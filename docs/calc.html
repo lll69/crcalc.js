@@ -1,0 +1,299 @@
+<!--
+Copyright 2025 lll69
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+  http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta http-equiv="content-type" content="text/html; charset=utf-8">
+    <title>CRCalc.js Exact Calculator</title>
+    <meta name="viewport" content="width=device-width">
+    <link rel="icon" type="image/svg+xml" href="calculator.svg">
+    <link rel="apple-touch-icon" type="image/svg+xml" href="calculator.svg">
+    <style id="loading-style">
+        .grid-fun>button,
+        .grid-num>button,
+        .grid-ops>button {
+            color: transparent;
+        }
+    </style>
+    <style>
+        body {
+            margin: 0;
+        }
+
+        .header {
+            width: 100%;
+            height: 5em;
+            white-space: nowrap;
+            padding: 0 8px 0 8px;
+        }
+
+        .header-fixed {
+            background-color: aliceblue;
+            position: fixed;
+            top: 0;
+            z-index: 10;
+        }
+
+        .calculator {
+            width: 100%;
+            max-width: 26ch;
+            font-size: 2em;
+            font-family: 'Courier New', Courier, monospace;
+        }
+
+        .display {
+            border-style: solid;
+            border-bottom-style: none;
+            border-width: 2px;
+            display: grid;
+            grid-template-rows: 1fr 1fr 1fr;
+        }
+
+        .display>input {
+            font-size: 1em;
+            font-family: 'Courier New', Courier, monospace;
+            border: none;
+            min-width: 0;
+        }
+
+        .result-div {
+            white-space: nowrap;
+            overflow-x: auto;
+            overflow-y: hidden;
+            text-align: right;
+        }
+
+        .result-div::-webkit-scrollbar {
+            display: none;
+        }
+
+        .result-div:not(.result-movable) {
+            cursor: text;
+        }
+
+        .result-movable {
+            cursor: ew-resize;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .result-movable>span,
+        .result-movable>b {
+            pointer-events: none;
+        }
+
+        .no-select {
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+        }
+
+        .measure-4ch {
+            height: 0;
+            width: 4ch;
+        }
+
+        .op-div {
+            display: flex;
+            flex-direction: row;
+        }
+
+        .frac-output {
+            font-size: 1em;
+            font-family: 'Courier New', Courier, monospace;
+            flex-grow: 1;
+            text-align: right;
+            border: none;
+            min-width: 0;
+        }
+
+        .op-hide {
+            display: none;
+        }
+
+        .grid-bottom {
+            display: grid;
+            grid-template-columns: 3fr 2fr;
+            grid-template-rows: 1fr;
+        }
+
+        .grid-fun {
+            border-style: solid;
+            border-bottom-style: none;
+            border-width: 2px;
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+        }
+
+        .grid-fun>button,
+        .grid-num>button,
+        .grid-ops>button,
+        .grid-var>button {
+            padding: 0;
+            overflow: hidden;
+            height: 1.5em;
+            font-size: 1em;
+            font-family: 'Courier New', Courier, monospace;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            transition: color 0.2s;
+        }
+
+        .grid-num {
+            border-style: solid;
+            display: grid;
+            border-width: 2px 1px 2px 2px;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+        }
+
+        .grid-num>#num_0 {
+            display: inline-block;
+            grid-column-start: 1;
+            grid-column-end: 3;
+        }
+
+        .grid-ops:not(.grid-hide),
+        .grid-var:not(.grid-hide) {
+            border-style: solid;
+            display: grid;
+            border-width: 2px 2px 2px 1px;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+        }
+
+        .grid-hide {
+            display: none;
+        }
+
+        .hidden-input {
+            width: 0;
+            height: 0;
+            max-width: 0;
+            max-height: 0;
+            margin: 0;
+            padding: 0;
+            border-style: none;
+        }
+
+        .button-link {
+            padding: 0 4px 0 4px;
+        }
+
+        .button-link:hover {
+            background-color: rgba(0, 255, 255, 0.3);
+        }
+
+        .button-link:active {
+            background-color: rgba(0, 255, 255, 0.6);
+        }
+    </style>
+    <link rel="preload" as="image" href="copy.svg">
+    <link rel="preload" as="image" href="save.svg">
+</head>
+
+<body>
+    <div class="header header-fixed" id="header">
+        <h1><img src="aosp/icon_96.png" style="height:1em"> Exact Calculator</h1>
+    </div>
+    <div class="header"></div>
+    <p class="intro">CRCalc.js Exact Calculator - Calculate mathematical expressions with high precision</p>
+    <p>You can scroll through the results by dragging, using the mouse wheel, and arrow keys.</p>
+    <p id="loading" class="intro">Loading Calculator...</p>
+    <div id="calculator" class="calculator">
+        <div class="display">
+            <input id="expression" inputmode="none" tabindex="1">
+            <div class="result-div" id="result_div" tabindex="2"><b id="result_bold"></b><span
+                    id="result_normal"></span></div>
+            <div class="op-div">
+                <a hidden id="copy_result" href="javascript:;" class="button-link" title="Copy displayed result"
+                    tabindex="3"><img alt="Copy displayed result" src="copy.svg"></a>
+                <a hidden id="save_result" href="javascript:;" class="button-link" title="Save displayed result to file"
+                    tabindex="4"><img alt="Save displayed result to file" src="save.svg"></a>
+                <input id="frac_output" class="frac-output" readonly hidden tabindex="5">
+            </div>
+        </div>
+        <div class="grid-fun">
+            <button id="toggle_inv">INV</button>
+            <button id="toggle_mode">RAD</button>
+            <button id="fun_sin">sin</button>
+            <button id="fun_arcsin" class="op-hide" title="inverse sine">sin&#x207B;&#x00B9;</button>
+            <button id="fun_cos">cos</button>
+            <button id="fun_arccos" class="op-hide" title="inverse cosine">cos&#x207B;&#x00B9;</button>
+            <button id="fun_tan">tan</button>
+            <button id="fun_arctan" class="op-hide" title="inverse tangent">tan&#x207B;&#x00B9;</button>
+            <button id="fun_percent" title="percent">%</button>
+            <button id="fun_ln">ln</button>
+            <button id="fun_exp" class="op-hide" title="exponential function">e&#x02E3;</button>
+            <button id="fun_log">log</button>
+            <button id="fun_10pow" class="op-hide" title="ten to the power of">10&#x02E3;</button>
+            <button id="op_fact" title="factorial">!</button>
+            <button id="op_pow" title="power">^</button>
+            <button id="const_pi" title="pi">&#x03C0;</button>
+            <button id="const_e" title="Euler's number">e</button>
+            <button id="op_lparen">(</button>
+            <button id="op_rparen">)</button>
+            <button id="op_sqrt" title="square root">&#x221A;</button>
+        </div>
+        <div class="grid-bottom">
+            <div class="grid-num">
+                <button id="num_7">7</button>
+                <button id="num_8">8</button>
+                <button id="num_9">9</button>
+                <button id="num_4">4</button>
+                <button id="num_5">5</button>
+                <button id="num_6">6</button>
+                <button id="num_1">1</button>
+                <button id="num_2">2</button>
+                <button id="num_3">3</button>
+                <button id="num_0">0</button>
+                <button id="num_point">.</button>
+            </div>
+            <div id="grid_ops" class="grid-ops">
+                <button id="op_div">&#x00F7;</button>
+                <button id="but_del">DEL</button>
+                <button id="op_mul">&#x00D7;</button>
+                <button id="but_clr">CLR</button>
+                <button id="op_sub">-</button>
+                <button id="but_var">&#x21C4;<i>x</i></button>
+                <button id="op_add">+</button>
+                <button id="but_eq">=</button>
+            </div>
+            <div id="grid_var" class="grid-var grid-hide">
+                <button id="var_in_x"><i>x</i>&#x2190;</button>
+                <button id="var_out_x"><i>x</i></button>
+                <button id="var_in_y"><i>y</i>&#x2190;</button>
+                <button id="var_out_y"><i>y</i></button>
+                <button id="var_clear">CLR</button>
+                <button id="var_close">&#x21C4;<i>x</i></button>
+                <button id="var_in_z"><i>z</i>&#x2190;</button>
+                <button id="var_out_z"><i>z</i></button>
+            </div>
+        </div>
+        <div class="measure-4ch" id="measure_4ch"></div>
+    </div>
+    <script src="calc.js"></script>
+</body>
+
+</html>

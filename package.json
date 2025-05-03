@@ -1,0 +1,21 @@
+{
+    "name": "crcalc-js",
+    "version": "1.0.0",
+    "description": "Constructive Real Calculator (CRCalc) written in JS and TS",
+    "main": "cr.min.js",
+    "scripts": {
+        "test": "npm run build && node dist/cr-test.mjs",
+        "build": "node build.js"
+    },
+    "keywords": [
+        "math",
+        "calculator",
+        "arithmetic"
+    ],
+    "author": "lll69",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "terser": "^5.31.6",
+        "typescript": "^5.3.3"
+    }
+}
