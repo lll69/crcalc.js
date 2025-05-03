@@ -5,6 +5,13 @@ declare const enum CRConstants {
 declare class ExceptionBase extends Error {
     constructor(type: string, message?: string);
 }
+/**
+ * Indicates that the number of bits of precision requested by
+ * a computation on constructive reals required more than 28 bits,
+ * and was thus in danger of overflowing an int.
+ * This is likely to be a symptom of a diverging computation,
+ * <I>e.g.</i> division by zero.
+ */
 declare class PrecisionOverflowException extends ExceptionBase {
     constructor(message?: string);
 }
@@ -262,7 +269,7 @@ declare abstract class CR {
      * Return a BigInteger which differs by less than one from the
      * constructive real.
      */
-    BigIntegerValue(): BigInt;
+    BigIntegerValue(): bigint;
     /**
      * This value is not precise! Use toStringD and toStringR instead!
      *
@@ -532,6 +539,12 @@ declare class gl_pi_CR extends slow_CR {
     constructor();
     protected approximate(p: number): bigint;
 }
+/**
+ * Unary functions on constructive reals implemented as objects.
+ * The <TT>execute</tt> member computes the function result.
+ * Unary function objects on constructive reals inherit from
+ * <TT>UnaryCRFunction</tt>.
+ */
 declare abstract class UnaryCRFunction {
     abstract execute(x: CR): CR;
 }

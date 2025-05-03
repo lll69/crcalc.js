@@ -135,6 +135,13 @@ class ExceptionBase extends Error {
     }
 }
 
+/**
+ * Indicates that the number of bits of precision requested by
+ * a computation on constructive reals required more than 28 bits,
+ * and was thus in danger of overflowing an int.
+ * This is likely to be a symptom of a diverging computation,
+ * <I>e.g.</i> division by zero.
+ */
 class PrecisionOverflowException extends ExceptionBase {
     constructor(message?: string) {
         super("PrecisionOverflowException", message);
@@ -673,7 +680,7 @@ abstract class CR {
      * Return a BigInteger which differs by less than one from the
      * constructive real.
      */
-    public BigIntegerValue(): BigInt {
+    public BigIntegerValue(): bigint {
         return this.get_appr(0);
     }
 
@@ -1647,6 +1654,12 @@ CR.atan_PI = CR.four.multiply(CR.four.multiply(CR.atan_reciprocal(5))
     .subtract(CR.atan_reciprocal(239)));
 CR.half_pi = CR.PI.shiftRight(1);
 
+/**
+ * Unary functions on constructive reals implemented as objects.
+ * The <TT>execute</tt> member computes the function result.
+ * Unary function objects on constructive reals inherit from
+ * <TT>UnaryCRFunction</tt>.
+ */
 abstract class UnaryCRFunction {
     public abstract execute(x: CR): CR;
 }

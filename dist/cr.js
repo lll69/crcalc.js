@@ -4,6 +4,13 @@ class ExceptionBase extends Error {
         super(type + (message ? (": " + message) : message));
     }
 }
+/**
+ * Indicates that the number of bits of precision requested by
+ * a computation on constructive reals required more than 28 bits,
+ * and was thus in danger of overflowing an int.
+ * This is likely to be a symptom of a diverging computation,
+ * <I>e.g.</i> division by zero.
+ */
 class PrecisionOverflowException extends ExceptionBase {
     constructor(message) {
         super("PrecisionOverflowException", message);
@@ -1388,6 +1395,12 @@ CR.PI = new gl_pi_CR();
 CR.atan_PI = CR.four.multiply(CR.four.multiply(CR.atan_reciprocal(5))
     .subtract(CR.atan_reciprocal(239)));
 CR.half_pi = CR.PI.shiftRight(1);
+/**
+ * Unary functions on constructive reals implemented as objects.
+ * The <TT>execute</tt> member computes the function result.
+ * Unary function objects on constructive reals inherit from
+ * <TT>UnaryCRFunction</tt>.
+ */
 class UnaryCRFunction {
 }
 // Subclasses of UnaryCRFunction for various built-in functions.
