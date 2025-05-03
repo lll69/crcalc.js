@@ -3,12 +3,16 @@
         "module": "ESNext",
         //"moduleResolution": "Node",
         "target": "ES2020",
-        "declaration": false,
+        "declaration": true,
         "jsx": "preserve",
         "strictNullChecks": true,
         "strictFunctionTypes": true,
         "outDir": "dist"
     },
+    "include": [
+        "cr.ts",
+        "cr-test.mts"
+    ],
     "exclude": [
         "dist",
         "node_modules",

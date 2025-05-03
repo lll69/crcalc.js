@@ -2,7 +2,7 @@
     "name": "crcalc-js",
     "version": "1.0.0",
     "description": "Constructive Real Calculator (CRCalc) written in JS and TS",
-    "main": "cr.min.js",
+    "main": "dist/cr.min.js",
     "scripts": {
         "test": "npm run build && node dist/cr-test.mjs",
         "build": "node build.js"

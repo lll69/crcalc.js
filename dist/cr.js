@@ -75,24 +75,6 @@ function bitLength_n(t) {
     }
     return result + Number(l) + 1;
 }
-function pow_n(x, y) {
-    if (y < 0n) {
-        throw new ArithmeticException("Negative exponent");
-    }
-    if (y === 0n)
-        return 1n;
-    if (x === 0n)
-        return 0n;
-    let res = 1n;
-    while (y > 0n) {
-        if ((y & 1n) === 1n) {
-            res *= x;
-        }
-        x *= x;
-        y >>= 1n;
-    }
-    return res;
-}
 /**
  * Constructive real numbers, also known as recursive, or computable reals.
  * Each recursive real number is represented as an object that provides an
