@@ -6,8 +6,6 @@ Constructive Real calculating library modified from AOSP
 
 [Details of the AOSP](aosp/)
 
-[TOC]
-
 # Usage
 
 ## Exceptions
@@ -549,6 +547,21 @@ Compute an integral power of this.
 * **UnifiedReal.MINUS_HALF** = `UnifiedReal.newBR(BoundedRational.MINUS_HALF)`
 * **UnifiedReal.TEN** = `UnifiedReal.newBR(BoundedRational.TEN)`
 * **UnifiedReal.RADIANS_PER_DEGREE** = `new UnifiedReal(new BoundedRational(1n, 180n), UnifiedReal.CR_PI)`
+
+### UnifiedReal.newBR(rat)
+`static newBR(rat: BoundedRational): UnifiedReal`
+
+Construct a UnifiedReal.
+
+### UnifiedReal.newCR(cr)
+`static newCR(cr: CR): UnifiedReal`
+
+Construct a UnifiedReal.
+
+### UnifiedReal.newN(n)
+`static newN(n: bigint): UnifiedReal`
+
+Construct a UnifiedReal.
 
 ### UnifiedReal.asinHalves(n)
 `static asinHalves(n: int): UnifiedReal`
