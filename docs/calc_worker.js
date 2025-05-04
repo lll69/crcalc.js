@@ -19,7 +19,6 @@ const worker = this;
 const urList = {};
 const UR_LN10 = UnifiedReal.TEN.ln();
 const UR_RADIANS_PER_DEGREE = UnifiedReal.RADIANS_PER_DEGREE;
-const UR_DEGREES_PER_RADIAN = UnifiedReal.newN(180n).divide(UnifiedReal.PI);
 function tokenize(expr) {
     const result = [];
     const locations = [];
@@ -502,7 +501,7 @@ function createUR(expr, degreeMode) {
                     case "asin":
                     case "arcsin":
                         if (degreeMode) {
-                            stack.push(arg0.asin().multiply(UR_DEGREES_PER_RADIAN));
+                            stack.push(arg0.asin().divide(UR_RADIANS_PER_DEGREE));
                         } else {
                             stack.push(arg0.asin());
                         }
@@ -510,7 +509,7 @@ function createUR(expr, degreeMode) {
                     case "acos":
                     case "arccos":
                         if (degreeMode) {
-                            stack.push(arg0.acos().multiply(UR_DEGREES_PER_RADIAN));
+                            stack.push(arg0.acos().divide(UR_RADIANS_PER_DEGREE));
                         } else {
                             stack.push(arg0.acos());
                         }
@@ -518,7 +517,7 @@ function createUR(expr, degreeMode) {
                     case "atan":
                     case "arctan":
                         if (degreeMode) {
-                            stack.push(arg0.atan().multiply(UR_DEGREES_PER_RADIAN));
+                            stack.push(arg0.atan().divide(UR_RADIANS_PER_DEGREE));
                         } else {
                             stack.push(arg0.atan());
                         }
