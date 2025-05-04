@@ -260,7 +260,7 @@
                 calculateHigherPrecision();
             } else {
                 if (copyCallback) {
-                    copyCallback(true, resultString.substring(0, rightIndex - newOffsetStrLength));
+                    copyCallback(false, resultString.substring(0, rightIndex - newOffsetStrLength));
                     return;
                 }
                 resultBoldText.innerHTML = "..." + resultString.substring(scrollOffset + 3, rightIndex - newOffsetStrLength);
@@ -865,25 +865,50 @@
         }
     });
     copyButton.addEventListener("click", function () {
-        showScrolledResult(function (mightExact, str) {
-            copyText(str);
-            if (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) {
-                alert("Exact result have been copied");
-            } else {
-                alert("TRUNCATED result have been copied");
-            }
-        });
+        if (digitMax === 0 && precisionCurrent === 0) {
+            copyText(resultString.substring(0, resultString.length - 1));
+            alert("Exact result have been copied");
+        } else if (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
+            copyText(resultString);
+            alert("Exact result have been copied");
+        } else {
+            showScrolledResult(function (mightExact, str) {
+                copyText(str);
+                if (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) {
+                    alert("Exact result have been copied");
+                } else {
+                    alert("TRUNCATED result have been copied");
+                }
+            });
+        }
     });
     saveButton.addEventListener("click", function () {
-        showScrolledResult(function (mightExact, str) {
-            let url = URL.createObjectURL(new Blob([str], { type: "text/plain" }));
+        let content;
+        if (digitMax === 0 && precisionCurrent === 0) {
+            content = resultString.substring(0, resultString.length - 1);
+        } else if (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
+            content = resultString;
+        }
+        if (content) {
+            let url = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
             let element = document.createElement("a");
             element.href = url;
-            element.download = (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) ? "output_exact.txt" : "output_truncated.txt";
+            element.download = "output_exact.txt";
             document.body.appendChild(element);
             element.click();
             element.remove();
-        });
+        } else {
+            showScrolledResult(function (mightExact, str) {
+                let url = URL.createObjectURL(new Blob([str], { type: "text/plain" }));
+                let element = document.createElement("a");
+                element.href = url;
+                element.download = (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) ? "output_exact.txt" : "output_truncated.txt";
+                document.body.appendChild(element);
+                element.click();
+                element.remove();
+            });
+        }
+
     });
     if (!ENABLE_VARIABLES) {
         let varButton = document.getElementById("but_var");
