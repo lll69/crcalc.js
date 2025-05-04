@@ -1,4 +1,11 @@
-/* crcalc.js Copyright 2025 Licensed under the Apache License, Version 2.0 */
+/*
+ * crcalc.js
+ * Copyright 2025 lll69, Licensed under the Apache License, Version 2.0
+ * Copyright (C) 2016 The Android Open Source Project, Licensed under the Apache License, Version 2.0
+ * Copyright (C) 2015 The Android Open Source Project, Licensed under the Apache License, Version 2.0
+ * Copyright (c) 1999, Silicon Graphics, Inc.
+ * Copyright (c) 2001-2004, Hewlett-Packard Development Company, L.P.
+ */
 
 /*
  * Copyright 2025 lll69
@@ -53,6 +60,7 @@
  * The original code is licensed as follows:
  */
 
+/*
 //
 // Copyright (c) 1999, Silicon Graphics, Inc. -- ALL RIGHTS RESERVED
 //
@@ -123,6 +131,7 @@
 // EXCLUSION OR LIMITATION OF INCIDENTAL OR CONSEQUENTIAL DAMAGES, SO THAT
 // EXCLUSION AND LIMITATION MAY NOT APPLY TO YOU.
 //
+*/
 
 const enum CRConstants {
     INTEGER_MIN = -2147483648,

@@ -1,6 +1,6 @@
 # CRCalc.js
 
-Constructive Real calculating library modified from AOSP
+Constructive Real Calculating library modified from AOSP
 
 # Usage
 
@@ -516,9 +516,9 @@ Compute an integral power of this.
 >
 > A real number is represented as the product of two numbers with different representations:  
 >
-> **A\)** A BoundedRational that can only represent a subset of the rationals, but supports
+> **A)** A BoundedRational that can only represent a subset of the rationals, but supports
 >    exact computable comparisons.  
-> **B\)** A lazily evaluated "constructive real number" that provides operations to evaluate
+> **B)** A lazily evaluated "constructive real number" that provides operations to evaluate
 >    itself to any requested number of digits.
 >
 > Whenever possible, we choose (B) to be one of a small set of known constants about which we

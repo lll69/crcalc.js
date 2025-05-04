@@ -7,6 +7,7 @@
         "jsx": "preserve",
         "strictNullChecks": true,
         "strictFunctionTypes": true,
+        "removeComments": false,
         "outDir": "dist"
     },
     "include": [
