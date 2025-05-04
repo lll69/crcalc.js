@@ -489,7 +489,7 @@
     }
     function focusExpression() {
         if (workerLoaded) {
-            exprInput.focus({ preventScroll: true });
+            exprInput.focus();
         }
     }
     function refreshInverseButton() {
