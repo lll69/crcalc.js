@@ -104,7 +104,7 @@
         resultScrollable = !shouldEnableSelect;
         if (shouldEnableSelect) {
             if (copyCallback) {
-                copyCallback(digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
+                copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
                 return;
             }
             scrollOffset = 0;
@@ -129,12 +129,13 @@
             if (digitMax === 0) {
                 scrollOffset = Math.min(scrollOffset, pointIndex - displayWidth);
             } else if (digitMax !== INTEGER_MAX) {
-                if (digitMax >= displayWidth) {
+                if (digitMax + 4 >= displayWidth) {
                     scrollOffset = Math.min(scrollOffset, pointIndex + 1 + digitMax - displayWidth + String(digitMax).length + 2);
                 } else {
                     scrollOffset = Math.min(scrollOffset, pointIndex + 1 + digitMax - displayWidth);
                 }
             }
+            rightIndex = scrollOffset + displayWidth;
         }
         if (scrollOffset < 0) {
             scrollOffset = 0;
@@ -180,9 +181,9 @@
                         }
                         if (copyCallback) {
                             if (digitMax === INTEGER_MAX) {
-                                copyCallback(scientific);
+                                copyCallback(false, scientific);
                             } else {
-                                copyCallback(digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
+                                copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
                             }
                             return;
                         }
@@ -194,9 +195,9 @@
                 if (!usedScientific) {
                     if (copyCallback) {
                         if (digitMax === INTEGER_MAX) {
-                            copyCallback(resultString.substring(0, rightIndex - newOffsetStrLength) + "E" + newOffsetStr);
+                            copyCallback(false, resultString.substring(0, rightIndex - newOffsetStrLength) + "E" + newOffsetStr);
                         } else {
-                            copyCallback(digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
+                            copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
                         }
                         return;
                     }
@@ -206,9 +207,9 @@
             } else {
                 if (copyCallback) {
                     if (digitMax === INTEGER_MAX) {
-                        copyCallback(resultString.substring(0, rightIndex - newOffsetStrLength) + "E" + newOffsetStr);
+                        copyCallback(false, resultString.substring(0, rightIndex - newOffsetStrLength) + "E" + newOffsetStr);
                     } else {
-                        copyCallback(digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
+                        copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
                     }
                     return;
                 }
@@ -219,9 +220,9 @@
             rightIndex = Math.min(scrollOffset + displayWidth, resultString.length);
             if (copyCallback) {
                 if (digitMax === INTEGER_MAX) {
-                    copyCallback(resultString.substring(0, rightIndex));
+                    copyCallback(false, resultString.substring(0, rightIndex));
                 } else {
-                    copyCallback(digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
+                    copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
                 }
                 return;
             }
@@ -251,7 +252,7 @@
             newOffsetStrLength;
             if (scrollOffset > resultLength - displayWidth + newOffsetStrLength) {
                 if (copyCallback) {
-                    copyCallback(resultString);
+                    copyCallback(false, resultString);
                     return;
                 }
                 resultBoldText.innerHTML = "Calculating...";
@@ -259,7 +260,7 @@
                 calculateHigherPrecision();
             } else {
                 if (copyCallback) {
-                    copyCallback(resultString.substring(0, rightIndex - newOffsetStrLength));
+                    copyCallback(true, resultString.substring(0, rightIndex - newOffsetStrLength));
                     return;
                 }
                 resultBoldText.innerHTML = "..." + resultString.substring(scrollOffset + 3, rightIndex - newOffsetStrLength);
@@ -332,7 +333,7 @@
                 }
                 break;
             case "toStringTruncated":
-                if (msg.uid == lastCalculateUid) {
+                if (msg.uid === lastCalculateUid) {
                     workerBusy = false;
                     buttonCalc.innerText = "=";
                     if (msg.error) {
@@ -527,7 +528,7 @@
         const currentExpr = exprInput.value;
         const selectionStart = exprInput.selectionStart;
         const selectionEnd = exprInput.selectionEnd;
-        if (selectionStart === selectionEnd && selectionStart == currentExpr.length) {
+        if (selectionStart === selectionEnd && selectionStart === currentExpr.length) {
             exprInput.value = currentExpr + str;
         } else {
             exprInput.value = currentExpr.substring(0, selectionStart) + str + currentExpr.substring(selectionEnd, currentExpr.length);
@@ -864,9 +865,9 @@
         }
     });
     copyButton.addEventListener("click", function () {
-        showScrolledResult(function (str) {
+        showScrolledResult(function (mightExact, str) {
             copyText(str);
-            if (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax)) {
+            if (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) {
                 alert("Exact result have been copied");
             } else {
                 alert("TRUNCATED result have been copied");
@@ -874,11 +875,11 @@
         });
     });
     saveButton.addEventListener("click", function () {
-        showScrolledResult(function (str) {
+        showScrolledResult(function (mightExact, str) {
             let url = URL.createObjectURL(new Blob([str], { type: "text/plain" }));
             let element = document.createElement("a");
             element.href = url;
-            element.download = (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax)) ? "output_exact.txt" : "output_truncated.txt";
+            element.download = (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) ? "output_exact.txt" : "output_truncated.txt";
             document.body.appendChild(element);
             element.click();
             element.remove();
@@ -965,7 +966,7 @@
         function timedScroll() {
             let absSpeed = Math.abs(lastSpeed);
             if (absSpeed * 2 > chWidth && absSpeed !== Infinity) {
-                lastSpeed *= 0.8;
+                lastSpeed *= 0.8333333333333334;
             } else {
                 clearInterval(lastInterval);
             }
