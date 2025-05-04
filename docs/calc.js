@@ -279,6 +279,11 @@
             }
         }
     }
+    function scrollToErrorIfNeeded(e, str) {
+        if (e.startsWith(str)) {
+            resultDiv.scrollLeft = chWidth * str.length;
+        }
+    }
     function onWorkerMessage(e) {
         const msg = e.data;
         switch (msg.type) {
@@ -315,7 +320,7 @@
                     let errString = String(msg.error);
                     let match = errString.match(/at position \[(\d+),(\d+)\]/);
                     if (match) {
-                        exprInput.focus();
+                        focusExpression();
                         let start = Number(match[1]);
                         exprInput.selectionStart = start;
                         exprInput.selectionEnd = Number(match[2]);
@@ -323,12 +328,13 @@
                     }
                     match = errString.match(/at position \((\d+)\)/);
                     if (match) {
-                        exprInput.focus();
+                        focusExpression();
                         let start = Number(match[1]);
                         exprInput.selectionStart = start;
                         exprInput.selectionEnd = start + 1;
                         exprInput.scrollLeft = chWidth * (start > 0 ? start - 1 : start);
                     }
+                    scrollToErrorIfNeeded(errString, "Error: ArithmeticException: ");
                     changeResultUIVisibility();
                 }
                 break;
@@ -483,7 +489,7 @@
     }
     function focusExpression() {
         if (workerLoaded) {
-            exprInput.focus();
+            exprInput.focus({ preventScroll: true });
         }
     }
     function refreshInverseButton() {
@@ -691,6 +697,7 @@
     }
     function appendFunction(fn) {
         if (!workerLoaded) return;
+        checkEnterNewExpr();
         const currentExpr = exprInput.value;
         const selectionStart = exprInput.selectionStart;
         if (selectionStart > 0) {
@@ -867,17 +874,17 @@
     copyButton.addEventListener("click", function () {
         if (digitMax === 0 && precisionCurrent === 0) {
             copyText(resultString.substring(0, resultString.length - 1));
-            alert("Exact result have been copied");
+            alert("Exact result has been copied");
         } else if (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
             copyText(resultString);
-            alert("Exact result have been copied");
+            alert("Exact result has been copied");
         } else {
             showScrolledResult(function (mightExact, str) {
                 copyText(str);
                 if (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) {
-                    alert("Exact result have been copied");
+                    alert("Exact result has been copied");
                 } else {
-                    alert("TRUNCATED result have been copied");
+                    alert("TRUNCATED result has been copied");
                 }
             });
         }
@@ -1019,7 +1026,7 @@
                 lastTimestamp = e.timeStamp;
                 lastSpeed = 0;
                 isDown = true;
-                resultDiv.focus();
+                resultDiv.focus({ preventScroll: true });
             }
         }
         function mouseMove(e) {
