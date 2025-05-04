@@ -169,19 +169,24 @@
                 let usedScientific = false;
                 if (newOffsetStrLength > 0 && pointIndex > displayWidth) {
                     // Try to use scientific notation
-                    let powerOfTen = pointIndex - 1;
+                    let powerOfTen = resultString[0] === "-" ? (pointIndex - 2) : (pointIndex - 1);
                     let powerOfTenLength = String(powerOfTen).length + 1;
                     if (powerOfTenLength < displayWidth - 3) {
+                        let scientific;
+                        if (resultString[0] === "-") {
+                            scientific = resultString.substring(0, 2) + "." + resultString.substring(2, rightIndex - powerOfTenLength - 1) + "E" + powerOfTen
+                        } else {
+                            scientific = resultString[0] + "." + resultString.substring(1, rightIndex - powerOfTenLength - 1) + "E" + powerOfTen
+                        }
                         if (copyCallback) {
                             if (digitMax === INTEGER_MAX) {
-                                copyCallback(resultString[0] + "." + resultString.substring(1, rightIndex - powerOfTenLength - 1) + "E" + powerOfTen);
+                                copyCallback(scientific);
                             } else {
                                 copyCallback(digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
-
                             }
                             return;
                         }
-                        resultBoldText.innerHTML = resultString[0] + "." + resultString.substring(1, rightIndex - powerOfTenLength - 1) + "E" + powerOfTen;
+                        resultBoldText.innerHTML = scientific;
                         resultNormalText.innerHTML = "";
                         usedScientific = true;
                     }
