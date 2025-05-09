@@ -27,11 +27,15 @@ declare class ZeroDivisionException extends ArithmeticException {
 declare class AssertionError extends ExceptionBase {
     constructor(message?: string);
 }
-declare function gcd_n(a: bigint, b: bigint): bigint;
-declare function abs_n(x: bigint): bigint;
-declare function compare_n(x: bigint, y: bigint): number;
-declare function signum_n(x: bigint): number;
-declare function bitLength_n(t: bigint): number;
+declare function CR_gcd_n(a: bigint, b: bigint): bigint;
+declare function CR_abs_n(x: bigint): bigint;
+declare function CR_compare_n(x: bigint, y: bigint): number;
+declare function CR_signum_n(x: bigint): number;
+declare function CR_bitLength_n(t: bigint): number;
+/** Multiply k by 2**n. */
+declare function CR_shift(k: bigint, n: bigint): bigint;
+/** Multiply by 2**n, rounding result */
+declare function CR_scale(k: bigint, n: bigint): bigint;
 /**
  * Constructive real numbers, also known as recursive, or computable reals.
  * Each recursive real number is represented as an object that provides an
@@ -110,6 +114,7 @@ declare abstract class CR {
      * The scaled approximation corresponding to min_prec.
      */
     max_appr: bigint;
+    maxApprBitLen: number;
     /**
      * min_prec and max_val are valid.
      */
@@ -130,10 +135,8 @@ declare abstract class CR {
     static valueOfN(n: bigint): CR;
     static ZERO: CR;
     static ONE: CR;
-    /** Multiply k by 2**n. */
-    static shift(k: bigint, n: bigint): bigint;
-    /** Multiply by 2**n, rounding result */
-    static scale(k: bigint, n: bigint): bigint;
+    protected setMaxAppr(appr: bigint): void;
+    private getApprBitLen;
     /**
      * Identical to approximate(), but maintain and update cache.
      * Returns value / 2 ** prec rounded to an integer.
@@ -697,6 +700,8 @@ declare class BoundedRational {
 declare const enum UnifiedRealConstants {
     DEFAULT_COMPARE_TOLERANCE = -1000
 }
+declare const UR_RECURSIVE_POW_LIMIT = 1000n;
+declare const UR_HARD_RECURSIVE_POW_LIMIT: bigint;
 /**
  * Computable real numbers, represented so that we can get exact decidable comparisons
  * for a number of interesting special cases, including rational computations.
@@ -936,8 +941,6 @@ declare class UnifiedReal {
     asin(): UnifiedReal;
     acos(): UnifiedReal;
     atan(): UnifiedReal;
-    private static readonly RECURSIVE_POW_LIMIT;
-    private static readonly HARD_RECURSIVE_POW_LIMIT;
     /**
      * Compute an integral power of a constructive real, using the standard recursive algorithm.
      * exp is known to be positive.

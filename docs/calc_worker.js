@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-importScripts(crJsUrl);
 const worker = this;
 const urList = {};
 const UR_LN10 = UnifiedReal.TEN.ln();

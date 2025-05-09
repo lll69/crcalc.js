@@ -27,9 +27,10 @@ if (status.status || status.error) {
     exit(status.status || 1);
 }
 let minify_result = minify_sync(readFileSync("dist/cr.js", { "encoding": "utf-8" }), {
+    module: true,
     mangle: true,
     compress: true,
-    keep_classnames: /C/,
+    keep_classnames: false,
     format: {
         comments: /Copyright/g
     }

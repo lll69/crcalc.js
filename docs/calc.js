@@ -100,7 +100,7 @@
     function showScrolledResult(copyCallback) {
         if (!workerLoaded || !hasResult) return;
         const resultLength = resultString.endsWith(".") ? (resultString.length - 1) : resultString.length;
-        const shouldEnableSelect = (digitMax != INTEGER_MAX && resultLength <= displayWidth);
+        const shouldEnableSelect = (digitMax !== INTEGER_MAX && resultLength <= displayWidth);
         resultScrollable = !shouldEnableSelect;
         if (shouldEnableSelect) {
             if (copyCallback) {
@@ -256,7 +256,7 @@
                     return;
                 }
                 resultBoldText.innerHTML = "Calculating...";
-                precisionNeeded = precisionCurrent + PREC_INCREMENT * Math.min(1024, 1 + Math.floor(scrollOffset / 1600));
+                precisionNeeded = Math.max(scrollOffset - pointIndex + newOffsetStrLength * 2, precisionCurrent + PREC_INCREMENT * Math.min(1024, 1 + Math.floor(scrollOffset / 1600)));
                 calculateHigherPrecision();
             } else {
                 if (copyCallback) {
@@ -288,15 +288,18 @@
         const msg = e.data;
         switch (msg.type) {
             case "init":
-                workerLoaded = true;
-                for (let i = 0, arr = document.getElementsByClassName("intro"); i < arr.length; i++) {
-                    arr[i].hidden = true;
-                }
-                document.getElementById("loading-style").remove();
-                focusExpression();
-                if (navigator.userAgent.indexOf("Firefox") >= 0) {
-                    loadingElement.innerText = "When performing exponentiation and factorial calculations, Chrome/Edge may be faster than Firefox and can compute more digits.";
-                    loadingElement.hidden = false;
+                if (!workerLoaded) {
+                    workerLoaded = true;
+                    for (let i = 0, arr = document.getElementsByClassName("intro"); i < arr.length; i++) {
+                        arr[i].hidden = true;
+                    }
+                    document.getElementById("loading-style").remove();
+                    clearResult();
+                    focusExpression();
+                    if (navigator.userAgent.indexOf("Firefox") >= 0) {
+                        loadingElement.innerText = "When performing exponentiation and factorial calculations, Chrome/Edge may be faster than Firefox and can compute more digits.";
+                        loadingElement.hidden = false;
+                    }
                 }
                 break;
             case "createUR":
@@ -384,8 +387,7 @@
         hasError = false;
     }
     function initWorker(crJs, workerJs) {
-        let crUrl = URL.createObjectURL(new Blob([crJs], { type: "text/javascript" }));
-        workerContent = 'let crJsUrl="' + crUrl + '";' + workerJs;
+        workerContent = crJs + workerJs;
         reInitWorker();
     }
     function onLoadingError(e) {
@@ -628,7 +630,7 @@
                     needMultiply = true;
                 }
             }
-            if (selectionStart != selectionEnd) {
+            if (selectionStart !== selectionEnd) {
                 if (needMultiply) {
                     exprInput.value = currentExpr.substring(0, selectionStart) + multiplyChar + "(" + currentExpr.substring(selectionStart, selectionEnd) + ")" + currentExpr.substring(selectionEnd, currentExpr.length);
                     exprInput.selectionStart = selectionStart + 2;
@@ -976,7 +978,7 @@
     function onCalculatorResize() {
         chWidth = measureDiv.getBoundingClientRect().width / 4;
         let newDisplayWidth = Math.floor(calculatorDiv.clientWidth / chWidth);
-        if (newDisplayWidth != displayWidth) {
+        if (newDisplayWidth !== displayWidth) {
             displayWidth = newDisplayWidth;
             if (hasResult) {
                 showScrolledResult();

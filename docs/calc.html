@@ -20,8 +20,7 @@ limitations under the License.
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>CRCalc.js Exact Calculator</title>
-    <meta name="description" content="CRCalc.js Exact Calculator - Calculate mathematical expressions with high precision">
-    <meta name="keywords" content="math,calculator,exact,accuracy,precision,accurate">
+    <meta name="description" content="CRCalc.js Exact Calculator - Calculate mathematical expressions with scrollable high accuracy up to 1,000,000 digits. You can scroll through the result by dragging, using the mouse wheel, and arrow keys.">
     <meta name="viewport" content="width=device-width">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -222,19 +221,15 @@ limitations under the License.
         <h1><a href="/"><img src="/favicon.ico" style="height:1em"></a> Exact Calculator</h1>
     </div>
     <div class="header"></div>
-    <p class="intro">CRCalc.js Exact Calculator - Calculate mathematical expressions with high precision</p>
-    <p>You can scroll through the results by dragging, using the mouse wheel, and arrow keys.</p>
+    <p>You can scroll through the result by dragging, using the mouse wheel, and arrow keys.</p>
     <p id="loading" class="intro"><b>Loading Calculator...</b></p>
     <div id="calculator" class="calculator">
         <div class="display">
             <input id="expression" inputmode="none" tabindex="1">
-            <div class="result-div" id="result_div" tabindex="2"><b id="result_bold"></b><span
-                    id="result_normal"></span></div>
+            <div class="result-div" id="result_div" tabindex="2"><b id="result_bold">Loading...</b><span id="result_normal"></span></div>
             <div class="op-div">
-                <a hidden id="copy_result" href="javascript:;" class="button-link" title="Copy displayed result"
-                    tabindex="3"><img alt="Copy displayed result" src="copy.svg"></a>
-                <a hidden id="save_result" href="javascript:;" class="button-link" title="Save displayed result to file"
-                    tabindex="4"><img alt="Save displayed result to file" src="save.svg"></a>
+                <a hidden id="copy_result" href="javascript:;" class="button-link" title="Copy displayed result" tabindex="3"><img alt="Copy displayed result" src="copy.svg"></a>
+                <a hidden id="save_result" href="javascript:;" class="button-link" title="Save displayed result to file" tabindex="4"><img alt="Save displayed result to file" src="save.svg"></a>
                 <input id="frac_output" class="frac-output" readonly hidden tabindex="5">
             </div>
         </div>
@@ -297,6 +292,10 @@ limitations under the License.
         </div>
         <div class="measure-4ch" id="measure_4ch"></div>
     </div>
+    <p>
+        CRCalc.js Exact Calculator - Calculate mathematical expressions with scrollable high accuracy/precision up to 1,000,000 digits.
+        <br> Supports trigonometric functions, logarithms, e and &#x03C0; constant.
+    </p>
     <script src="calc.js"></script>
 </body>
 
