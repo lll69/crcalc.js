@@ -19,8 +19,9 @@ limitations under the License.
 
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
-    <title>CRCalc.js Exact Calculator</title>
+    <title>CRCalc.js High Precision Exact Calculator</title>
     <meta name="description" content="CRCalc.js Exact Calculator - Calculate mathematical expressions with scrollable high accuracy up to 1,000,000 digits. You can scroll through the result by dragging, using the mouse wheel, and arrow keys.">
+    <meta name="keywords" content="exact calculator, full precision calculator, high precision calculator, scientific calculator online, trigonometric function calculator, logarithm calculator, mathematics, math, maths">
     <meta name="viewport" content="width=device-width">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
@@ -211,6 +212,10 @@ limitations under the License.
         .button-link:active {
             background-color: #4DD0E1;
         }
+
+        section {
+            margin: 8px;
+        }
     </style>
     <link rel="preload" as="image" href="copy.svg">
     <link rel="preload" as="image" href="save.svg">
@@ -218,11 +223,14 @@ limitations under the License.
 
 <body>
     <div class="header header-fixed" id="header">
-        <h1><a href="/"><img src="/favicon.ico" style="height:1em"></a> Exact Calculator</h1>
+        <h1><a href="/"><img src="/favicon.ico" style="height:1em" alt="Home"></a> CRCalc.js Exact Calculator</h1>
     </div>
     <div class="header"></div>
-    <p>You can scroll through the result by dragging, using the mouse wheel, and arrow keys.</p>
-    <p id="loading" class="intro"><b>Loading Calculator...</b></p>
+    <section>
+        <p class="intro">Scientific Calculator - Calculate mathematical expressions with scrollable high accuracy/precision up to 1,000,000 digits.</p>
+        <p>You can scroll through the result by dragging, using the mouse wheel, and arrow keys.</p>
+        <p id="loading" class="intro"><b>Loading Calculator...</b></p>
+    </section>
     <div id="calculator" class="calculator">
         <div class="display">
             <input id="expression" inputmode="none" tabindex="1">
@@ -292,10 +300,26 @@ limitations under the License.
         </div>
         <div class="measure-4ch" id="measure_4ch"></div>
     </div>
-    <p>
-        CRCalc.js Exact Calculator - Calculate mathematical expressions with scrollable high accuracy/precision up to 1,000,000 digits.
-        <br> Supports trigonometric functions, logarithms, e and &#x03C0; constant.
-    </p>
+    <section>
+        <h2>Features</h2>
+        <ul>
+            <li>Scrollable high precision up to 1,000,000 digits</li>
+            <li>Trigonometric functions (sin/cos/tan)</li>
+            <li>Logarithm and exponential function</li>
+            <li>Supports factorial calculations, up to 1,048,575 on Chrome 100+</li>
+            <li>Supports constants e and π</li>
+            <li>Supports exponentiation and square root calculations</li>
+            <li>Supports copying results and saving results to a file</li>
+            <li>Open source on GitHub</li>
+        </ul>
+    </section>
+    <section>
+        <h2>Notes</h2>
+        <ul>
+            <li>Certain functions (e.g., x! or x^y) may need intensive computations and take a long time.</li>
+            <li>Firefox may support fewer computable digits than Chrome/Edge.</li>
+        </ul>
+    </section>
     <script src="calc.js"></script>
 </body>
 
