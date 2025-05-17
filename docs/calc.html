@@ -283,7 +283,8 @@ limitations under the License.
                 <button id="op_mul">&#x00D7;</button>
                 <button id="but_clr">CLR</button>
                 <button id="op_sub">-</button>
-                <button id="but_var">&#x21C4;<i>x</i></button>
+                <button id="op_cbrt" title="cube root">&#x221B;<i>x</i></button>
+                <button id="but_var" hidden>&#x21C4;<i>x</i></button>
                 <button id="op_add">+</button>
                 <button id="but_eq">=</button>
             </div>
@@ -322,6 +323,21 @@ limitations under the License.
         </ul>
     </section>
     <script src="calc.js"></script>
+    <script>
+        if (localStorage.getItem("skipgc") !== "t" && !sessionStorage.getItem("doNotTrack") && !localStorage.getItem("doNotTrack") && location.protocol.startsWith("http")) {
+            if (!sessionStorage.getItem("_swa") && document.referrer.indexOf(location.protocol + "//" + location.host) !== 0) {
+                sessionStorage.setItem("_swa", "1");
+                fetch("https://counter.dev/track?" + new URLSearchParams({ referrer: document.referrer, screen: screen.width + "x" + screen.height, id: "c2474bae-9e6c-48ea-9a93-39ae3f9dbdae", utcoffset: "0" }))
+            };
+            navigator.sendBeacon(
+                "https://counter.dev/trackpage",
+                new URLSearchParams({
+                    id: "c2474bae-9e6c-48ea-9a93-39ae3f9dbdae",
+                    page: window.location.pathname,
+                }),
+            );
+        }
+    </script>
 </body>
 
 </html>

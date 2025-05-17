@@ -817,6 +817,10 @@
         insertStr("/100");
         focusExpression();
     });
+    document.getElementById("op_cbrt").addEventListener("click", function () {
+        insertStr("^(1/3)");
+        focusExpression();
+    });
     document.getElementById("but_del").addEventListener("click", function () {
         onDel();
         focusExpression();
@@ -876,17 +880,17 @@
     copyButton.addEventListener("click", function () {
         if (digitMax === 0 && precisionCurrent === 0) {
             copyText(resultString.substring(0, resultString.length - 1));
-            alert("Exact result has been copied");
+            alert("Exact result has been copied (length:" + (resultString.length - 1) + ")");
         } else if (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
             copyText(resultString);
-            alert("Exact result has been copied");
+            alert("Exact result has been copied (length:" + (resultString.length) + ")");
         } else {
             showScrolledResult(function (mightExact, str) {
                 copyText(str);
                 if (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) {
-                    alert("Exact result has been copied");
+                    alert("Exact result has been copied (length:" + (str.length) + ")");
                 } else {
-                    alert("TRUNCATED result has been copied");
+                    alert("TRUNCATED result has been copied (length:" + (str.length) + ")");
                 }
             });
         }
