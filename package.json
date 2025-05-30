@@ -1,7 +1,7 @@
 {
     "name": "crcalc-js",
-    "version": "1.0.1",
-    "description": "Constructive Real Calculator (CRCalc)",
+    "version": "1.0.2",
+    "description": "Constructive Real Calculating library (CRCalc)",
     "main": "dist/cr.min.js",
     "scripts": {
         "test": "npm run build && node dist/cr-test.mjs",
