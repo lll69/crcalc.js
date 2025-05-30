@@ -20,5 +20,7 @@
     "dependencies": {
         "terser": "^5.31.6",
         "typescript": "^5.3.3"
-    }
+    },
+    "repository": "https://github.com/lll69/crcalc.js",
+    "homepage": "https://crcalc.js.org"
 }

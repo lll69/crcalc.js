@@ -2,7 +2,7 @@
 
 Constructive Real Calculating library modified from AOSP
 
-[Open CRCalc.js Exact Calculator](https://crcalc.js.org/calc.html)
+[Usage Example: CRCalc.js Exact Calculator](https://crcalc.js.org/calc.html)
 
 [Details of the AOSP](https://crcalc.js.org/aosp/)
 
@@ -276,6 +276,7 @@ The product of two constructive reals
 
 ### inverse()
 `inverse(): CR`
+
 The multiplicative inverse of a constructive real.
 `x.inverse()` is equivalent to `CR.valueOf(1).divide(x)`.
 

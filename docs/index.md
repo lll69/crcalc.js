@@ -276,6 +276,7 @@ The product of two constructive reals
 
 ### inverse()
 `inverse(): CR`
+
 The multiplicative inverse of a constructive real.
 `x.inverse()` is equivalent to `CR.valueOf(1).divide(x)`.
 
