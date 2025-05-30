@@ -6,6 +6,68 @@ Constructive Real Calculating library modified from AOSP
 
 [Details of the AOSP](https://crcalc.js.org/aosp/)
 
+# Example
+
+```javascript
+// Create constructive real numbers
+const a = CR.valueOfN(5n);
+const b = CR.valueOfS("10.2");
+const c = CR.valueOfS("ab.cd", 16);
+const d = CR.PI;
+const e = CR.ONE;
+
+// Constructive real number operations
+const add = a.add(b);
+const sub = a.subtract(c);
+const mul = a.multiply(d);
+const div = a.divide(e);
+const neg = a.negate();
+const inv = a.inverse();
+const exp = a.exp();
+const sin = a.sin();
+const ln = a.ln();
+const sqrt = a.sqrt();
+
+// toString() methods
+console.log(add.toStringD(20)); // '15.20000000000000000000'
+console.log(sub.toStringR(10, 16)); // '-a6.cd00000000'
+console.log(mul.toString()); // '15.7079632680'
+
+// Create UnifiedReal
+const u_pi = UnifiedReal.PI;
+const u_one = UnifiedReal.newN(1n);
+const u_quarter = UnifiedReal.newBR(new BoundedRational(1n, 4n));
+const u_a = UnifiedReal.newBR(BoundedRational.valueOfS("2.5"));
+const u_b = UnifiedReal.newBR(BoundedRational.valueOfS("a.b", 16));
+const u_c = UnifiedReal.newBR(BoundedRational.valueOfS("123456"));
+
+// UnifiedReal operations
+const u_add = u_a.add(u_b);
+const u_sub = u_a.subtract(u_b);
+const u_mul = u_a.multiply(u_b);
+const u_div = u_a.divide(u_b);
+const u_neg = u_a.negate();
+const u_inv = u_a.inverse();
+const u_exp = u_a.exp();
+const u_sin = u_a.sin();
+const u_tan = u_a.tan();
+const u_atan = u_a.atan();
+const u_ln = u_a.ln();
+const u_sqrt = u_a.sqrt();
+const u_fact = u_c.fact();
+const u_pow = u_c.pow(u_a);
+
+// UnifiedReal methods
+console.log(u_add.digitsRequired()); // 4
+console.log(u_fact.digitsRequired()); // 0
+console.log(u_ln.digitsRequired()); // 2147483647
+console.log(u_sqrt.exactlyDisplayable()); // true
+console.log(u_atan.exactlyDisplayable()); // false
+console.log(u_add.toNiceString()); // '211/16'
+console.log(u_sqrt.toNiceString()); // '(1/2)√10'
+console.log(u_sub.toStringTruncated(10)); // '-8.1875000000'
+```
+
 # Usage
 
 ## Exceptions
@@ -775,10 +837,10 @@ if r is a power of ten.
 ### leadingBinaryZeroes()
 `leadingBinaryZeroes(): int`
 
-Return the number of decimal digits to the right of the decimal point required to represent
-the argument exactly.  
-Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
-if r is a power of ten.
+Return an upper bound on the number of leading zero bits.  
+These are the number of 0 bits
+to the right of the binary point and to the left of the most significant digit.  
+Return Integer.MAX_VALUE if we cannot bound it.
 
 ### approxWholeNumberBitsGreaterThan(bound)
 `approxWholeNumberBitsGreaterThan(bound: int): boolean`
