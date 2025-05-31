@@ -84,6 +84,8 @@
     let scrollOffset = 0;
     let lastCalculateId = 1;
     let lastCalculateUid = 1;
+    let loadAnimationIndex = 0;
+    let loadAnimationInterval;
     function copyText(str) {
         let element = document.createElement("input");
         element.style.opacity = 0;
@@ -390,7 +392,12 @@
         workerContent = crJs + workerJs;
         reInitWorker();
     }
+    function showLoadAnimation() {
+        loadAnimationIndex = (loadAnimationIndex + 1) % 4;
+        resultBoldText.innerHTML = "Loading..." + "/-\\|"[loadAnimationIndex];
+    }
     function onLoadingError(e) {
+        clearInterval(loadAnimationInterval);
         loadingElement.innerText = e;
         exprInput.readOnly = true;
         exprInput.value = e;
@@ -424,12 +431,14 @@
         }
         clearResult();
     }
+    loadAnimationInterval = setInterval(showLoadAnimation, 100);
     fetch("cr.min.js").then(function (result) {
         if (result.ok) {
             result.text().then(function (crJs) {
                 fetch("calc_worker.js").then(function (result) {
                     if (result.ok) {
                         result.text().then(function (workerJs) {
+                            clearInterval(loadAnimationInterval);
                             initWorker(crJs, workerJs);
                         }).catch(function (e) {
                             console.error(e);
