@@ -141,7 +141,7 @@ limitations under the License.
 
         .grid-fun {
             border-style: solid;
-            border-bottom-style: none;
+            border-top-style: none;
             border-width: 2px;
             display: grid;
             grid-template-columns: repeat(5, 1fr);
@@ -261,7 +261,7 @@ limitations under the License.
                 <button id="op_mul">&#x00D7;</button>
                 <button id="but_clr">CLR</button>
                 <button id="op_sub">-</button>
-                <button id="op_cbrt" title="cube root">&#x221B;<i>x</i></button>
+                <button id="op_pow" title="power">^</button>
                 <button id="but_var" hidden>&#x21C4;<i>x</i></button>
                 <button id="op_add">+</button>
                 <button id="but_eq">=</button>
@@ -278,6 +278,18 @@ limitations under the License.
             </div>
         </div>
         <div class="grid-fun">
+            <button id="const_pi" title="pi">&#x03C0;</button>
+            <button id="const_e" title="Euler's number">e</button>
+            <button id="op_lparen">(</button>
+            <button id="op_rparen">)</button>
+            <button id="op_sqrt" title="square root">&#x221A;</button>
+            <button id="fun_percent" title="percent">%</button>
+            <button id="fun_ln">ln</button>
+            <button id="fun_exp" class="op-hide" title="exponential function">e&#x02E3;</button>
+            <button id="fun_log">log</button>
+            <button id="fun_10pow" class="op-hide" title="ten to the power of">10&#x02E3;</button>
+            <button id="op_fact" title="factorial">!</button>
+            <button id="op_cbrt" title="cube root">&#x221B;<i>x</i></button>
             <button id="toggle_inv">INV</button>
             <button id="toggle_mode">RAD</button>
             <button id="fun_sin">sin</button>
@@ -286,18 +298,6 @@ limitations under the License.
             <button id="fun_arccos" class="op-hide" title="inverse cosine">cos&#x207B;&#x00B9;</button>
             <button id="fun_tan">tan</button>
             <button id="fun_arctan" class="op-hide" title="inverse tangent">tan&#x207B;&#x00B9;</button>
-            <button id="fun_percent" title="percent">%</button>
-            <button id="fun_ln">ln</button>
-            <button id="fun_exp" class="op-hide" title="exponential function">e&#x02E3;</button>
-            <button id="fun_log">log</button>
-            <button id="fun_10pow" class="op-hide" title="ten to the power of">10&#x02E3;</button>
-            <button id="op_fact" title="factorial">!</button>
-            <button id="op_pow" title="power">^</button>
-            <button id="const_pi" title="pi">&#x03C0;</button>
-            <button id="const_e" title="Euler's number">e</button>
-            <button id="op_lparen">(</button>
-            <button id="op_rparen">)</button>
-            <button id="op_sqrt" title="square root">&#x221A;</button>
         </div>
         <div class="measure-4ch" id="measure_4ch"></div>
     </div>
@@ -312,7 +312,7 @@ limitations under the License.
             <li>Supports exponentiation and square root calculations</li>
             <li>Supports switching between radian and degree modes</li>
             <li>Supports copying results and saving results to a file</li>
-            <li>Open source on GitHub</li>
+            <li><a style="color:inherit;text-decoration:inherit;" href="https://github.com/lll69/crcalc.js">Open source</a></li>
         </ul>
     </section>
     <section>
