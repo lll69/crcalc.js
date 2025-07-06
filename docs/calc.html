@@ -324,6 +324,25 @@ limitations under the License.
     </section>
     <script src="calc.js"></script>
     <script defer async src="https://md5.js.org/track.js"></script>
+    <script>(function () {
+            let lastScrollTop = 0;
+            let headerY = 0;
+            let header = document.querySelector(".header-fixed");
+            document.addEventListener("scroll", function () {
+                let currentScrollTop = document.documentElement.scrollTop;
+                let scrollOffset = currentScrollTop - lastScrollTop;
+                lastScrollTop = currentScrollTop;
+                let headerHeight = header.offsetHeight;
+                let newHeaderY = headerY - scrollOffset;
+                if (newHeaderY > 0) {
+                    newHeaderY = 0;
+                } else if (newHeaderY < -headerHeight) {
+                    newHeaderY = -headerHeight;
+                }
+                headerY = newHeaderY;
+                header.style.top = headerY + "px";
+            });
+        })();</script>
 </body>
 
 </html>
