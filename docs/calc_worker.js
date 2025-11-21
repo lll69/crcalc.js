@@ -18,6 +18,178 @@ const worker = this;
 const urList = {};
 const UR_LN10 = UnifiedReal.TEN.ln();
 const UR_RADIANS_PER_DEGREE = UnifiedReal.RADIANS_PER_DEGREE;
+
+const cachedURMap = new Map();
+const negateMap = new Map();
+const factMap = new Map();
+const sinMap = new Map();
+const cosMap = new Map();
+const tanMap = new Map();
+const asinMap = new Map();
+const acosMap = new Map();
+const atanMap = new Map();
+const addMap = {};
+const multiplyMap = {};
+const divideMap = {};
+const powBIMap = {};
+const powURMap = {};
+
+function getURFromStr(str){
+    let cached = cachedURMap.get(str);
+    if (cached === undefined) {
+        cached = UnifiedReal.newBR(BoundedRational.valueOfS(str));
+        cachedURMap.set(str, cached);
+    }
+    return cached;
+}
+
+function getURFromBI(bi){
+    let cached = cachedURMap.get(bi);
+    if (cached === undefined) {
+        cached = UnifiedReal.newN(bi);
+        cachedURMap.set(bi, cached);
+    }
+    return cached;
+}
+
+function getNegate(ur) {
+    let cached = negateMap.get(ur);
+    if (cached === undefined) {
+        cached = ur.negate();
+        negateMap.set(ur, cached);
+        negateMap.set(cached, ur);
+    }
+    return cached;
+}
+
+function getFact(ur) {
+    let cached = factMap.get(ur);
+    if (cached === undefined) {
+        cached = ur.fact();
+        factMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getSin(ur) {
+    let cached = sinMap.get(ur);
+    if (cached === undefined) {
+        cached = ur.sin();
+        sinMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getCos(ur) {
+    let cached = cosMap.get(ur);
+    if (cached === undefined) {
+        cached = ur.cos();
+        cosMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getTan(ur) {
+    let cached = tanMap.tan(ur);
+    if (cached === undefined) {
+        cached = ur.tan();
+        tanMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getASin(ur) {
+    let cached = asinMap.get(ur);
+    if (cached === undefined) {
+        cached = ur.asin();
+        asinMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getACos(ur) {
+    let cached = acosMap.get(ur);
+    if (cached === undefined) {
+        cached = ur.acos();
+        acosMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getATan(ur) {
+    let cached = atanMap.tan(ur);
+    if (cached === undefined) {
+        cached = ur.atan();
+        atanMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getCachedMap(map, ur) {
+    let cachedMap = map[ur];
+    if (cachedMap === undefined) {
+        cachedMap = {};
+        map[ur] = cachedMap;
+    }
+    return cachedMap;
+}
+
+function getAdd(arg0, arg1) {
+    const cachedMap = getCachedMap(addMap, arg0);
+    let cached = cachedMap[arg1];
+    if (cached === undefined) {
+        cached = arg0.add(arg1);
+        cachedMap[arg1] = cached;
+        getCachedMap(addMap, arg1)[arg0] = cached;
+    }
+    return cached;
+}
+
+function getMultiply(arg0, arg1) {
+    const cachedMap = getCachedMap(multiplyMap, arg0);
+    let cached = cachedMap[arg1];
+    if (cached === undefined) {
+        cached = arg0.multiply(arg1);
+        cachedMap[arg1] = cached;
+        getCachedMap(multiplyMap, arg1)[arg0] = cached;
+    }
+    return cached;
+}
+
+function getDivide(arg0, arg1) {
+    const cachedMap = getCachedMap(divideMap, arg0);
+    let cached = cachedMap[arg1];
+    if (cached === undefined) {
+        cached = arg0.divide(arg1);
+        cachedMap[arg1] = cached;
+    }
+    return cached;
+}
+
+function getPowBI(arg0, arg1) {
+    const cachedMap = getCachedMap(powBIMap, arg0);
+    let cached = cachedMap[arg1];
+    if (cached === undefined) {
+        cached = arg0 ** arg1;
+        cachedMap[arg1] = cached;
+    }
+    return cached;
+}
+
+function getPowUR(arg0, arg1) {
+    const cachedMap = getCachedMap(powURMap, arg0);
+    let cached = cachedMap[arg1];
+    if (cached === undefined) {
+        if (arg0 === UnifiedReal.E) {
+            cached = arg1.exp();
+        } else {
+            cached = arg0.pow(arg1);
+        }
+        cachedMap[arg1] = cached;
+    }
+    return cached;
+}
+
 function tokenize(expr) {
     const result = [];
     const locations = [];
@@ -91,7 +263,7 @@ function tokenize(expr) {
             } else if (lastChar === "\0" || lastChar === "(" || lastChar === "^"
                 || lastChar === "+" || lastChar === "-" || lastChar === "*"
                 || lastChar === "/" || lastChar === "\u00D7" || lastChar === "\u00F7") {
-                result.push("unary" + ch);
+                result.push((lastChar === "^") ? ("unary" + ch + "pow") : ("unary" + ch));
                 locations.push(Object.freeze([i, i + 1]));
                 unprocessed = "";
             } else {
@@ -202,7 +374,7 @@ function tokenize(expr) {
         const token = result[i];
         const loc = locations[i];
         if (token !== "") {
-            if (token.length > 0 && token !== "unary+" && token !== "unary-") {
+            if (token.length > 0 && token !== "unary+" && token !== "unary-" && token !== "unary+pow" && token !== "unary-pow") {
                 const firstChar = token[0];
                 if ((firstChar < "0" || firstChar > "9") && firstChar !== ".") {
                     const lastChar = token[token.length - 1];
@@ -302,7 +474,9 @@ function tokenToRpn(tokenizeResult) {
     const locations = tokenizeResult.locations;
     const len = tokens.length;
     const priority = Object.freeze({
-        "!": 5,
+        "!": 6,
+        "unary+pow": 5,
+        "unary-pow": 5,
         "^": 4,
         "unary+": 3,
         "unary-": 3,
@@ -318,7 +492,7 @@ function tokenToRpn(tokenizeResult) {
         "arcsin", "arccos", "arctan"
     ]));
     const rightAssocList = Object.freeze(new Set([
-        "unary+", "unary-", "^"
+        "unary+", "unary-", "unary+pow", "unary-pow", "^"
     ]));
     const output = [];
     const stack = [];
@@ -380,7 +554,7 @@ function urToBigInt(ur) {
 }
 function createUR(expr, degreeMode) {
     const unaryOps = Object.freeze(new Set([
-        "unary+", "unary-", "!"
+        "unary+", "unary-", "unary+pow", "unary-pow", "!"
     ]));
     const binaryOps = Object.freeze(new Set([
         "+", "-", "*", "/", "^"
@@ -408,27 +582,27 @@ function createUR(expr, degreeMode) {
             try {
                 switch (token) {
                     case "+":
-                        stack.push(arg0.add(arg1));
+                        stack.push(getAdd(arg0, arg1));
                         break;
                     case "-":
-                        stack.push(arg0.subtract(arg1));
+                        stack.push(getAdd(arg0, getNegate(arg1)));
                         break;
                     case "*":
-                        stack.push(arg0.multiply(arg1));
+                        stack.push(getMultiply(arg0, arg1));
                         break;
                     case "/":
-                        stack.push(arg0.divide(arg1));
+                        stack.push(getDivide(arg0, arg1));
                         break;
                     case "^": {
                         if (arg0.digitsRequired() === 0 && arg1.digitsRequired() === 0) {
-                            let big0 = urToBigInt(arg0);
-                            let big1 = urToBigInt(arg1);
+                            const big0 = urToBigInt(arg0);
+                            const big1 = urToBigInt(arg1);
                             if (big0 && big1 && big1 >= 0) {
-                                stack.push(UnifiedReal.newN(big0 ** big1));
+                                stack.push(getURFromBI(getPowBI(big0, big1)));
                                 break;
                             }
                         }
-                        stack.push(arg0.pow(arg1));
+                        stack.push(getPowUR(arg0, arg1));
                         break;
                     }
                 }
@@ -444,14 +618,18 @@ function createUR(expr, degreeMode) {
             try {
                 switch (token) {
                     case "unary+":
+                    case "unary+pow":
                         stack.push(arg0);
                         break;
                     case "unary-":
-                        stack.push(arg0.negate());
+                    case "unary-pow": {
+                        stack.push(getNegate(arg0));
                         break;
-                    case "!":
-                        stack.push(arg0.fact());
+                    }
+                    case "!": {
+                        stack.push(getFact(arg0));
                         break;
+                    }
                 }
             } catch (e) {
                 console.error(e);
@@ -471,7 +649,7 @@ function createUR(expr, degreeMode) {
                         stack.push(arg0.ln().divide(UR_LN10));
                         break;
                     case "exp":
-                        stack.push(arg0.exp());
+                        stack.push(getPowUR(UnifiedReal.E, arg0));
                         break;
                     case "sqrt":
                         stack.push(arg0.sqrt());
@@ -530,7 +708,7 @@ function createUR(expr, degreeMode) {
             const firstChar = token[0];
             if (firstChar === "." || (firstChar >= "0" && firstChar <= "9")) {
                 // number
-                stack.push(UnifiedReal.newBR(BoundedRational.valueOfS(firstChar === "." ? ("0" + token) : token)));
+                stack.push(getURFromStr(firstChar === "." ? ("0" + token) : token));
             } else if (token === "e") {
                 stack.push(UnifiedReal.E);
             } else if (token === "\u03C0") {

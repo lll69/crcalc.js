@@ -1096,6 +1096,9 @@ class neg_CR extends CR {
     protected approximate(p: number): bigint {
         return -(this.op.get_appr(p));
     }
+    public negate(): CR {
+        return this.op;
+    }
 }
 
 // Representation of:
