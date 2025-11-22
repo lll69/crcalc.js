@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "module": "ESNext",
-        //"moduleResolution": "Node",
+        "moduleResolution": "node",
         "target": "ES2020",
         "declaration": true,
         "jsx": "preserve",
@@ -11,8 +11,7 @@
         "outDir": "dist"
     },
     "include": [
-        "cr.ts",
-        "cr-test.mts"
+        "src/**/*",
     ],
     "exclude": [
         "dist",
