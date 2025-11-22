@@ -90,7 +90,7 @@ function getCos(ur) {
 }
 
 function getTan(ur) {
-    let cached = tanMap.tan(ur);
+    let cached = tanMap.get(ur);
     if (cached === undefined) {
         cached = ur.tan();
         tanMap.set(ur, cached);
@@ -117,7 +117,7 @@ function getACos(ur) {
 }
 
 function getATan(ur) {
-    let cached = atanMap.tan(ur);
+    let cached = atanMap.get(ur);
     if (cached === undefined) {
         cached = ur.atan();
         atanMap.set(ur, cached);
