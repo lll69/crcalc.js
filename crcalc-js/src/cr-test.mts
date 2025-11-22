@@ -60,8 +60,7 @@
 // Added basic asin and acos tests, improved messages,
 //        hboehm@google.com, 5/22/15
 
-// @ts-ignore
-const { CR, UnaryCRFunctions } = await import("./cr.js");
+import { CR, UnaryCRFunctions } from "./cr.js";
 
 class AssertionFailedError extends Error {
     constructor(message: string) {
@@ -172,4 +171,3 @@ class CRTest {
 }
 
 new CRTest().testCR();
-export { }

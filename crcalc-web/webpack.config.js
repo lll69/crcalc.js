@@ -12,7 +12,7 @@ module.exports = {
     module: {
         rules: [
             {
-                test: /\.tsx?$/,
+                test: /\.m?tsx?$/,
                 use: "ts-loader",
                 exclude: /node_modules/,
             },
@@ -21,18 +21,19 @@ module.exports = {
     plugins: [
         new CopyPlugin({
             patterns: [
-                { from: "docs", to: "" }
+                { from: "static", to: "" }
             ]
         })
     ],
     resolve: {
-        extensions: [".tsx", ".ts", ".js"],
+        extensions: [".mts", ".tsx", ".ts", ".js"],
     },
     output: {
         filename: "[name].js",
         path: path.resolve(__dirname, "dist"),
     },
     optimization: {
+        minimize: true,
         minimizer: [
             new TerserPlugin({
                 terserOptions: {

@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "module": "ESNext",
+        "moduleResolution": "node",
+        "target": "ES2020",
+        "jsx": "preserve",
+        "strictNullChecks": true,
+        "strictFunctionTypes": true,
+        "outDir": "dist"
+    },
+    "include": [
+        "src/**/*",
+    ],
+    "exclude": [
+        "dist",
+        "node_modules",
+        "**/node_modules/*"
+    ]
+}

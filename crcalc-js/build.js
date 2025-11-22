@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-const { spawnSync } = require('node:child_process');
-const { readFileSync, writeFileSync, existsSync, rmSync, cpSync } = require("node:fs");
-const { exit } = require('node:process');
-const { minify_sync } = require("terser");
+import { spawnSync } from 'node:child_process';
+import { readFileSync, writeFileSync, existsSync, rmSync, cpSync } from "node:fs";
+import { exit } from 'node:process';
+import { minify_sync } from "terser";
 if (existsSync("dist")) {
     rmSync("dist", { recursive: true });
 }
@@ -36,4 +36,3 @@ let minify_result = minify_sync(readFileSync("dist/cr.js", { "encoding": "utf-8"
     }
 });
 writeFileSync("dist/cr.min.js", minify_result.code, { "encoding": "utf-8" });
-cpSync("dist/cr.min.js", "docs/cr.min.js", { force: true });

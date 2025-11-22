@@ -1,0 +1,27 @@
+{
+    "name": "crcalc-js",
+    "version": "1.0.3",
+    "description": "Constructive Real Calculating library (CRCalc)",
+    "main": "dist/cr.min.js",
+    "types": "dist/cr.d.ts",
+    "scripts": {
+        "test": "npm run build && node dist/cr-test.mjs",
+        "build": "node build.js"
+    },
+    "type": "module",
+    "keywords": [
+        "math",
+        "calculator",
+        "arithmetic",
+        "number",
+        "precision",
+        "arbitrary"
+    ],
+    "author": "lll69",
+    "license": "Apache-2.0",
+    "dependencies": {
+        "typescript": "^5.3.3"
+    },
+    "repository": "https://github.com/lll69/crcalc.js",
+    "homepage": "https://crcalc.js.org"
+}

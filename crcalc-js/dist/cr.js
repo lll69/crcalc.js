@@ -1,4 +1,4 @@
-/*
+/*!
  * crcalc.js
  * Copyright 2025 lll69, Licensed under the Apache License, Version 2.0
  * Copyright (C) 2016 The Android Open Source Project, Licensed under the Apache License, Version 2.0
@@ -862,6 +862,9 @@ class neg_CR extends CR {
     }
     approximate(p) {
         return -(this.op.get_appr(p));
+    }
+    negate() {
+        return this.op;
     }
 }
 // Representation of:
@@ -3015,23 +3018,4 @@ UnifiedReal.PI_OVER_6 = new UnifiedReal(BoundedRational.SIXTH, UnifiedReal.CR_PI
 // Must be <= 30.
 UnifiedReal.EXTRA_PREC = 10;
 UnifiedReal.EXTRA_PREC_BIG = 10n;
-// @ts-ignore
-if (typeof module !== "undefined") {
-    // @ts-ignore
-    module.exports = {
-        CR: CR,
-        BoundedRational: BoundedRational,
-        UnifiedReal: UnifiedReal,
-        UnaryCRFunction: UnaryCRFunction,
-        UnaryCRFunctions: UnaryCRFunctions
-    };
-}
-if (typeof this !== "undefined") {
-    Object.assign(this, {
-        CR: CR,
-        BoundedRational: BoundedRational,
-        UnifiedReal: UnifiedReal,
-        UnaryCRFunction: UnaryCRFunction,
-        UnaryCRFunctions: UnaryCRFunctions
-    });
-}
+export { CR, BoundedRational, UnifiedReal, UnaryCRFunction, UnaryCRFunctions };

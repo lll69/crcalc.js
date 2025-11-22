@@ -56,8 +56,7 @@
 // Modified further for Android/JUnit testing framework, 12/15/14
 // Added basic asin and acos tests, improved messages,
 //        hboehm@google.com, 5/22/15
-// @ts-ignore
-const { CR, UnaryCRFunctions } = await import("./cr.js");
+import { CR, UnaryCRFunctions } from "./cr.js";
 class AssertionFailedError extends Error {
     constructor(message) {
         super("AssertionFailedError: " + message);
@@ -151,4 +150,3 @@ class CRTest {
     }
 }
 new CRTest().testCR();
-export {};

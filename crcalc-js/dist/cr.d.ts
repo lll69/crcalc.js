@@ -1,41 +1,11 @@
-declare const enum CRConstants {
-    INTEGER_MIN = -2147483648,
-    INTEGER_MAX = 2147483647
-}
-declare class ExceptionBase extends Error {
-    constructor(type: string, message?: string);
-}
-/**
- * Indicates that the number of bits of precision requested by
- * a computation on constructive reals required more than 28 bits,
- * and was thus in danger of overflowing an int.
- * This is likely to be a symptom of a diverging computation,
- * <I>e.g.</i> division by zero.
+/*!
+ * crcalc.js
+ * Copyright 2025 lll69, Licensed under the Apache License, Version 2.0
+ * Copyright (C) 2016 The Android Open Source Project, Licensed under the Apache License, Version 2.0
+ * Copyright (C) 2015 The Android Open Source Project, Licensed under the Apache License, Version 2.0
+ * Copyright (c) 1999, Silicon Graphics, Inc.
+ * Copyright (c) 2001-2004, Hewlett-Packard Development Company, L.P.
  */
-declare class PrecisionOverflowException extends ExceptionBase {
-    constructor(message?: string);
-}
-declare class ArithmeticException extends ExceptionBase {
-    constructor(message?: string);
-}
-declare class NumberFormatException extends ExceptionBase {
-    constructor(message?: string);
-}
-declare class ZeroDivisionException extends ArithmeticException {
-    constructor();
-}
-declare class AssertionError extends ExceptionBase {
-    constructor(message?: string);
-}
-declare function CR_gcd_n(a: bigint, b: bigint): bigint;
-declare function CR_abs_n(x: bigint): bigint;
-declare function CR_compare_n(x: bigint, y: bigint): number;
-declare function CR_signum_n(x: bigint): number;
-declare function CR_bitLength_n(t: bigint): number;
-/** Multiply k by 2**n. */
-declare function CR_shift(k: bigint, n: bigint): bigint;
-/** Multiply by 2**n, rounding result */
-declare function CR_scale(k: bigint, n: bigint): bigint;
 /**
  * Constructive real numbers, also known as recursive, or computable reals.
  * Each recursive real number is represented as an object that provides an
@@ -389,160 +359,6 @@ declare abstract class CR {
     sqrt(): CR;
 }
 /**
- * A specialization of CR for cases in which approximate() calls
- * to increase evaluation precision are somewhat expensive.
- * If we need to (re)evaluate, we speculatively evaluate to slightly
- * higher precision, miminimizing reevaluations.
- * Note that this requires any arguments to be evaluated to higher
- * precision than absolutely necessary.  It can thus potentially
- * result in lots of wasted effort, and should be used judiciously.
- * This assumes that the order of magnitude of the number is roughly one.
- */
-declare abstract class slow_CR extends CR {
-    get_appr(precision: number): bigint;
-}
-/** Representation of an integer constant.  Private. */
-declare class int_CR extends CR {
-    value: bigint;
-    constructor(n: bigint);
-    protected approximate(p: number): bigint;
-}
-/**
- * Representation of a number that may not have been completely
- * evaluated, but is assumed to be an integer.  Hence we never
- * evaluate beyond the decimal point.
- */
-declare class assumed_int_CR extends CR {
-    value: CR;
-    constructor(x: CR);
-    protected approximate(p: number): bigint;
-}
-/** Representation of the sum of 2 constructive reals.  Private. */
-declare class add_CR extends CR {
-    op1: CR;
-    op2: CR;
-    constructor(x: CR, y: CR);
-    protected approximate(p: number): bigint;
-}
-/** Representation of a CR multiplied by 2**n */
-declare class shifted_CR extends CR {
-    op: CR;
-    count: number;
-    constructor(x: CR, n: number);
-    protected approximate(p: number): bigint;
-}
-/** Representation of the negation of a constructive real.  Private. */
-declare class neg_CR extends CR {
-    op: CR;
-    constructor(x: CR);
-    protected approximate(p: number): bigint;
-}
-declare class select_CR extends CR {
-    selector: CR;
-    selector_sign: number;
-    op1: CR;
-    op2: CR;
-    constructor(s: CR, x: CR, y: CR);
-    protected approximate(p: number): bigint;
-}
-declare class mult_CR extends CR {
-    op1: CR;
-    op2: CR;
-    constructor(x: CR, y: CR);
-    protected approximate(p: number): bigint;
-}
-/**
- * Representation of the multiplicative inverse of a constructive
- * real.  Private.  Should use Newton iteration to refine estimates.
- */
-declare class inv_CR extends CR {
-    op: CR;
-    constructor(x: CR);
-    protected approximate(p: number): bigint;
-}
-/**
- * Representation of the exponential of a constructive real.  Private.
- * Uses a Taylor series expansion.  Assumes |x| < 1/2.
- * Note: this is known to be a bad algorithm for
- * floating point.  Unfortunately, other alternatives
- * appear to require precomputed information.
- */
-declare class prescaled_exp_CR extends CR {
-    op: CR;
-    constructor(x: CR);
-    protected approximate(p: number): bigint;
-}
-/**
- * Representation of the cosine of a constructive real.  Private.
- * Uses a Taylor series expansion.  Assumes |x| < 1.
- */
-declare class prescaled_cos_CR extends slow_CR {
-    op: CR;
-    constructor(x: CR);
-    protected approximate(p: number): bigint;
-}
-/**
- * The constructive real atan(1/n), where n is a small integer
- * > base.
- * This gives a simple and moderately fast way to compute PI.
- */
-declare class integral_atan_CR extends slow_CR {
-    op: number;
-    constructor(x: number);
-    protected approximate(p: number): bigint;
-}
-/** Representation for ln(1 + op) */
-declare class prescaled_ln_CR extends slow_CR {
-    op: CR;
-    constructor(x: CR);
-    /**
-     * Compute an approximation of ln(1+x) to precision
-     * prec. This assumes |x| < 1/2.
-     * It uses a Taylor series expansion.
-     * Unfortunately there appears to be no way to take
-     * advantage of old information.
-     * Note: this is known to be a bad algorithm for
-     * floating point.  Unfortunately, other alternatives
-     * appear to require precomputed tabular information.
-     */
-    protected approximate(p: number): bigint;
-}
-/**
- * Representation of the arcsine of a constructive real.  Private.
- * Uses a Taylor series expansion.  Assumes |x| < (1/2)^(1/3).
- */
-declare class prescaled_asin_CR extends slow_CR {
-    op: CR;
-    constructor(x: CR);
-    protected approximate(p: number): bigint;
-}
-declare class sqrt_CR extends CR {
-    op: CR;
-    constructor(x: CR, min_p?: number, max_a?: bigint | null);
-    protected approximate(p: number): bigint;
-}
-/**
- * The constant PI, computed using the Gauss-Legendre alternating
- * arithmetic-geometric mean algorithm:
- *
- *      a[0] = 1
- *      b[0] = 1/sqrt(2)
- *      t[0] = 1/4
- *      p[0] = 1
- *
- *      a[n+1] = (a[n] + b[n])/2        (arithmetic mean, between 0.8 and 1)
- *      b[n+1] = sqrt(a[n] * b[n])      (geometric mean, between 0.7 and 1)
- *      t[n+1] = t[n] - (2^n)(a[n]-a[n+1])^2,  (always between 0.2 and 0.25)
- *
- *      pi is then approximated as (a[n+1]+b[n+1])^2 / 4*t[n+1].
- */
-declare class gl_pi_CR extends slow_CR {
-    b_prec: (number | null)[];
-    b_val: (bigint | null)[];
-    constructor();
-    protected approximate(p: number): bigint;
-}
-/**
  * Unary functions on constructive reals implemented as objects.
  * The <TT>execute</tt> member computes the function result.
  * Unary function objects on constructive reals inherit from
@@ -578,9 +394,6 @@ declare const UnaryCRFunctions: Readonly<{
     acosFunction: acos_UnaryCRFunction;
     atanFunction: atan_UnaryCRFunction;
 }>;
-declare const enum BoundedRationalConstants {
-    MAX_SIZE = 10000
-}
 /**
  * Rational numbers that may turn to null if they get too big.
  * For many operations, if the length of the nuumerator plus the length of the denominator exceeds
@@ -697,11 +510,6 @@ declare class BoundedRational {
      */
     static digitsRequired(r: BoundedRational): number;
 }
-declare const enum UnifiedRealConstants {
-    DEFAULT_COMPARE_TOLERANCE = -1000
-}
-declare const UR_RECURSIVE_POW_LIMIT = 1000n;
-declare const UR_HARD_RECURSIVE_POW_LIMIT: bigint;
 /**
  * Computable real numbers, represented so that we can get exact decidable comparisons
  * for a number of interesting special cases, including rational computations.
@@ -1007,3 +815,4 @@ declare class UnifiedReal {
      */
     approxWholeNumberBitsGreaterThan(bound: number): boolean;
 }
+export { CR, BoundedRational, UnifiedReal, UnaryCRFunction, UnaryCRFunctions };
