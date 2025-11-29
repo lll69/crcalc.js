@@ -28,6 +28,7 @@ const cachedURMap: Map<string | bigint, UnifiedReal> = new Map();
 const negateMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const factMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const sqrtMap: Map<UnifiedReal, UnifiedReal> = new Map();
+const lnMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const sinMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const cosMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const tanMap: Map<UnifiedReal, UnifiedReal> = new Map();
@@ -90,6 +91,15 @@ function getSqrt(ur: UnifiedReal): UnifiedReal {
     if (cached === undefined) {
         cached = ur.sqrt();
         sqrtMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getLn(ur: UnifiedReal): UnifiedReal {
+    let cached = lnMap.get(ur);
+    if (cached === undefined) {
+        cached = ur.ln();
+        lnMap.set(ur, cached);
     }
     return cached;
 }
@@ -669,10 +679,10 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
             try {
                 switch (token) {
                     case "ln":
-                        stack.push(arg0.ln());
+                        stack.push(getLn(arg0));
                         break;
                     case "log":
-                        stack.push(arg0.ln().divide(UR_LN10));
+                        stack.push(getDivide(getLn(arg0), UR_LN10));
                         break;
                     case "exp":
                         stack.push(getPowUR(UR_E, arg0));
@@ -682,47 +692,47 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         break;
                     case "sin":
                         if (degreeMode) {
-                            stack.push(arg0.multiply(UR_RADIANS_PER_DEGREE).sin());
+                            stack.push(getSin(getMultiply(arg0, UR_RADIANS_PER_DEGREE)));
                         } else {
-                            stack.push(arg0.sin());
+                            stack.push(getSin(arg0));
                         }
                         break;
                     case "cos":
                         if (degreeMode) {
-                            stack.push(arg0.multiply(UR_RADIANS_PER_DEGREE).cos());
+                            stack.push(getCos(getMultiply(arg0, UR_RADIANS_PER_DEGREE)));
                         } else {
-                            stack.push(arg0.cos());
+                            stack.push(getCos(arg0));
                         }
                         break;
                     case "tan":
                         if (degreeMode) {
-                            stack.push(arg0.multiply(UR_RADIANS_PER_DEGREE).tan());
+                            stack.push(getTan(getMultiply(arg0, UR_RADIANS_PER_DEGREE)));
                         } else {
-                            stack.push(arg0.tan());
+                            stack.push(getTan(arg0));
                         }
                         break;
                     case "asin":
                     case "arcsin":
                         if (degreeMode) {
-                            stack.push(arg0.asin().divide(UR_RADIANS_PER_DEGREE));
+                            stack.push(getDivide(getASin(arg0), UR_RADIANS_PER_DEGREE));
                         } else {
-                            stack.push(arg0.asin());
+                            stack.push(getASin(arg0));
                         }
                         break;
                     case "acos":
                     case "arccos":
                         if (degreeMode) {
-                            stack.push(arg0.acos().divide(UR_RADIANS_PER_DEGREE));
+                            stack.push(getDivide(getACos(arg0), UR_RADIANS_PER_DEGREE));
                         } else {
-                            stack.push(arg0.acos());
+                            stack.push(getACos(arg0));
                         }
                         break;
                     case "atan":
                     case "arctan":
                         if (degreeMode) {
-                            stack.push(arg0.atan().divide(UR_RADIANS_PER_DEGREE));
+                            stack.push(getDivide(getATan(arg0), UR_RADIANS_PER_DEGREE));
                         } else {
-                            stack.push(arg0.atan());
+                            stack.push(getATan(arg0));
                         }
                         break;
                 }
