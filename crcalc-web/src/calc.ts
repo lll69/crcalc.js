@@ -40,6 +40,8 @@ const round = M.round;
 const iSetInterval = setInterval;
 const iClearInterval = clearInterval;
 const createObjectURL = URL.createObjectURL;
+// @ts-ignore
+const replaceStr: (s: string, a: string, b: string) => string = "".replaceAll ? (s, a, b) => s.replaceAll(a, b) : (s, a, b) => s.split(a).join(b);
 
 const calculatorDiv = getElementById("calculator") as HTMLElement;
 const exprInput = getElementById("expression") as HTMLInputElement;
@@ -475,6 +477,34 @@ function calculateHigherPrecision() {
         prec: precision
     } as ToStringRequest);
 }
+function preprocessExpr() {
+    let expr: string = exprInput.value;
+    let modified = false;
+    if (expr.indexOf(" ") >= 0) {
+        expr = replaceStr(expr, " ", "");
+        modified = true;
+    }
+    if (expr.indexOf("pi") >= 0) {
+        expr = replaceStr(expr, "pi", "\u03C0");
+        modified = true;
+    }
+    if (expr.indexOf("**") >= 0) {
+        expr = replaceStr(expr, "**", "^");
+        modified = true;
+    }
+    if (expr.indexOf("\u00D7") >= 0) {
+        expr = replaceStr(expr, "\u00D7", "*");
+        modified = true;
+    }
+    if (expr.indexOf("\u00F7") >= 0) {
+        expr = replaceStr(expr, "\u00F7", "/");
+        modified = true;
+    }
+    if (modified) {
+        exprInput.value = expr;
+        exprInput.selectionStart = exprInput.selectionEnd = expr.length;
+    }
+}
 function calculateResult() {
     if (!workerLoaded) return;
     if (workerBusy) {
@@ -484,6 +514,7 @@ function calculateResult() {
     }
     clearResult();
     onCalculatorResize();
+    preprocessExpr();
     needEnterNewExpr = true;
     buttonCalc.innerText = "STOP";
     worker!!.postMessage({ type: "removeUR", id: lastCalculateId });
@@ -681,6 +712,10 @@ function appendOperator(op: string, fromInput?: boolean) {
                 insertStr("(" + op);
                 return true;
             }
+        } else if (op === "*" && prevChar === '*') {
+            exprInput.selectionStart = selectionStart - 1;
+            insertStr("^");
+            return true;
         } else {
             if (selectionStart > 0 && "+-\u00D7\u00F7*/^".indexOf(prevChar) >= 0) {
                 exprInput.selectionStart = selectionStart - 1;
@@ -693,7 +728,7 @@ function appendOperator(op: string, fromInput?: boolean) {
         insertStr(op);
     }
 }
-function appendConst(c) {
+function appendConst(c: string) {
     if (!workerLoaded) return;
     checkEnterNewExpr();
     const currentExpr = exprInput.value;
@@ -707,7 +742,7 @@ function appendConst(c) {
     }
     insertStr(c);
 }
-function appendFunction(fn) {
+function appendFunction(fn: string) {
     if (!workerLoaded) return;
     checkEnterNewExpr();
     const currentExpr = exprInput.value;
@@ -721,7 +756,7 @@ function appendFunction(fn) {
     }
     insertStr(fn + "(");
 }
-function registerFunction(fun) {
+function registerFunction(fun: string) {
     getElementById("fun_" + fun)!!.addEventListener("click", () => {
         appendFunction(fun);
         focusExpression();

@@ -17,6 +17,8 @@
 import { BoundedRational, UnifiedReal } from "crcalc-js";
 import { CreateURResult, InitResult, ToStringResult, WorkerRequest } from "./worker_types";
 
+const STRICT_EXPR = true;
+
 const urList = {};
 const UR_E = UnifiedReal.E;
 const UR_LN10 = UnifiedReal.TEN.ln();
@@ -25,17 +27,18 @@ const UR_RADIANS_PER_DEGREE = UnifiedReal.RADIANS_PER_DEGREE;
 const cachedURMap: Map<string | bigint, UnifiedReal> = new Map();
 const negateMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const factMap: Map<UnifiedReal, UnifiedReal> = new Map();
+const sqrtMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const sinMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const cosMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const tanMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const asinMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const acosMap: Map<UnifiedReal, UnifiedReal> = new Map();
 const atanMap: Map<UnifiedReal, UnifiedReal> = new Map();
-const addMap = {};
-const multiplyMap = {};
-const divideMap = {};
-const powBIMap = {};
-const powURMap = {};
+const addMap: Map<UnifiedReal, Map<UnifiedReal, UnifiedReal>> = new Map();
+const multiplyMap: Map<UnifiedReal, Map<UnifiedReal, UnifiedReal>> = new Map();
+const divideMap: Map<UnifiedReal, Map<UnifiedReal, UnifiedReal>> = new Map();
+const powBIMap: Map<bigint, Map<bigint, bigint>> = new Map();
+const powURMap: Map<UnifiedReal, Map<UnifiedReal, UnifiedReal>> = new Map();
 
 type TokenizeResult = {
     tokens: string[];
@@ -78,6 +81,15 @@ function getFact(ur: UnifiedReal): UnifiedReal {
     if (cached === undefined) {
         cached = ur.fact();
         factMap.set(ur, cached);
+    }
+    return cached;
+}
+
+function getSqrt(ur: UnifiedReal): UnifiedReal {
+    let cached = sqrtMap.get(ur);
+    if (cached === undefined) {
+        cached = ur.sqrt();
+        sqrtMap.set(ur, cached);
     }
     return cached;
 }
@@ -136,67 +148,67 @@ function getATan(ur: UnifiedReal): UnifiedReal {
     return cached;
 }
 
-function getCachedMap(map, ur) {
-    let cachedMap = map[ur];
+function getCachedMap<T>(map: Map<T, Map<T, T>>, ur: T): Map<T, T> {
+    let cachedMap = map.get(ur);
     if (cachedMap === undefined) {
-        cachedMap = {};
-        map[ur] = cachedMap;
+        cachedMap = new Map();
+        map.set(ur, cachedMap);
     }
     return cachedMap;
 }
 
 function getAdd(arg0: UnifiedReal, arg1: UnifiedReal): UnifiedReal {
     const cachedMap = getCachedMap(addMap, arg0);
-    let cached: UnifiedReal | undefined = cachedMap[arg1 as any];
+    let cached = cachedMap.get(arg1);
     if (cached === undefined) {
         cached = arg0.add(arg1);
-        cachedMap[arg1 as any] = cached;
-        getCachedMap(addMap, arg1)[arg0 as any] = cached;
+        cachedMap.set(arg1, cached);
+        getCachedMap(addMap, arg1).set(arg0, cached);
     }
     return cached;
 }
 
 function getMultiply(arg0: UnifiedReal, arg1: UnifiedReal): UnifiedReal {
     const cachedMap = getCachedMap(multiplyMap, arg0);
-    let cached: UnifiedReal | undefined = cachedMap[arg1 as any];
+    let cached = cachedMap.get(arg1);
     if (cached === undefined) {
         cached = arg0.multiply(arg1);
-        cachedMap[arg1 as any] = cached;
-        getCachedMap(multiplyMap, arg1)[arg0 as any] = cached;
+        cachedMap.set(arg1, cached);
+        getCachedMap(multiplyMap, arg1).set(arg0, cached);
     }
     return cached;
 }
 
 function getDivide(arg0: UnifiedReal, arg1: UnifiedReal): UnifiedReal {
     const cachedMap = getCachedMap(divideMap, arg0);
-    let cached: UnifiedReal | undefined = cachedMap[arg1 as any];
+    let cached = cachedMap.get(arg1);
     if (cached === undefined) {
         cached = arg0.divide(arg1);
-        cachedMap[arg1 as any] = cached;
+        cachedMap.set(arg1, cached);
     }
     return cached;
 }
 
 function getPowBI(arg0: bigint, arg1: bigint): bigint {
     const cachedMap = getCachedMap(powBIMap, arg0);
-    let cached: bigint | undefined = cachedMap[arg1 as any];
+    let cached = cachedMap.get(arg1);
     if (cached === undefined) {
         cached = arg0 ** arg1;
-        cachedMap[arg1 as any] = cached;
+        cachedMap.set(arg1, cached);
     }
     return cached;
 }
 
 function getPowUR(arg0: UnifiedReal, arg1: UnifiedReal): UnifiedReal {
     const cachedMap = getCachedMap(powURMap, arg0);
-    let cached: UnifiedReal | undefined = cachedMap[arg1 as any];
+    let cached = cachedMap.get(arg1);
     if (cached === undefined) {
         if (arg0 === UR_E) {
             cached = arg1.exp();
         } else {
             cached = arg0.pow(arg1);
         }
-        cachedMap[arg1 as any] = cached;
+        cachedMap.set(arg1, cached);
     }
     return cached;
 }
@@ -274,6 +286,9 @@ function tokenize(expr: string): TokenizeResult {
             } else if (lastChar === "\0" || lastChar === "(" || lastChar === "^"
                 || lastChar === "+" || lastChar === "-" || lastChar === "*"
                 || lastChar === "/" || lastChar === "\u00D7" || lastChar === "\u00F7") {
+                if (STRICT_EXPR && (lastChar === "^" || lastChar === "+" || lastChar === "-")) {
+                    throw new Error("Missing '(' before '" + ch + "' at position (" + i + ")");
+                }
                 result.push((lastChar === "^") ? ("unary" + ch + "pow") : ("unary" + ch));
                 locations.push(freezeObject([i, i + 1]));
                 unprocessed = "";
@@ -663,7 +678,7 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         stack.push(getPowUR(UR_E, arg0));
                         break;
                     case "sqrt":
-                        stack.push(arg0.sqrt());
+                        stack.push(getSqrt(arg0));
                         break;
                     case "sin":
                         if (degreeMode) {

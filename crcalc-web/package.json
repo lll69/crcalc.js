@@ -1,6 +1,6 @@
 {
     "name": "crcalc-web",
-    "version": "1.0.3",
+    "version": "1.0.4",
     "description": "Constructive Real Calculating library (CRCalc)",
     "private": true,
     "scripts": {
@@ -17,7 +17,7 @@
     "author": "lll69",
     "license": "Apache-2.0",
     "dependencies": {
-        "crcalc-js": "^1.0.3",
+        "crcalc-js": "^1.0.4",
         "typescript": "^5.3.3"
     },
     "devDependencies": {
