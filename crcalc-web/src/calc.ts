@@ -28,47 +28,60 @@ let degreeMode = false;
 let isInvert = false;
 const multiplyChar = "*";
 const divideChar = "/";
-const calculatorDiv = document.getElementById("calculator") as HTMLElement;
-const exprInput = document.getElementById("expression") as HTMLInputElement;
-const fracOutput = document.getElementById("frac_output") as HTMLElement;
-const resultDiv = document.getElementById("result_div") as HTMLElement;
-const resultBoldText = document.getElementById("result_bold") as HTMLElement;
-const resultNormalText = document.getElementById("result_normal") as HTMLElement;
-const buttonInv = document.getElementById("toggle_inv") as HTMLElement;
-const buttonCalc = document.getElementById("but_eq") as HTMLElement;
-const buttonMode = document.getElementById("toggle_mode") as HTMLElement;
-const measureDiv = document.getElementById("measure_4ch") as HTMLElement;
+
+const D = document;
+const M = Math;
+const getElementById: typeof D.getElementById = D.getElementById.bind(D);
+const min = M.min;
+const max = M.max;
+const abs = M.abs;
+const floor = M.floor;
+const round = M.round;
+const iSetInterval = setInterval;
+const iClearInterval = clearInterval;
+const createObjectURL = URL.createObjectURL;
+
+const calculatorDiv = getElementById("calculator") as HTMLElement;
+const exprInput = getElementById("expression") as HTMLInputElement;
+const fracOutput = getElementById("frac_output") as HTMLElement;
+const resultDiv = getElementById("result_div") as HTMLElement;
+const resultBoldText = getElementById("result_bold") as HTMLElement;
+const resultNormalText = getElementById("result_normal") as HTMLElement;
+const buttonInv = getElementById("toggle_inv") as HTMLElement;
+const buttonCalc = getElementById("but_eq") as HTMLElement;
+const buttonMode = getElementById("toggle_mode") as HTMLElement;
+const measureDiv = getElementById("measure_4ch") as HTMLElement;
 const numButtons = [
-    document.getElementById("num_0") as HTMLElement,
-    document.getElementById("num_1") as HTMLElement,
-    document.getElementById("num_2") as HTMLElement,
-    document.getElementById("num_3") as HTMLElement,
-    document.getElementById("num_4") as HTMLElement,
-    document.getElementById("num_5") as HTMLElement,
-    document.getElementById("num_6") as HTMLElement,
-    document.getElementById("num_7") as HTMLElement,
-    document.getElementById("num_8") as HTMLElement,
-    document.getElementById("num_9") as HTMLElement
+    getElementById("num_0") as HTMLElement,
+    getElementById("num_1") as HTMLElement,
+    getElementById("num_2") as HTMLElement,
+    getElementById("num_3") as HTMLElement,
+    getElementById("num_4") as HTMLElement,
+    getElementById("num_5") as HTMLElement,
+    getElementById("num_6") as HTMLElement,
+    getElementById("num_7") as HTMLElement,
+    getElementById("num_8") as HTMLElement,
+    getElementById("num_9") as HTMLElement
 ];
 const normalButtons = [
-    document.getElementById("fun_sin") as HTMLElement,
-    document.getElementById("fun_cos") as HTMLElement,
-    document.getElementById("fun_tan") as HTMLElement,
-    document.getElementById("fun_ln") as HTMLElement,
-    document.getElementById("fun_log") as HTMLElement
+    getElementById("fun_sin") as HTMLElement,
+    getElementById("fun_cos") as HTMLElement,
+    getElementById("fun_tan") as HTMLElement,
+    getElementById("fun_ln") as HTMLElement,
+    getElementById("fun_log") as HTMLElement
 ];
 const inverseButtons = [
-    document.getElementById("fun_arcsin") as HTMLElement,
-    document.getElementById("fun_arccos") as HTMLElement,
-    document.getElementById("fun_arctan") as HTMLElement,
-    document.getElementById("fun_exp") as HTMLElement,
-    document.getElementById("fun_10pow") as HTMLElement
+    getElementById("fun_arcsin") as HTMLElement,
+    getElementById("fun_arccos") as HTMLElement,
+    getElementById("fun_arctan") as HTMLElement,
+    getElementById("fun_exp") as HTMLElement,
+    getElementById("fun_10pow") as HTMLElement
 ];
-const copyButton = document.getElementById("copy_result") as HTMLElement;
-const saveButton = document.getElementById("save_result") as HTMLElement;
-const gridOps = document.getElementById("grid_ops") as HTMLElement;
-const gridVar = document.getElementById("grid_var") as HTMLElement;
-const loadingElement = document.getElementById("loading") as HTMLElement;
+const copyButton = getElementById("copy_result") as HTMLElement;
+const saveButton = getElementById("save_result") as HTMLElement;
+const gridOps = getElementById("grid_ops") as HTMLElement;
+const gridVar = getElementById("grid_var") as HTMLElement;
+const loadingElement = getElementById("loading") as HTMLElement;
 let workerContent: string | null = null;
 let workerLoaded = false;
 let workerBusy = false;
@@ -88,12 +101,12 @@ let lastCalculateUid = 1;
 let loadAnimationIndex = 0;
 let loadAnimationInterval: any;
 function copyText(str: string) {
-    let element = document.createElement("input");
+    let element = D.createElement("input");
     element.style.opacity = "0";
     element.value = str;
-    document.body.appendChild(element);
+    D.body.appendChild(element);
     element.select();
-    document.execCommand("copy");
+    D.execCommand("copy");
     element.remove();
 }
 function changeResultUIVisibility() {
@@ -130,12 +143,12 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
     let rightIndex = scrollOffset + displayWidth;
     if (rightIndex > resultLength) {
         if (digitMax === 0) {
-            scrollOffset = Math.min(scrollOffset, pointIndex - displayWidth);
+            scrollOffset = min(scrollOffset, pointIndex - displayWidth);
         } else if (digitMax !== INTEGER_MAX) {
             if (digitMax + 4 >= displayWidth) {
-                scrollOffset = Math.min(scrollOffset, pointIndex + 1 + digitMax - displayWidth + String(digitMax).length + 2);
+                scrollOffset = min(scrollOffset, pointIndex + 1 + digitMax - displayWidth + String(digitMax).length + 2);
             } else {
-                scrollOffset = Math.min(scrollOffset, pointIndex + 1 + digitMax - displayWidth);
+                scrollOffset = min(scrollOffset, pointIndex + 1 + digitMax - displayWidth);
             }
         }
         rightIndex = scrollOffset + displayWidth;
@@ -147,7 +160,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
         resultDiv.classList.add("result-movable");
     }
     if (rightIndex <= pointIndex) {
-        rightIndex = Math.min(scrollOffset + displayWidth, resultString.length);
+        rightIndex = min(scrollOffset + displayWidth, resultString.length);
         let offsetDigits: number;
         let offsetStrLength: number;
         let newOffsetDigits: number;
@@ -220,7 +233,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
             resultNormalText.innerHTML = newOffsetStrLength > 0 ? "E" + newOffsetStr : "";
         }
     } else if (scrollOffset === 0 || scrollOffset + 4 <= pointIndex) {
-        rightIndex = Math.min(scrollOffset + displayWidth, resultString.length);
+        rightIndex = min(scrollOffset + displayWidth, resultString.length);
         if (copyCallback) {
             if (digitMax === INTEGER_MAX) {
                 copyCallback(false, resultString.substring(0, rightIndex));
@@ -258,7 +271,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
                 return;
             }
             resultBoldText.innerHTML = "Calculating...";
-            precisionNeeded = Math.max(scrollOffset - pointIndex + newOffsetStrLength * 2, precisionCurrent + PREC_INCREMENT * Math.min(1024, 1 + Math.floor(scrollOffset / 1600)));
+            precisionNeeded = max(scrollOffset - pointIndex + newOffsetStrLength * 2, precisionCurrent + PREC_INCREMENT * min(1024, 1 + floor(scrollOffset / 1600)));
             calculateHigherPrecision();
         } else {
             if (copyCallback) {
@@ -271,12 +284,12 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
         if (scrollOffset > resultLength - displayWidth + newOffsetStrLength - INCREMENT_THRESHOLD) {
             let newResultLength = resultLength;
             precisionNeeded = precisionCurrent;
-            const precIncr = PREC_INCREMENT * Math.min(1024, 1 + Math.floor(scrollOffset / 1600));
+            const precIncr = PREC_INCREMENT * min(1024, 1 + floor(scrollOffset / 1600));
             while (scrollOffset > newResultLength - displayWidth + newOffsetStrLength - INCREMENT_THRESHOLD) {
                 precisionNeeded += precIncr;
                 newResultLength += precIncr;
             }
-            precisionNeeded = Math.min(digitMax, precisionNeeded);
+            precisionNeeded = min(digitMax, precisionNeeded);
             calculateHigherPrecision();
         }
     }
@@ -292,10 +305,10 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "init":
             if (!workerLoaded) {
                 workerLoaded = true;
-                for (let i = 0, arr = document.getElementsByClassName("intro") as HTMLCollectionOf<HTMLElement>; i < arr.length; i++) {
+                for (let i = 0, arr = D.getElementsByClassName("intro") as HTMLCollectionOf<HTMLElement>; i < arr.length; i++) {
                     arr[i].hidden = true;
                 }
-                document.getElementById("loading-style")!!.remove();
+                getElementById("loading-style")!!.remove();
                 clearResult();
                 focusExpression();
                 if (navigator.userAgent.indexOf("Firefox") >= 0) {
@@ -381,7 +394,7 @@ function reInitWorker() {
     if (worker) {
         worker.terminate();
     }
-    worker = new Worker(URL.createObjectURL(new Blob([workerContent!!], { type: "text/javascript" })));
+    worker = new Worker(createObjectURL(new Blob([workerContent!!], { type: "text/javascript" })));
     worker.onmessage = onWorkerMessage;
     worker.onerror = onWorkerError;
     workerBusy = false;
@@ -397,14 +410,14 @@ function showLoadAnimation() {
     resultBoldText.innerHTML = "Loading..." + "/-\\|"[loadAnimationIndex];
 }
 function onLoadingError(e: string) {
-    clearInterval(loadAnimationInterval);
+    iClearInterval(loadAnimationInterval);
     loadingElement.innerText = e;
     exprInput.readOnly = true;
     exprInput.value = e;
     resultDiv.classList.remove("result-movable");
     resultBoldText.innerHTML = "Try refreshing the page.";
     resultNormalText.innerHTML = "";
-    Array.prototype.forEach.call(calculatorDiv.getElementsByTagName("button"), function (e) {
+    Array.prototype.forEach.call(calculatorDiv.getElementsByTagName("button"), (e) => {
         e.disabled = true;
     });
 }
@@ -431,27 +444,27 @@ function onExprChange() {
     }
     clearResult();
 }
-loadAnimationInterval = setInterval(showLoadAnimation, 100);
+loadAnimationInterval = iSetInterval(showLoadAnimation, 100);
 
-fetch("calc_worker.js").then(function (result) {
+fetch("calc_worker.js").then((result) => {
     if (result.ok) {
-        result.text().then(function (workerJs) {
-            clearInterval(loadAnimationInterval);
+        result.text().then((workerJs) => {
+            iClearInterval(loadAnimationInterval);
             initWorker(workerJs);
-        }).catch(function (e) {
+        }).catch((e) => {
             console.error(e);
             onLoadingError("Error: calc_worker.js " + e);
         })
     } else {
         onLoadingError("Error: calc_worker.js status=" + result.status);
     }
-}).catch(function (e) {
+}).catch((e) => {
     console.error(e);
     onLoadingError("Error: calc_worker.js " + e);
 });
 function calculateHigherPrecision() {
     if (!workerLoaded || !hasResult || workerBusy) return;
-    let precision = Math.min(digitMax, precisionNeeded);
+    let precision = min(digitMax, precisionNeeded);
     if (precision <= precisionCurrent) return;
     workerBusy = true;
     buttonCalc.innerText = "STOP";
@@ -709,7 +722,7 @@ function appendFunction(fn) {
     insertStr(fn + "(");
 }
 function registerFunction(fun) {
-    document.getElementById("fun_" + fun)!!.addEventListener("click", function () {
+    getElementById("fun_" + fun)!!.addEventListener("click", () => {
         appendFunction(fun);
         focusExpression();
     });
@@ -743,57 +756,57 @@ refreshInverseButton();
 buttonInv.addEventListener("click", inverseClick);
 refreshModeButton();
 buttonMode.addEventListener("click", modeClick);
-numButtons.forEach(function (button, idx) {
-    button.addEventListener("click", function () {
+numButtons.forEach((button, idx) => {
+    button.addEventListener("click", () => {
         appendDigit(idx);
         focusExpression();
     });
 });
-document.getElementById("num_point")!!.addEventListener("click", function () {
+getElementById("num_point")!!.addEventListener("click", () => {
     appendPoint();
     focusExpression();
 });
-document.getElementById("op_add")!!.addEventListener("click", function () {
+getElementById("op_add")!!.addEventListener("click", () => {
     appendOperator("+");
     focusExpression();
 });
-document.getElementById("op_sub")!!.addEventListener("click", function () {
+getElementById("op_sub")!!.addEventListener("click", () => {
     appendOperator("-");
     focusExpression();
 });
-document.getElementById("op_mul")!!.addEventListener("click", function () {
+getElementById("op_mul")!!.addEventListener("click", () => {
     appendOperator(multiplyChar);
     focusExpression();
 });
-document.getElementById("op_div")!!.addEventListener("click", function () {
+getElementById("op_div")!!.addEventListener("click", () => {
     appendOperator(divideChar);
     focusExpression();
 });
-document.getElementById("op_pow")!!.addEventListener("click", function () {
+getElementById("op_pow")!!.addEventListener("click", () => {
     appendOperator("^");
     focusExpression();
 });
-document.getElementById("op_fact")!!.addEventListener("click", function () {
+getElementById("op_fact")!!.addEventListener("click", () => {
     appendOperator("!");
     focusExpression();
 });
-document.getElementById("const_pi")!!.addEventListener("click", function () {
+getElementById("const_pi")!!.addEventListener("click", () => {
     appendConst("\u03C0");
     focusExpression();
 });
-document.getElementById("const_e")!!.addEventListener("click", function () {
+getElementById("const_e")!!.addEventListener("click", () => {
     appendConst("e");
     focusExpression();
 });
-document.getElementById("op_lparen")!!.addEventListener("click", function () {
+getElementById("op_lparen")!!.addEventListener("click", () => {
     appendParen("(");
     focusExpression();
 });
-document.getElementById("op_rparen")!!.addEventListener("click", function () {
+getElementById("op_rparen")!!.addEventListener("click", () => {
     appendParen(")");
     focusExpression();
 });
-document.getElementById("op_sqrt")!!.addEventListener("click", function () {
+getElementById("op_sqrt")!!.addEventListener("click", () => {
     appendFunction("sqrt");
     focusExpression();
 });
@@ -806,29 +819,29 @@ registerFunction("arctan");
 registerFunction("ln");
 registerFunction("log");
 registerFunction("exp");
-document.getElementById("fun_10pow")!!.addEventListener("click", function () {
+getElementById("fun_10pow")!!.addEventListener("click", () => {
     insertStr("10^");
     focusExpression();
 });
-document.getElementById("fun_percent")!!.addEventListener("click", function () {
+getElementById("fun_percent")!!.addEventListener("click", () => {
     insertStr("/100");
     focusExpression();
 });
-document.getElementById("op_cbrt")!!.addEventListener("click", function () {
+getElementById("op_cbrt")!!.addEventListener("click", () => {
     insertStr("^(1/3)");
     focusExpression();
 });
-document.getElementById("but_del")!!.addEventListener("click", function () {
+getElementById("but_del")!!.addEventListener("click", () => {
     onDel();
     focusExpression();
 });
-document.getElementById("but_clr")!!.addEventListener("click", function () {
+getElementById("but_clr")!!.addEventListener("click", () => {
     onClear();
     focusExpression();
 });
 buttonCalc.addEventListener("click", calculateResult);
 exprInput.addEventListener("input", onExprChange);
-exprInput.addEventListener("keydown", function (e) {
+exprInput.addEventListener("keydown", (e) => {
     if (!workerLoaded) {
         e.preventDefault();
         return;
@@ -874,7 +887,7 @@ exprInput.addEventListener("keydown", function (e) {
             break;
     }
 });
-copyButton.addEventListener("click", function () {
+copyButton.addEventListener("click", () => {
     if (digitMax === 0 && precisionCurrent === 0) {
         copyText(resultString.substring(0, resultString.length - 1));
         alert("Exact result has been copied (length:" + (resultString.length - 1) + ")");
@@ -882,7 +895,7 @@ copyButton.addEventListener("click", function () {
         copyText(resultString);
         alert("Exact result has been copied (length:" + (resultString.length) + ")");
     } else {
-        showScrolledResult(function (mightExact, str) {
+        showScrolledResult((mightExact, str) => {
             copyText(str);
             if (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) {
                 alert("Exact result has been copied (length:" + (str.length) + ")");
@@ -892,7 +905,7 @@ copyButton.addEventListener("click", function () {
         });
     }
 });
-saveButton.addEventListener("click", function () {
+saveButton.addEventListener("click", () => {
     let content;
     if (digitMax === 0 && precisionCurrent === 0) {
         content = resultString.substring(0, resultString.length - 1);
@@ -900,20 +913,20 @@ saveButton.addEventListener("click", function () {
         content = resultString;
     }
     if (content) {
-        let url = URL.createObjectURL(new Blob([content], { type: "text/plain" }));
-        let element = document.createElement("a");
+        let url = createObjectURL(new Blob([content], { type: "text/plain" }));
+        let element = D.createElement("a");
         element.href = url;
         element.download = "output_exact.txt";
-        document.body.appendChild(element);
+        D.body.appendChild(element);
         element.click();
         element.remove();
     } else {
-        showScrolledResult(function (mightExact, str) {
-            let url = URL.createObjectURL(new Blob([str], { type: "text/plain" }));
-            let element = document.createElement("a");
+        showScrolledResult((mightExact, str) => {
+            let url = createObjectURL(new Blob([str], { type: "text/plain" }));
+            let element = D.createElement("a");
             element.href = url;
             element.download = (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) ? "output_exact.txt" : "output_truncated.txt";
-            document.body.appendChild(element);
+            D.body.appendChild(element);
             element.click();
             element.remove();
         });
@@ -921,28 +934,28 @@ saveButton.addEventListener("click", function () {
 
 });
 if (!ENABLE_VARIABLES) {
-    let varButton = document.getElementById("but_var") as HTMLButtonElement;
+    let varButton = getElementById("but_var") as HTMLButtonElement;
     varButton.disabled = true;
     varButton.innerHTML = "";
 }
-document.getElementById("but_var")!!.addEventListener("click", function () {
+getElementById("but_var")!!.addEventListener("click", () => {
     if (!ENABLE_VARIABLES || !workerLoaded) return;
     gridOps.classList.add("grid-hide");
     gridVar.classList.remove("grid-hide");
     focusExpression();
 });
-document.getElementById("var_close")!!.addEventListener("click", function () {
+getElementById("var_close")!!.addEventListener("click", () => {
     if (!workerLoaded) return;
     gridOps.classList.remove("grid-hide");
     gridVar.classList.add("grid-hide");
     focusExpression();
 });
 function registerVariable(name) {
-    document.getElementById("var_in_" + name)!!.addEventListener("click", function () {
+    getElementById("var_in_" + name)!!.addEventListener("click", () => {
         if (!ENABLE_VARIABLES || !workerLoaded) return;
         throw new Error("Not yet implemented");
     });
-    document.getElementById("var_out_" + name)!!.addEventListener("click", function () {
+    getElementById("var_out_" + name)!!.addEventListener("click", () => {
         if (!ENABLE_VARIABLES || !workerLoaded) return;
         appendConst(name);
         focusExpression();
@@ -954,31 +967,31 @@ registerVariable("z");
 function disallowScroll(element: HTMLElement) {
     let eLastScrollLeft = 0;
     let eHaveFocus = false;
-    element.addEventListener("scroll", function () {
+    element.addEventListener("scroll", () => {
         let lastScrollLeft = eLastScrollLeft;
         eLastScrollLeft = element.scrollLeft;
         if (element.scrollLeft === 0 && !eHaveFocus && lastScrollLeft !== 0) {
             element.scrollLeft = lastScrollLeft;
         }
     })
-    element.addEventListener("focus", function () {
+    element.addEventListener("focus", () => {
         eHaveFocus = true;
         if (element === exprInput) {
             needEnterNewExpr = false;
         }
     });
-    element.addEventListener("blur", function () {
+    element.addEventListener("blur", () => {
         eHaveFocus = false;
     });
 }
 disallowScroll(exprInput);
 disallowScroll(fracOutput);
-exprInput.addEventListener("pointerdown", function () {
+exprInput.addEventListener("pointerdown", () => {
     needEnterNewExpr = false;
 });
 function onCalculatorResize() {
     chWidth = measureDiv.getBoundingClientRect().width / 4;
-    let newDisplayWidth = Math.floor(calculatorDiv.clientWidth / chWidth);
+    let newDisplayWidth = floor(calculatorDiv.clientWidth / chWidth);
     if (newDisplayWidth !== displayWidth) {
         displayWidth = newDisplayWidth;
         if (hasResult) {
@@ -999,15 +1012,15 @@ function registerScroll() {
     let lastSpeed = 0;
     let lastInterval: any = -1;
     function timedScroll() {
-        let absSpeed = Math.abs(lastSpeed);
+        let absSpeed = abs(lastSpeed);
         if (absSpeed * 2 > chWidth && absSpeed !== Infinity) {
             lastSpeed *= 0.8333333333333334;
         } else {
-            clearInterval(lastInterval);
+            iClearInterval(lastInterval);
         }
         downX += lastSpeed;
-        let offsetCh = Math.round(downX / chWidth);
-        let newScrollOffset = Math.max(0, downScrollOffset - offsetCh);
+        let offsetCh = round(downX / chWidth);
+        let newScrollOffset = max(0, downScrollOffset - offsetCh);
         if (newScrollOffset !== scrollOffset) {
             scrollOffset = newScrollOffset;
             showScrolledResult();
@@ -1023,7 +1036,7 @@ function registerScroll() {
                 resultDiv.setPointerCapture(e.pointerId);
             }
             downType = e.type;
-            clearInterval(lastInterval);
+            iClearInterval(lastInterval);
             lastDownX = downX;
             downScrollOffset = scrollOffset;
             lastTimestamp = e.timeStamp;
@@ -1045,14 +1058,14 @@ function registerScroll() {
                 return;
             }
             offsetX = moveX - downX;
-            let offsetCh = Math.round(offsetX / chWidth);
+            let offsetCh = round(offsetX / chWidth);
             let offsetTime = e.timeStamp - lastTimestamp;
             if (offsetTime >= SCROLL_TICK) {
                 lastTimestamp = e.timeStamp;
                 lastSpeed = (moveX - lastDownX) * SCROLL_TICK / offsetTime;
                 lastDownX = moveX;
             }
-            let newScrollOffset = Math.max(0, downScrollOffset - offsetCh);
+            let newScrollOffset = max(0, downScrollOffset - offsetCh);
             if (newScrollOffset !== scrollOffset) {
                 scrollOffset = newScrollOffset;
                 showScrolledResult();
@@ -1070,38 +1083,39 @@ function registerScroll() {
             isDown = false;
             downX = 0;
             downScrollOffset = scrollOffset;
-            if (Math.abs(lastSpeed) > chWidth) {
-                lastInterval = setInterval(timedScroll, SCROLL_TICK);
+            if (abs(lastSpeed) > chWidth) {
+                lastInterval = iSetInterval(timedScroll, SCROLL_TICK);
             }
         }
     }
-    resultDiv.addEventListener("touchstart", mouseDown, { passive: false });
-    resultDiv.addEventListener("pointerdown", mouseDown, { passive: false });
-    resultDiv.addEventListener("touchmove", mouseMove, { passive: false });
-    resultDiv.addEventListener("pointermove", mouseMove, { passive: false });
-    resultDiv.addEventListener("touchend", mouseUp, { passive: false });
-    resultDiv.addEventListener("pointerup", mouseUp, { passive: false });
-    resultDiv.addEventListener("touchcancel", mouseUp, { passive: false });
-    resultDiv.addEventListener("wheel", function (e) {
+    const P = { passive: false };
+    resultDiv.addEventListener("touchstart", mouseDown, P);
+    resultDiv.addEventListener("pointerdown", mouseDown, P);
+    resultDiv.addEventListener("touchmove", mouseMove, P);
+    resultDiv.addEventListener("pointermove", mouseMove, P);
+    resultDiv.addEventListener("touchend", mouseUp, P);
+    resultDiv.addEventListener("pointerup", mouseUp, P);
+    resultDiv.addEventListener("touchcancel", mouseUp, P);
+    resultDiv.addEventListener("wheel", (e) => {
         if (workerLoaded && hasResult && resultScrollable) {
-            clearInterval(lastInterval);
+            iClearInterval(lastInterval);
             e.preventDefault();
             let delta = e.deltaX + e.deltaY;
-            let offsetCh = Math.round(delta / chWidth);
-            let newScrollOffset = Math.max(0, scrollOffset + offsetCh);
+            let offsetCh = round(delta / chWidth);
+            let newScrollOffset = max(0, scrollOffset + offsetCh);
             if (newScrollOffset !== scrollOffset) {
                 scrollOffset = newScrollOffset;
                 showScrolledResult();
             }
         }
     });
-    resultDiv.addEventListener("keydown", function (e) {
+    resultDiv.addEventListener("keydown", (e) => {
         let newScrollOffset;
         switch (e.key) {
             case "ArrowLeft":
             case "ArrowUp":
                 e.preventDefault();
-                newScrollOffset = Math.max(0, scrollOffset - (e.ctrlKey ? 1 : 4));
+                newScrollOffset = max(0, scrollOffset - (e.ctrlKey ? 1 : 4));
                 if (newScrollOffset !== scrollOffset) {
                     scrollOffset = newScrollOffset;
                     showScrolledResult();
@@ -1110,7 +1124,7 @@ function registerScroll() {
             case "ArrowRight":
             case "ArrowDown":
                 e.preventDefault();
-                newScrollOffset = Math.max(0, scrollOffset + (e.ctrlKey ? 1 : 4));
+                newScrollOffset = max(0, scrollOffset + (e.ctrlKey ? 1 : 4));
                 if (newScrollOffset !== scrollOffset) {
                     scrollOffset = newScrollOffset;
                     showScrolledResult();
@@ -1118,7 +1132,7 @@ function registerScroll() {
                 break;
             case "PageDown":
                 e.preventDefault();
-                newScrollOffset = Math.max(0, scrollOffset + displayWidth);
+                newScrollOffset = max(0, scrollOffset + displayWidth);
                 if (newScrollOffset !== scrollOffset) {
                     scrollOffset = newScrollOffset;
                     showScrolledResult();
@@ -1126,7 +1140,7 @@ function registerScroll() {
                 break;
             case "PageUp":
                 e.preventDefault();
-                newScrollOffset = Math.max(0, scrollOffset - displayWidth);
+                newScrollOffset = max(0, scrollOffset - displayWidth);
                 if (newScrollOffset !== scrollOffset) {
                     scrollOffset = newScrollOffset;
                     showScrolledResult();
