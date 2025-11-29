@@ -17,6 +17,7 @@ export type CreateURResultSuccess = {
     expr: string,
     degreeMode: boolean,
     digitsRequired: number,
+    exactlyDisplayable: boolean,
     success: true,
     error: undefined
 }
@@ -27,7 +28,6 @@ export type CreateURResultError = {
     uid: number,
     expr: string,
     degreeMode: boolean,
-    digitsRequired: number,
     success: undefined,
     error: string
 }
@@ -59,6 +59,20 @@ export type ToStringResultError = {
     error: string
 }
 
+export type ToNiceStringRequest = {
+    type: "toNiceString",
+    id: number,
+    uid: number
+}
+
+export type ToNiceStringResult = {
+    type: "toNiceString",
+    id: number,
+    uid: number,
+    result?: string,
+    error?: string
+}
+
 export type ToStringResult = ToStringResultSuccess | ToStringResultError;
 
 export type CopyURRequest = {
@@ -72,5 +86,5 @@ export type RemoveURRequest = {
     id: number
 }
 
-export type WorkerRequest = CreateURRequest | CopyURRequest | RemoveURRequest | ToStringRequest;
-export type WorkerResult = InitResult | CreateURResult | ToStringResult;
+export type WorkerRequest = CreateURRequest | CopyURRequest | RemoveURRequest | ToStringRequest | ToNiceStringRequest;
+export type WorkerResult = InitResult | CreateURResult | ToStringResult | ToNiceStringResult;

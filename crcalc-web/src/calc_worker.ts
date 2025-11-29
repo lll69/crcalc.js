@@ -15,7 +15,7 @@
  */
 
 import { BoundedRational, UnifiedReal } from "crcalc-js";
-import { CreateURResult, InitResult, ToStringResult, WorkerRequest } from "./worker_types";
+import { CreateURResult, InitResult, ToNiceStringResult, ToStringResult, WorkerRequest } from "./worker_types";
 
 const STRICT_EXPR = true;
 
@@ -613,8 +613,8 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
             if (stack.length < 2) {
                 throw new Error("Insufficient number of parameters for operator '" + token + "' at position [" + loc + "]")
             }
-            const arg1 = stack.pop()!!;
-            const arg0 = stack.pop()!!;
+            const arg1 = stack.pop()!;
+            const arg0 = stack.pop()!;
             try {
                 switch (token) {
                     case "+":
@@ -650,7 +650,7 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
             if (stack.length < 1) {
                 throw new Error("Insufficient number of parameters for operator '" + token + "' at position [" + loc + "]")
             }
-            const arg0 = stack.pop()!!;
+            const arg0 = stack.pop()!;
             try {
                 switch (token) {
                     case "unary+":
@@ -675,7 +675,7 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
             if (stack.length < 1) {
                 throw new Error("Insufficient number of parameters for function '" + token + "' at position [" + loc + "]")
             }
-            const arg0 = stack.pop()!!;
+            const arg0 = stack.pop()!;
             try {
                 switch (token) {
                     case "ln":
@@ -757,7 +757,7 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
     if (stack.length != 1) {
         throw new Error("Invalid stack length: " + stack.length);
     }
-    return stack.pop()!!;
+    return stack.pop()!;
 }
 onmessage = function (e: MessageEvent<WorkerRequest>) {
     const msg = e.data;
@@ -767,6 +767,7 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
                 let ur: UnifiedReal = createUR(msg.expr, msg.degreeMode);
                 urList[msg.id] = ur;
                 let digitsRequired = ur.digitsRequired();
+                let exactlyDisplayable = ur.exactlyDisplayable();
                 postWorkerMessage({
                     type: "createUR",
                     id: msg.id,
@@ -774,6 +775,7 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
                     expr: msg.expr,
                     degreeMode: msg.degreeMode,
                     digitsRequired: digitsRequired,
+                    exactlyDisplayable: exactlyDisplayable,
                     success: true
                 } as CreateURResult);
             } catch (e) {
@@ -812,6 +814,26 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
                     prec: msg.prec,
                     error: String(e)
                 } as ToStringResult);
+            }
+            break;
+        }
+        case "toNiceString": {
+            try {
+                let ur: UnifiedReal = urList[msg.id];
+                let result = ur.toNiceString();
+                postWorkerMessage({
+                    type: "toNiceString",
+                    id: msg.id,
+                    uid: msg.uid,
+                    result: result
+                } as ToNiceStringResult);
+            } catch (e) {
+                postWorkerMessage({
+                    type: "toNiceString",
+                    id: msg.id,
+                    uid: msg.uid,
+                    error: String(e)
+                } as ToNiceStringResult);
             }
             break;
         }

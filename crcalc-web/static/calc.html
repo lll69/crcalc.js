@@ -220,6 +220,7 @@ limitations under the License.
     </style>
     <link rel="preload" as="image" href="copy.svg">
     <link rel="preload" as="image" href="save.svg">
+    <link rel="preload" as="image" href="simplify.svg">
 </head>
 
 <body>
@@ -239,6 +240,7 @@ limitations under the License.
             <div class="op-div">
                 <a hidden id="copy_result" href="javascript:;" class="button-link" title="Copy displayed result" tabindex="3"><img alt="Copy displayed result" src="copy.svg"></a>
                 <a hidden id="save_result" href="javascript:;" class="button-link" title="Save displayed result to file" tabindex="4"><img alt="Save displayed result to file" src="save.svg"></a>
+                <a hidden id="show_simplify" href="javascript:;" class="button-link" title="Show simplified result" tabindex="5"><img alt="Show simplified result" src="simplify.svg"></a>
                 <input id="frac_output" class="frac-output" readonly hidden tabindex="5">
             </div>
         </div>
@@ -326,9 +328,12 @@ limitations under the License.
     <section>
         <a style="color:inherit;" href="/aosp/licenses.html">Open Source Licenses</a>
     </section>
+    <div id="react-root"></div>
     <script src="calc.js"></script>
+    <script src="calc_mui.js"></script>
     <script defer async src="https://md5.js.org/track.js"></script>
-    <script>(function () {
+    <script>
+        (function () {
             let lastScrollTop = 0;
             let headerY = 0;
             let header = document.querySelector(".header-fixed");
@@ -346,7 +351,8 @@ limitations under the License.
                 headerY = newHeaderY;
                 header.style.top = headerY + "px";
             });
-        })();</script>
+        })();
+    </script>
 </body>
 
 </html>

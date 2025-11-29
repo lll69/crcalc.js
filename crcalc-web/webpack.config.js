@@ -8,6 +8,7 @@ module.exports = {
     entry: {
         calc: "./src/calc.ts",
         calc_worker: "./src/calc_worker.ts",
+        calc_mui: "./src/calc_mui.tsx",
     },
     module: {
         rules: [

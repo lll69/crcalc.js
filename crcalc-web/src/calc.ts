@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-import { CreateURRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
+import { CalcMuiPlugin, CalcMuiPluginHolder } from "./calc_mui_types";
+import { CreateURRequest, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
 
 const INTEGER_MAX = 2147483647;
 const INITIAL_PREC = 32;
@@ -81,6 +82,7 @@ const inverseButtons = [
 ];
 const copyButton = getElementById("copy_result") as HTMLElement;
 const saveButton = getElementById("save_result") as HTMLElement;
+const simplifyButton = getElementById("show_simplify") as HTMLElement;
 const gridOps = getElementById("grid_ops") as HTMLElement;
 const gridVar = getElementById("grid_var") as HTMLElement;
 const loadingElement = getElementById("loading") as HTMLElement;
@@ -90,8 +92,10 @@ let workerBusy = false;
 let needEnterNewExpr = false;
 let hasResult = false;
 let hasError = false;
+let isResultExact = false;
 let resultScrollable = false;
 let worker: Worker | null = null;
+let muiPlugin: CalcMuiPlugin | undefined = undefined;
 let resultString = "";
 let digitMax = INTEGER_MAX;
 let precisionNeeded = INITIAL_PREC;
@@ -114,6 +118,7 @@ function copyText(str: string) {
 function changeResultUIVisibility() {
     copyButton.hidden = !hasResult;
     saveButton.hidden = !hasResult;
+    simplifyButton.hidden = !(hasResult && isResultExact);
 }
 function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) => void) {
     if (!workerLoaded || !hasResult) return;
@@ -310,7 +315,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 for (let i = 0, arr = D.getElementsByClassName("intro") as HTMLCollectionOf<HTMLElement>; i < arr.length; i++) {
                     arr[i].hidden = true;
                 }
-                getElementById("loading-style")!!.remove();
+                getElementById("loading-style")!.remove();
                 clearResult();
                 focusExpression();
                 if (navigator.userAgent.indexOf("Firefox") >= 0) {
@@ -322,6 +327,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "createUR":
             if (msg.success) {
                 hasResult = true;
+                isResultExact = msg.exactlyDisplayable;
                 hasError = false;
                 digitMax = msg.digitsRequired;
                 precisionNeeded = digitMax !== INTEGER_MAX ? MAX_INITIAL_PREC : INITIAL_PREC;
@@ -385,6 +391,23 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 }
             }
             break;
+        case "toNiceString":
+            if (msg.uid === lastCalculateUid) {
+                const text = msg.error || msg.result;
+                let shown = false;
+                if (muiPlugin) {
+                    try {
+                        muiPlugin.showAlert("Simplified Result", text!);
+                        shown = true;
+                    } catch (e) {
+                        console.error(e);
+                    }
+                }
+                if (!shown) {
+                    alert("Simplified Result: " + text);
+                }
+            }
+            break;
     }
 }
 function onWorkerError(e: ErrorEvent) {
@@ -396,7 +419,7 @@ function reInitWorker() {
     if (worker) {
         worker.terminate();
     }
-    worker = new Worker(createObjectURL(new Blob([workerContent!!], { type: "text/javascript" })));
+    worker = new Worker(createObjectURL(new Blob([workerContent!], { type: "text/javascript" })));
     worker.onmessage = onWorkerMessage;
     worker.onerror = onWorkerError;
     workerBusy = false;
@@ -470,7 +493,7 @@ function calculateHigherPrecision() {
     if (precision <= precisionCurrent) return;
     workerBusy = true;
     buttonCalc.innerText = "STOP";
-    worker!!.postMessage({
+    worker!.postMessage({
         type: "toStringTruncated",
         id: lastCalculateId,
         uid: ++lastCalculateUid,
@@ -517,10 +540,10 @@ function calculateResult() {
     preprocessExpr();
     needEnterNewExpr = true;
     buttonCalc.innerText = "STOP";
-    worker!!.postMessage({ type: "removeUR", id: lastCalculateId });
+    worker!.postMessage({ type: "removeUR", id: lastCalculateId });
     lastCalculateId = (lastCalculateId + 1) | 0;
     changeResultUIVisibility();
-    worker!!.postMessage({
+    worker!.postMessage({
         type: "createUR",
         id: lastCalculateId,
         uid: lastCalculateId,
@@ -575,8 +598,8 @@ function modeClick() {
 function insertStr(str: string) {
     if (!workerLoaded) return;
     const currentExpr = exprInput.value;
-    const selectionStart = exprInput.selectionStart!!;
-    const selectionEnd = exprInput.selectionEnd!!;
+    const selectionStart = exprInput.selectionStart!;
+    const selectionEnd = exprInput.selectionEnd!;
     if (selectionStart === selectionEnd && selectionStart === currentExpr.length) {
         exprInput.value = currentExpr + str;
     } else {
@@ -597,7 +620,7 @@ function appendDigit(n: string | number, fromInput?: boolean) {
     if (!workerLoaded) return;
     checkEnterNewExpr();
     const currentExpr = exprInput.value;
-    const selectionStart = exprInput.selectionStart!!;
+    const selectionStart = exprInput.selectionStart!;
     if (selectionStart > 0) {
         const prevChar = currentExpr[selectionStart - 1];
         if (")!\u03C0xyze".indexOf(prevChar) >= 0) {
@@ -613,8 +636,8 @@ function appendPoint(fromInput?: boolean) {
     if (!workerLoaded) return true;
     checkEnterNewExpr();
     const currentExpr = exprInput.value;
-    const selectionStart = exprInput.selectionStart!!;
-    const selectionEnd = exprInput.selectionEnd!!;
+    const selectionStart = exprInput.selectionStart!;
+    const selectionEnd = exprInput.selectionEnd!;
     if (selectionEnd < currentExpr.length) {
         let i = selectionEnd;
         while (i < currentExpr.length) {
@@ -662,8 +685,8 @@ function appendParen(p: string, fromInput?: boolean) {
     if (!workerLoaded) return;
     if (p === "(") {
         const currentExpr = exprInput.value;
-        const selectionStart = exprInput.selectionStart!!;
-        const selectionEnd = exprInput.selectionEnd!!;
+        const selectionStart = exprInput.selectionStart!;
+        const selectionEnd = exprInput.selectionEnd!;
         let needMultiply = false;
         if (selectionStart > 0) {
             const prevChar = currentExpr[selectionStart - 1];
@@ -702,7 +725,7 @@ function appendOperator(op: string, fromInput?: boolean) {
         return false;
     }
     const currentExpr = exprInput.value;
-    const selectionStart = exprInput.selectionStart!!;
+    const selectionStart = exprInput.selectionStart!;
     if (selectionStart > 0) {
         const prevChar = currentExpr[selectionStart - 1];
         if (op === "-") {
@@ -732,7 +755,7 @@ function appendConst(c: string) {
     if (!workerLoaded) return;
     checkEnterNewExpr();
     const currentExpr = exprInput.value;
-    const selectionStart = exprInput.selectionStart!!;
+    const selectionStart = exprInput.selectionStart!;
     if (selectionStart > 0) {
         const prevChar = currentExpr.charAt(selectionStart - 1);
         if ("0123456789.)!\u03C0xyze".indexOf(prevChar) >= 0) {
@@ -746,7 +769,7 @@ function appendFunction(fn: string) {
     if (!workerLoaded) return;
     checkEnterNewExpr();
     const currentExpr = exprInput.value;
-    const selectionStart = exprInput.selectionStart!!;
+    const selectionStart = exprInput.selectionStart!;
     if (selectionStart > 0) {
         const prevChar = currentExpr.charAt(selectionStart - 1);
         if ("0123456789.)!\u03C0xyze".indexOf(prevChar) >= 0) {
@@ -757,7 +780,7 @@ function appendFunction(fn: string) {
     insertStr(fn + "(");
 }
 function registerFunction(fun: string) {
-    getElementById("fun_" + fun)!!.addEventListener("click", () => {
+    getElementById("fun_" + fun)!.addEventListener("click", () => {
         appendFunction(fun);
         focusExpression();
     });
@@ -765,8 +788,8 @@ function registerFunction(fun: string) {
 function onDel(fromInput?: boolean) {
     if (!workerLoaded) return;
     if (fromInput) return false;
-    const selectionStart = exprInput.selectionStart!!;
-    const selectionEnd = exprInput.selectionEnd!!;
+    const selectionStart = exprInput.selectionStart!;
+    const selectionEnd = exprInput.selectionEnd!;
     if (selectionStart === selectionEnd) {
         if (selectionStart > 0) {
             const currentExpr = exprInput.value;
@@ -797,51 +820,51 @@ numButtons.forEach((button, idx) => {
         focusExpression();
     });
 });
-getElementById("num_point")!!.addEventListener("click", () => {
+getElementById("num_point")!.addEventListener("click", () => {
     appendPoint();
     focusExpression();
 });
-getElementById("op_add")!!.addEventListener("click", () => {
+getElementById("op_add")!.addEventListener("click", () => {
     appendOperator("+");
     focusExpression();
 });
-getElementById("op_sub")!!.addEventListener("click", () => {
+getElementById("op_sub")!.addEventListener("click", () => {
     appendOperator("-");
     focusExpression();
 });
-getElementById("op_mul")!!.addEventListener("click", () => {
+getElementById("op_mul")!.addEventListener("click", () => {
     appendOperator(multiplyChar);
     focusExpression();
 });
-getElementById("op_div")!!.addEventListener("click", () => {
+getElementById("op_div")!.addEventListener("click", () => {
     appendOperator(divideChar);
     focusExpression();
 });
-getElementById("op_pow")!!.addEventListener("click", () => {
+getElementById("op_pow")!.addEventListener("click", () => {
     appendOperator("^");
     focusExpression();
 });
-getElementById("op_fact")!!.addEventListener("click", () => {
+getElementById("op_fact")!.addEventListener("click", () => {
     appendOperator("!");
     focusExpression();
 });
-getElementById("const_pi")!!.addEventListener("click", () => {
+getElementById("const_pi")!.addEventListener("click", () => {
     appendConst("\u03C0");
     focusExpression();
 });
-getElementById("const_e")!!.addEventListener("click", () => {
+getElementById("const_e")!.addEventListener("click", () => {
     appendConst("e");
     focusExpression();
 });
-getElementById("op_lparen")!!.addEventListener("click", () => {
+getElementById("op_lparen")!.addEventListener("click", () => {
     appendParen("(");
     focusExpression();
 });
-getElementById("op_rparen")!!.addEventListener("click", () => {
+getElementById("op_rparen")!.addEventListener("click", () => {
     appendParen(")");
     focusExpression();
 });
-getElementById("op_sqrt")!!.addEventListener("click", () => {
+getElementById("op_sqrt")!.addEventListener("click", () => {
     appendFunction("sqrt");
     focusExpression();
 });
@@ -854,23 +877,23 @@ registerFunction("arctan");
 registerFunction("ln");
 registerFunction("log");
 registerFunction("exp");
-getElementById("fun_10pow")!!.addEventListener("click", () => {
+getElementById("fun_10pow")!.addEventListener("click", () => {
     insertStr("10^");
     focusExpression();
 });
-getElementById("fun_percent")!!.addEventListener("click", () => {
+getElementById("fun_percent")!.addEventListener("click", () => {
     insertStr("/100");
     focusExpression();
 });
-getElementById("op_cbrt")!!.addEventListener("click", () => {
+getElementById("op_cbrt")!.addEventListener("click", () => {
     insertStr("^(1/3)");
     focusExpression();
 });
-getElementById("but_del")!!.addEventListener("click", () => {
+getElementById("but_del")!.addEventListener("click", () => {
     onDel();
     focusExpression();
 });
-getElementById("but_clr")!!.addEventListener("click", () => {
+getElementById("but_clr")!.addEventListener("click", () => {
     onClear();
     focusExpression();
 });
@@ -966,31 +989,39 @@ saveButton.addEventListener("click", () => {
             element.remove();
         });
     }
-
+});
+simplifyButton.addEventListener("click", () => {
+    if (hasResult && isResultExact) {
+        worker!.postMessage({
+            type: "toNiceString",
+            id: lastCalculateId,
+            uid: ++lastCalculateUid,
+        } as ToNiceStringRequest);
+    }
 });
 if (!ENABLE_VARIABLES) {
     let varButton = getElementById("but_var") as HTMLButtonElement;
     varButton.disabled = true;
     varButton.innerHTML = "";
 }
-getElementById("but_var")!!.addEventListener("click", () => {
+getElementById("but_var")!.addEventListener("click", () => {
     if (!ENABLE_VARIABLES || !workerLoaded) return;
     gridOps.classList.add("grid-hide");
     gridVar.classList.remove("grid-hide");
     focusExpression();
 });
-getElementById("var_close")!!.addEventListener("click", () => {
+getElementById("var_close")!.addEventListener("click", () => {
     if (!workerLoaded) return;
     gridOps.classList.remove("grid-hide");
     gridVar.classList.add("grid-hide");
     focusExpression();
 });
 function registerVariable(name) {
-    getElementById("var_in_" + name)!!.addEventListener("click", () => {
+    getElementById("var_in_" + name)!.addEventListener("click", () => {
         if (!ENABLE_VARIABLES || !workerLoaded) return;
         throw new Error("Not yet implemented");
     });
-    getElementById("var_out_" + name)!!.addEventListener("click", () => {
+    getElementById("var_out_" + name)!.addEventListener("click", () => {
         if (!ENABLE_VARIABLES || !workerLoaded) return;
         appendConst(name);
         focusExpression();
@@ -1185,3 +1216,24 @@ function registerScroll() {
     });
 }
 registerScroll();
+
+fetch("calc_mui.js").then((result) => {
+    if (result.ok) {
+        result.text().then((workerJs) => {
+            Function(workerJs)();
+            muiPlugin = (window as any as CalcMuiPluginHolder).calcMuiPlugin;
+        }).catch((e) => {
+            console.error(e);
+        })
+    } else {
+        console.error("Error: calc_mui.js status=" + result.status);
+    }
+}).catch((e) => {
+    console.error(e);
+});
+
+onmessage = (e) => {
+    if (e.data === "calcMuiPlugin") {
+        muiPlugin = (window as any as CalcMuiPluginHolder).calcMuiPlugin;
+    }
+}
