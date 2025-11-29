@@ -6,6 +6,18 @@
  * Copyright (c) 1999, Silicon Graphics, Inc.
  * Copyright (c) 2001-2004, Hewlett-Packard Development Company, L.P.
  */
+const M = Math;
+const LN2 = M.LN2;
+const abs = M.abs;
+const ceil = M.ceil;
+const floor = M.floor;
+const log = M.log;
+const max = M.max;
+const random = M.random;
+const round = M.round;
+const sqrt = M.sqrt;
+const BI = BigInt;
+const Num = Number;
 class ExceptionBase extends Error {
     constructor(type, message) {
         super(type + (message ? (": " + message) : message));
@@ -99,7 +111,7 @@ function CR_bitLength_n(t) {
             l = m;
         }
     }
-    return result + Number(l) + 1;
+    return result + Num(l) + 1;
 }
 /** Multiply k by 2**n. */
 function CR_shift(k, n) {
@@ -187,8 +199,8 @@ class CR {
     }
     // Helper functions
     static bound_log2(n) {
-        let abs_n = Math.abs(n);
-        return Math.ceil(Math.log((abs_n + 1)) / Math.LN2) ^ 0;
+        let abs_n = abs(n);
+        return ceil(log((abs_n + 1)) / LN2) ^ 0;
     }
     /**
      * Check that a precision is at least a factor of 8 away from
@@ -245,7 +257,7 @@ class CR {
     get_appr(precision) {
         CR.check_prec(precision);
         if (this.appr_valid && precision >= this.min_prec) {
-            return CR_scale(this.max_appr, BigInt(this.min_prec - precision));
+            return CR_scale(this.max_appr, BI(this.min_prec - precision));
         }
         else {
             let result = this.approximate(precision);
@@ -455,19 +467,19 @@ class CR {
         let scaled_result;
         switch (radix) {
             case 2:
-                scaled_result = BigInt("0b" + whole + fraction);
+                scaled_result = BI("0b" + whole + fraction);
                 break;
             case 8:
-                scaled_result = BigInt("0o" + whole + fraction);
+                scaled_result = BI("0o" + whole + fraction);
                 break;
             case 10:
-                scaled_result = BigInt(whole + fraction);
+                scaled_result = BI(whole + fraction);
                 break;
             case 16:
-                scaled_result = BigInt("0x" + whole + fraction);
+                scaled_result = BI("0x" + whole + fraction);
                 break;
         }
-        let divisor = (BigInt(radix) ** BigInt(fraction.length));
+        let divisor = (BI(radix) ** BI(fraction.length));
         return CR.valueOfN(scaled_result).divide(CR.valueOfN(divisor));
     }
     /**
@@ -483,7 +495,7 @@ class CR {
             scaled_CR = this.shiftLeft(4 * n);
         }
         else {
-            let scale_factor = (BigInt(radix) ** BigInt(n));
+            let scale_factor = (BI(radix) ** BI(n));
             scaled_CR = this.multiply(new int_CR(scale_factor));
         }
         let scaled_int = scaled_CR.get_appr(0);
@@ -543,13 +555,13 @@ class CR {
         if (-2147483648 /* CRConstants.INTEGER_MIN */ === my_msd)
             return 0.0;
         let needed_prec = my_msd - 60;
-        let scaled_int = Number(this.get_appr(needed_prec));
+        let scaled_int = Num(this.get_appr(needed_prec));
         let may_underflow = (needed_prec < -1000);
         let buffer = new ArrayBuffer(8);
         let bufferView = new DataView(buffer);
         bufferView.setFloat64(0, scaled_int);
         let scaled_int_rep = bufferView.getBigInt64(0);
-        let exp_adj = BigInt(may_underflow ? needed_prec + 96 : needed_prec);
+        let exp_adj = BI(may_underflow ? needed_prec + 96 : needed_prec);
         let orig_exp = (scaled_int_rep >> 52n) & 0x7ffn;
         // Original unbiased exponent is > 50. Exp_adj > -1050.
         // Thus the sum must be > the smallest representable exponent
@@ -569,7 +581,7 @@ class CR {
         if (may_underflow) {
             // Exponent is too large by 96. Compensate, relying on fp arithmetic
             // to handle gradual underflow correctly.
-            const two48 = Number(1n << 48n);
+            const two48 = Num(1n << 48n);
             return result / two48 / two48;
         }
         else {
@@ -759,7 +771,7 @@ class CR {
             else {
                 let extra_bits = CR_bitLength_n(rough_appr) - 3;
                 let scaled_result = this.shiftRight(extra_bits).ln();
-                return scaled_result.add(CR.valueOfN(BigInt(extra_bits)).multiply(CR.ln2));
+                return scaled_result.add(CR.valueOfN(BI(extra_bits)).multiply(CR.ln2));
             }
         }
         return this.simple_ln();
@@ -787,7 +799,7 @@ class slow_CR extends CR {
         const prec_incr = 32;
         slow_CR.check_prec(precision);
         if (this.appr_valid && precision >= this.min_prec) {
-            return CR_scale(this.max_appr, BigInt(this.min_prec - precision));
+            return CR_scale(this.max_appr, BI(this.min_prec - precision));
         }
         else {
             let eval_prec = (precision >= max_prec ? max_prec :
@@ -796,7 +808,7 @@ class slow_CR extends CR {
             this.min_prec = eval_prec;
             this.setMaxAppr(result);
             this.appr_valid = true;
-            return CR_scale(result, BigInt(eval_prec - precision));
+            return CR_scale(result, BI(eval_prec - precision));
         }
     }
 }
@@ -807,7 +819,7 @@ class int_CR extends CR {
         this.value = n;
     }
     approximate(p) {
-        return CR_scale(this.value, BigInt(-p));
+        return CR_scale(this.value, BI(-p));
     }
 }
 /**
@@ -825,7 +837,7 @@ class assumed_int_CR extends CR {
             return this.value.get_appr(p);
         }
         else {
-            return CR_scale(this.value.get_appr(0), BigInt(-p));
+            return CR_scale(this.value.get_appr(0), BI(-p));
         }
     }
 }
@@ -945,7 +957,7 @@ class mult_CR extends CR {
         let prec1 = p - msd_op2 - 3; // Precision needed for op1.
         let appr1 = this.op1.get_appr(prec1);
         let scale_digits = prec1 + prec2 - p;
-        return CR_scale(appr1 * appr2, BigInt(scale_digits));
+        return CR_scale(appr1 * appr2, BI(scale_digits));
     }
 }
 /**
@@ -978,7 +990,7 @@ class inv_CR extends CR {
         let log_scale_factor = -p - prec_needed;
         if (log_scale_factor < 0)
             return 0n;
-        let dividend = 1n << BigInt(log_scale_factor);
+        let dividend = 1n << BI(log_scale_factor);
         let scaled_divisor = this.op.get_appr(prec_needed);
         let abs_scaled_divisor = CR_abs_n(scaled_divisor);
         let adj_dividend = dividend + (abs_scaled_divisor >> 1n);
@@ -1017,25 +1029,25 @@ class prescaled_exp_CR extends CR {
             - 4; // for error in op, truncation.
         let op_prec = p - 3;
         let op_appr = this.op.get_appr(op_prec);
-        let op_prec_big = BigInt(op_prec);
+        let op_prec_big = BI(op_prec);
         // Error in argument results in error of < 3/8 ulp.
         // Sum of term eval. rounding error is < 1/16 ulp.
         // Series truncation error < 1/16 ulp.
         // Final rounding error is <= 1/2 ulp.
         // Thus final error is < 1 ulp.
-        let scaled_1 = 1n << BigInt(-calc_precision);
+        let scaled_1 = 1n << BI(-calc_precision);
         let current_term = scaled_1;
         let current_sum = scaled_1;
         let n = 0;
-        let max_trunc_error = 1n << BigInt(p - 4 - calc_precision);
+        let max_trunc_error = 1n << BI(p - 4 - calc_precision);
         while (CR_abs_n(current_term) >= max_trunc_error) {
             n = (n + 1) ^ 0;
             /* current_term = current_term * op / n */
             current_term = CR_scale(current_term * op_appr, op_prec_big);
-            current_term = current_term / BigInt(n);
+            current_term = current_term / BI(n);
             current_sum = current_sum + current_term;
         }
-        return CR_scale(current_sum, BigInt(calc_precision - p));
+        return CR_scale(current_sum, BI(calc_precision - p));
     }
 }
 /**
@@ -1060,7 +1072,7 @@ class prescaled_cos_CR extends slow_CR {
             - 4; // for error in op, truncation.
         let op_prec = p - 2;
         let op_appr = this.op.get_appr(op_prec);
-        let op_prec_big = BigInt(op_prec);
+        let op_prec_big = BI(op_prec);
         // Error in argument results in error of < 1/4 ulp.
         // Cumulative arithmetic rounding error is < 1/16 ulp.
         // Series truncation error < 1/16 ulp.
@@ -1068,20 +1080,20 @@ class prescaled_cos_CR extends slow_CR {
         // Thus final error is < 1 ulp.
         let current_term;
         let n;
-        let max_trunc_error = 1n << BigInt(p - 4 - calc_precision);
+        let max_trunc_error = 1n << BI(p - 4 - calc_precision);
         n = 0;
-        current_term = 1n << BigInt(-calc_precision);
+        current_term = 1n << BI(-calc_precision);
         let current_sum = current_term;
         while (CR_abs_n(current_term) >= max_trunc_error) {
             n += 2;
             /* current_term = - current_term * op * op / n * (n - 1)   */
             current_term = CR_scale(current_term * op_appr, op_prec_big);
             current_term = CR_scale(current_term * op_appr, op_prec_big);
-            let divisor = BigInt(-n) * BigInt(n - 1);
+            let divisor = BI(-n) * BI(n - 1);
             current_term = current_term / divisor;
             current_sum = current_sum + current_term;
         }
-        return CR_scale(current_sum, BigInt(calc_precision - p));
+        return CR_scale(current_sum, BI(calc_precision - p));
     }
 }
 /**
@@ -1110,25 +1122,25 @@ class integral_atan_CR extends slow_CR {
         // Series truncation error < 1/4 ulp.
         // Final rounding error is <= 1/2 ulp.
         // Thus final error is < 1 ulp.
-        let scaled_1 = 1n << BigInt(-calc_precision);
-        let big_op = BigInt(this.op);
-        let big_op_squared = BigInt(this.op * this.op);
+        let scaled_1 = 1n << BI(-calc_precision);
+        let big_op = BI(this.op);
+        let big_op_squared = BI(this.op * this.op);
         let op_inverse = scaled_1 / big_op;
         let current_power = op_inverse;
         let current_term = op_inverse;
         let current_sum = op_inverse;
         let current_sign = 1;
         let n = 1;
-        let max_trunc_error = 1n << BigInt(p - 2 - calc_precision);
+        let max_trunc_error = 1n << BI(p - 2 - calc_precision);
         while (CR_abs_n(current_term) >= (max_trunc_error)) {
             n += 2;
             current_power = current_power / big_op_squared;
             current_sign = -current_sign;
             current_term =
-                current_power / (BigInt(current_sign * n));
+                current_power / (BI(current_sign * n));
             current_sum = current_sum + current_term;
         }
-        return CR_scale(current_sum, BigInt(calc_precision - p));
+        return CR_scale(current_sum, BI(calc_precision - p));
     }
 }
 /** Representation for ln(1 + op) */
@@ -1159,23 +1171,23 @@ class prescaled_ln_CR extends slow_CR {
             - 4; // for error in op, truncation.
         let op_prec = p - 3;
         let op_appr = this.op.get_appr(op_prec);
-        let op_prec_big = BigInt(op_prec);
+        let op_prec_big = BI(op_prec);
         // Error analysis as for exponential.
-        let x_nth = CR_scale(op_appr, BigInt(op_prec - calc_precision));
+        let x_nth = CR_scale(op_appr, BI(op_prec - calc_precision));
         let current_term = x_nth; // x**n
         let current_sum = current_term;
         let n = 1;
         let current_sign = 1; // (-1)^(n-1)
-        let max_trunc_error = 1n << BigInt(p - 4 - calc_precision);
+        let max_trunc_error = 1n << BI(p - 4 - calc_precision);
         while (CR_abs_n(current_term) >= (max_trunc_error)) {
             n += 1;
             current_sign = -current_sign;
             x_nth = CR_scale(x_nth * op_appr, op_prec_big);
-            current_term = x_nth / (BigInt(n * current_sign));
+            current_term = x_nth / (BI(n * current_sign));
             // x**n / (n * (-1)**(n-1))
             current_sum = current_sum + (current_term);
         }
-        return CR_scale(current_sum, BigInt(calc_precision - p));
+        return CR_scale(current_sum, BI(calc_precision - p));
     }
 }
 /**
@@ -1213,8 +1225,8 @@ class prescaled_asin_CR extends slow_CR {
             - 4; // for error in op, truncation.
         let op_prec = p - 3; // always <= -2
         let op_appr = this.op.get_appr(op_prec);
-        let op_prec_big_p2 = BigInt(op_prec + 2);
-        let op_prec_big_n2 = BigInt(op_prec - 2);
+        let op_prec_big_p2 = BI(op_prec + 2);
+        let op_prec_big_n2 = BI(op_prec - 2);
         // Error in argument results in error of < 1/4 ulp.
         // (Derivative is bounded by 2 in the specified range and we use
         // 3 extra digits.)
@@ -1226,9 +1238,9 @@ class prescaled_asin_CR extends slow_CR {
         // 3/2 * current term.)
         // Final rounding error is <= 1/2 ulp.
         // Thus final error is < 1 ulp (relative to p).
-        let max_last_term = 1n << BigInt(p - 4 - calc_precision);
+        let max_last_term = 1n << BI(p - 4 - calc_precision);
         let exp = 1; // Current exponent, = 2n+1 in above expression
-        let current_term = op_appr << BigInt(op_prec - calc_precision);
+        let current_term = op_appr << BI(op_prec - calc_precision);
         let current_sum = current_term;
         let current_factor = current_term;
         // Current scaled Taylor series term
@@ -1243,24 +1255,24 @@ class prescaled_asin_CR extends slow_CR {
             // Thus the error any in the previous term is multiplied by
             // op^2, adding an error of < (1/2)^(2/3) < 2/3 the original
             // error.
-            current_factor = current_factor * (BigInt(exp - 2));
+            current_factor = current_factor * (BI(exp - 2));
             current_factor = CR_scale(current_factor * op_appr, op_prec_big_p2);
             // Carry 2 extra bits of precision forward; thus
             // this effectively introduces 1/8 ulp error.
             current_factor = current_factor * op_appr;
-            let divisor = BigInt(exp - 1);
+            let divisor = BI(exp - 1);
             current_factor = current_factor / divisor;
             // Another 1/4 ulp error here.
             current_factor = CR_scale(current_factor, op_prec_big_n2);
             // Remove extra 2 bits.  1/2 ulp rounding error.
             // Current_factor has original 3 ulp rounding error, which we
             // reduced by 1, plus < 1 ulp new rounding error.
-            current_term = current_factor / (BigInt(exp));
+            current_term = current_factor / (BI(exp));
             // Contributes 1 ulp error to sum plus at most 3 ulp
             // from current_factor.
             current_sum = current_sum + current_term;
         }
-        return CR_scale(current_sum, BigInt(calc_precision - p));
+        return CR_scale(current_sum, BI(calc_precision - p));
     }
 }
 class sqrt_CR extends CR {
@@ -1302,7 +1314,7 @@ class sqrt_CR extends CR {
             // Compute (last_appr * last_appr + op_appr) / last_appr / 2
             // while adjusting the scaling to make everything work
             let prod_prec_scaled_numerator = (last_appr * last_appr) + (op_appr);
-            let scaled_numerator = CR_scale(prod_prec_scaled_numerator, BigInt(appr_prec - p));
+            let scaled_numerator = CR_scale(prod_prec_scaled_numerator, BI(appr_prec - p));
             let shifted_result = scaled_numerator / last_appr;
             return (shifted_result + 1n) >> (1n);
         }
@@ -1313,13 +1325,13 @@ class sqrt_CR extends CR {
             let working_prec = op_prec - fp_op_prec;
             let scaled_bi_appr = this.op.get_appr(op_prec)
                 << (fp_op_prec_big);
-            let scaled_appr = Number(scaled_bi_appr);
+            let scaled_appr = Num(scaled_bi_appr);
             if (scaled_appr < 0.0)
                 throw new ArithmeticException("sqrt(negative)");
-            let scaled_fp_sqrt = Math.sqrt(scaled_appr);
-            let scaled_sqrt = BigInt(Math.floor(scaled_fp_sqrt));
+            let scaled_fp_sqrt = sqrt(scaled_appr);
+            let scaled_sqrt = BI(floor(scaled_fp_sqrt));
             let shift_count = ((working_prec) >> 1) - p;
-            return CR_shift(scaled_sqrt, BigInt(shift_count));
+            return CR_shift(scaled_sqrt, BI(shift_count));
         }
     }
 }
@@ -1354,19 +1366,19 @@ class gl_pi_CR extends slow_CR {
         }
         // Rough approximations are easy.
         if (p >= 0)
-            return CR_scale(3n, BigInt(-p));
+            return CR_scale(3n, BI(-p));
         // We need roughly log2(p) iterations.  Each iteration should
         // contribute no more than 2 ulps to the error in the corresponding
         // term (a[n], b[n], or t[n]).  Thus 2log2(n) bits plus a few for the
         // final calulation and rounding suffice.
-        const extra_eval_prec = (Math.ceil(Math.log(-p) / Math.LN2) + 10) ^ 0;
-        const extra_eval_prec_bign = BigInt(-extra_eval_prec);
+        const extra_eval_prec = (ceil(log(-p) / LN2) + 10) ^ 0;
+        const extra_eval_prec_bign = BI(-extra_eval_prec);
         // All our terms are implicitly scaled by eval_prec.
         const eval_prec = p - extra_eval_prec;
-        const eval_prec_bign = BigInt(-eval_prec);
+        const eval_prec_bign = BI(-eval_prec);
         let a = 1n << eval_prec_bign;
         let b = gl_pi_CR.SQRT_HALF.get_appr(eval_prec);
-        let t = 1n << BigInt(-eval_prec - 2);
+        let t = 1n << BI(-eval_prec - 2);
         let n = 0;
         while ((a - b - TOLERANCE) > 0n) {
             // Current values correspond to n, next_ values to n + 1
@@ -1401,7 +1413,7 @@ class gl_pi_CR extends slow_CR {
             }
             // b_prec.size() == b_val.size() >= n + 2
             let next_t = t - ((a_diff * a_diff)
-                << BigInt(n + eval_prec)); // shift dist. usually neg.
+                << BI(n + eval_prec)); // shift dist. usually neg.
             a = next_a;
             b = next_b;
             t = next_t;
@@ -1534,19 +1546,19 @@ class BoundedRational {
         let scaled_result;
         switch (radix) {
             case 2:
-                scaled_result = BigInt("0b" + whole + fraction);
+                scaled_result = BI("0b" + whole + fraction);
                 break;
             case 8:
-                scaled_result = BigInt("0o" + whole + fraction);
+                scaled_result = BI("0o" + whole + fraction);
                 break;
             case 10:
-                scaled_result = BigInt(whole + fraction);
+                scaled_result = BI(whole + fraction);
                 break;
             case 16:
-                scaled_result = BigInt("0x" + whole + fraction);
+                scaled_result = BI("0x" + whole + fraction);
                 break;
         }
-        let divisor = (BigInt(radix) ** BigInt(fraction.length));
+        let divisor = (BI(radix) ** BI(fraction.length));
         return new BoundedRational(scaled_result, divisor);
     }
     /**
@@ -1581,7 +1593,7 @@ class BoundedRational {
      * @param n result precision, >= 0
      */
     toStringTruncated(n) {
-        let digits = (CR_abs_n(this.mNum) * (10n ** BigInt(n)) / CR_abs_n(this.mDen)).toString();
+        let digits = (CR_abs_n(this.mNum) * (10n ** BI(n)) / CR_abs_n(this.mDen)).toString();
         let len = digits.length;
         if (len < n + 1) {
             digits = "0".repeat(n + 1 - len) + digits;
@@ -1598,7 +1610,7 @@ class BoundedRational {
         if (reduced.mDen !== 1n) {
             throw new ArithmeticException("intValue of non-int");
         }
-        return Number(reduced.mNum);
+        return Num(reduced.mNum);
     }
     // Approximate number of bits to left of binary point.
     // Negative indicates leading zeroes to the right of binary point.
@@ -1648,7 +1660,7 @@ class BoundedRational {
         if (r === null)
             return null;
         // Reduce randomly, with 1/16 probability, or if the result is too big.
-        if (!r.tooBig() && (Math.random() < (1 / 16))) {
+        if (!r.tooBig() && (random() < (1 / 16))) {
             return r;
         }
         let result = r.positiveDen();
@@ -1755,19 +1767,19 @@ class BoundedRational {
         if (r.mNum < 0n) {
             throw new ArithmeticException("sqrt(negative)");
         }
-        let num_double_sqrt = Math.round(Math.sqrt(Number(r.mNum)));
+        let num_double_sqrt = round(sqrt(Num(r.mNum)));
         if (num_double_sqrt === Infinity) {
             return null;
         }
-        let num_sqrt = BigInt(num_double_sqrt);
+        let num_sqrt = BI(num_double_sqrt);
         if ((num_sqrt * num_sqrt) !== r.mNum) {
             return null;
         }
-        let num_den_sqrt = Math.round(Math.sqrt(Number(r.mDen)));
+        let num_den_sqrt = round(sqrt(Num(r.mDen)));
         if (num_den_sqrt === Infinity) {
             return null;
         }
-        let den_sqrt = BigInt(num_den_sqrt);
+        let den_sqrt = BI(num_den_sqrt);
         if ((den_sqrt * den_sqrt) !== r.mDen) {
             return null;
         }
@@ -1886,7 +1898,7 @@ class BoundedRational {
         if (den !== 1n && den !== -1n) {
             return 10000 /* BoundedRationalConstants.MAX_SIZE */;
         }
-        return Math.max(powersOfTwo, powersOfFive);
+        return max(powersOfTwo, powersOfFive);
     }
 }
 BoundedRational.ZERO = new BoundedRational(0n);
@@ -1960,7 +1972,7 @@ class UnifiedReal {
         const sSqrts = UnifiedReal.sSqrts;
         for (let i = 0; i < sSqrts.length; ++i) {
             if (sSqrts[i] === cr) {
-                return new BoundedRational(BigInt(i));
+                return new BoundedRational(BI(i));
             }
         }
         return null;
@@ -1975,7 +1987,7 @@ class UnifiedReal {
         const sLogs = UnifiedReal.sLogs;
         for (let i = 0; i < sLogs.length; ++i) {
             if (sLogs[i] === cr) {
-                return new BoundedRational(BigInt(i));
+                return new BoundedRational(BI(i));
             }
         }
         return null;
@@ -2154,7 +2166,7 @@ class UnifiedReal {
         if (this.mCrFactor === UnifiedReal.CR_ONE || this.mRatFactor === BoundedRational.ZERO) {
             return this.mRatFactor.toStringTruncated(n);
         }
-        const scaled = CR.valueOfN((10n ** BigInt(n))).multiply(this.crValue());
+        const scaled = CR.valueOfN((10n ** BI(n))).multiply(this.crValue());
         let negative = false;
         let intScaled;
         if (this.exactlyTruncatable()) {
@@ -2426,7 +2438,7 @@ class UnifiedReal {
             // where small_int has a known sqrt.  This includes the small_int = 1 case.
             for (let divisor = 1; divisor < UnifiedReal.sSqrts.length; ++divisor) {
                 if (UnifiedReal.sSqrts[divisor] !== null) {
-                    ratSqrt = BoundedRational.sqrt(BoundedRational.divide(this.mRatFactor, new BoundedRational(BigInt(divisor))));
+                    ratSqrt = BoundedRational.sqrt(BoundedRational.divide(this.mRatFactor, new BoundedRational(BI(divisor))));
                     if (ratSqrt !== null) {
                         return new UnifiedReal(ratSqrt, UnifiedReal.sSqrts[divisor]);
                     }
@@ -2483,7 +2495,7 @@ class UnifiedReal {
     sin() {
         let piTwelfths = this.getPiTwelfths();
         if (piTwelfths !== null) {
-            let result = UnifiedReal.sinPiTwelfths(Number(piTwelfths));
+            let result = UnifiedReal.sinPiTwelfths(Num(piTwelfths));
             if (result !== null) {
                 return result;
             }
@@ -2500,7 +2512,7 @@ class UnifiedReal {
     cos() {
         let piTwelfths = this.getPiTwelfths();
         if (piTwelfths !== null) {
-            let result = UnifiedReal.cosPiTwelfths(Number(piTwelfths));
+            let result = UnifiedReal.cosPiTwelfths(Num(piTwelfths));
             if (result !== null) {
                 return result;
             }
@@ -2510,7 +2522,7 @@ class UnifiedReal {
     tan() {
         let piTwelfths = this.getPiTwelfths();
         if (piTwelfths !== null) {
-            let i = Number(piTwelfths);
+            let i = Num(piTwelfths);
             if (i === 6 || i === 18) {
                 throw new ArithmeticException("Tangent undefined");
             }
@@ -2564,7 +2576,7 @@ class UnifiedReal {
         this.checkAsinDomain();
         const halves = this.multiply(UnifiedReal.TWO).bigIntegerValue();
         if (halves !== null) {
-            return UnifiedReal.asinHalves(Number(halves));
+            return UnifiedReal.asinHalves(Num(halves));
         }
         if (this.mCrFactor === CR.ONE || this.mCrFactor !== UnifiedReal.CR_SQRT2 || this.mCrFactor !== UnifiedReal.CR_SQRT3) {
             return this.asinNonHalves();
@@ -2580,7 +2592,7 @@ class UnifiedReal {
         }
         const asBI = this.bigIntegerValue();
         if (asBI !== null && asBI <= 1n) {
-            const asInt = Number(asBI);
+            const asInt = Num(asBI);
             // These seem to be all rational cases:
             switch (asInt) {
                 case 0:
@@ -2733,7 +2745,7 @@ class UnifiedReal {
         if (n > 10) {
             throw new AssertionError("Unexpected pow16 argument");
         }
-        let result = BigInt(n);
+        let result = BI(n);
         result *= result;
         result *= result;
         result *= result;
@@ -2745,15 +2757,15 @@ class UnifiedReal {
      * n is presumed positive.
      */
     static getIntLog(n, base) {
-        let nAsDouble = Number(n);
-        let approx = Math.log(nAsDouble) / Math.log(base);
+        let nAsDouble = Num(n);
+        let approx = log(nAsDouble) / log(base);
         // A relatively quick test first.
         // Unfortunately, this doesn't help for values to big to fit in a Double.
-        if (isFinite(nAsDouble) && Math.abs(approx - Math.round(approx)) > 1.0e-6) {
+        if (isFinite(nAsDouble) && abs(approx - round(approx)) > 1.0e-6) {
             return 0n;
         }
         let result = 0n;
-        let bigBase = BigInt(base);
+        let bigBase = BI(base);
         let base16th = null; // base^16, computed lazily
         while ((n % bigBase) === 0n) {
             n = n / bigBase;
