@@ -33,6 +33,7 @@ const divideChar = "/";
 const D = document;
 const M = Math;
 const getElementById: typeof D.getElementById = D.getElementById.bind(D);
+const createTextNode: typeof D.createTextNode = D.createTextNode.bind(D);
 const min = M.min;
 const max = M.max;
 const abs = M.abs;
@@ -86,6 +87,11 @@ const simplifyButton = getElementById("show_simplify") as HTMLElement;
 const gridOps = getElementById("grid_ops") as HTMLElement;
 const gridVar = getElementById("grid_var") as HTMLElement;
 const loadingElement = getElementById("loading") as HTMLElement;
+const resultBoldTextNode = createTextNode("");
+const resultNormalTextNode = createTextNode("");
+resultBoldText.appendChild(resultBoldTextNode);
+resultNormalText.appendChild(resultNormalTextNode);
+
 let workerContent: string | null = null;
 let workerLoaded = false;
 let workerBusy = false;
@@ -132,11 +138,11 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
         }
         scrollOffset = 0;
         if (digitMax === 0) {
-            resultBoldText.innerHTML = resultString.substring(0, resultString.length - 1);
-            resultNormalText.innerHTML = "";
+            resultBoldTextNode.textContent = resultString.substring(0, resultString.length - 1);
+            resultNormalTextNode.textContent = "";
         } else {
-            resultBoldText.innerHTML = resultString;
-            resultNormalText.innerHTML = "";
+            resultBoldTextNode.textContent = resultString;
+            resultNormalTextNode.textContent = "";
         }
         resultDiv.classList.remove("result-movable");
         return;
@@ -210,8 +216,8 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
                         }
                         return;
                     }
-                    resultBoldText.innerHTML = scientific;
-                    resultNormalText.innerHTML = "";
+                    resultBoldTextNode.textContent = scientific;
+                    resultNormalTextNode.textContent = "";
                     usedScientific = true;
                 }
             }
@@ -224,8 +230,8 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
                     }
                     return;
                 }
-                resultBoldText.innerHTML = resultString.substring(scrollOffset, rightIndex - newOffsetStrLength);
-                resultNormalText.innerHTML = newOffsetStrLength > 0 ? "E" + newOffsetStr : "";
+                resultBoldTextNode.textContent = resultString.substring(scrollOffset, rightIndex - newOffsetStrLength);
+                resultNormalTextNode.textContent = newOffsetStrLength > 0 ? "E" + newOffsetStr : "";
             }
         } else {
             if (copyCallback) {
@@ -236,8 +242,8 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
                 }
                 return;
             }
-            resultBoldText.innerHTML = "..." + resultString.substring(scrollOffset + 3, rightIndex - newOffsetStrLength);
-            resultNormalText.innerHTML = newOffsetStrLength > 0 ? "E" + newOffsetStr : "";
+            resultBoldTextNode.textContent = "..." + resultString.substring(scrollOffset + 3, rightIndex - newOffsetStrLength);
+            resultNormalTextNode.textContent = newOffsetStrLength > 0 ? "E" + newOffsetStr : "";
         }
     } else if (scrollOffset === 0 || scrollOffset + 4 <= pointIndex) {
         rightIndex = min(scrollOffset + displayWidth, resultString.length);
@@ -250,11 +256,11 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
             return;
         }
         if (scrollOffset === 0) {
-            resultBoldText.innerHTML = resultString.substring(scrollOffset, rightIndex);
+            resultBoldTextNode.textContent = resultString.substring(scrollOffset, rightIndex);
         } else {
-            resultBoldText.innerHTML = "..." + resultString.substring(scrollOffset + 3, rightIndex);
+            resultBoldTextNode.textContent = "..." + resultString.substring(scrollOffset + 3, rightIndex);
         }
-        resultNormalText.innerHTML = "";
+        resultNormalTextNode.textContent = "";
     } else {
         let offsetDigits = rightIndex - pointIndex - 1;
         let offsetStrLength = String(offsetDigits).length + 2;
@@ -277,7 +283,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
                 copyCallback(false, resultString);
                 return;
             }
-            resultBoldText.innerHTML = "Calculating...";
+            resultBoldTextNode.textContent = "Calculating...";
             precisionNeeded = max(scrollOffset - pointIndex + newOffsetStrLength * 2, precisionCurrent + PREC_INCREMENT * min(1024, 1 + floor(scrollOffset / 1600)));
             calculateHigherPrecision();
         } else {
@@ -285,9 +291,9 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
                 copyCallback(false, resultString.substring(0, rightIndex - newOffsetStrLength));
                 return;
             }
-            resultBoldText.innerHTML = "..." + resultString.substring(scrollOffset + 3, rightIndex - newOffsetStrLength);
+            resultBoldTextNode.textContent = "..." + resultString.substring(scrollOffset + 3, rightIndex - newOffsetStrLength);
         }
-        resultNormalText.innerHTML = "E-" + newOffsetStr;
+        resultNormalTextNode.textContent = "E-" + newOffsetStr;
         if (scrollOffset > resultLength - displayWidth + newOffsetStrLength - INCREMENT_THRESHOLD) {
             let newResultLength = resultLength;
             precisionNeeded = precisionCurrent;
@@ -342,7 +348,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 buttonCalc.innerText = "=";
                 resultDiv.classList.remove("result-movable");
                 resultBoldText.innerText = msg.error;
-                resultNormalText.innerHTML = "";
+                resultNormalTextNode.textContent = "";
                 let errString = String(msg.error);
                 let match = errString.match(/at position \[(\d+),(\d+)\]/);
                 if (match) {
@@ -373,7 +379,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                     hasError = true;
                     resultDiv.classList.remove("result-movable");
                     resultBoldText.innerText = msg.error;
-                    resultNormalText.innerHTML = "";
+                    resultNormalTextNode.textContent = "";
                     changeResultUIVisibility();
                 } else {
                     hasResult = true;
@@ -432,7 +438,7 @@ function initWorker(workerJs: string) {
 }
 function showLoadAnimation() {
     loadAnimationIndex = (loadAnimationIndex + 1) % 4;
-    resultBoldText.innerHTML = "Loading..." + "/-\\|"[loadAnimationIndex];
+    resultBoldTextNode.textContent = "Loading..." + "/-\\|"[loadAnimationIndex];
 }
 function onLoadingError(e: string) {
     iClearInterval(loadAnimationInterval);
@@ -440,16 +446,16 @@ function onLoadingError(e: string) {
     exprInput.readOnly = true;
     exprInput.value = e;
     resultDiv.classList.remove("result-movable");
-    resultBoldText.innerHTML = "Try refreshing the page.";
-    resultNormalText.innerHTML = "";
+    resultBoldTextNode.textContent = "Try refreshing the page.";
+    resultNormalTextNode.textContent = "";
     Array.prototype.forEach.call(calculatorDiv.getElementsByTagName("button"), (e) => {
         e.disabled = true;
     });
 }
 function clearResult() {
     resultDiv.classList.remove("result-movable");
-    resultBoldText.innerHTML = "";
-    resultNormalText.innerHTML = "";
+    resultBoldTextNode.textContent = "";
+    resultNormalTextNode.textContent = "";
     loadingElement.hidden = true;
     needEnterNewExpr = false;
     hasResult = false;
@@ -583,7 +589,7 @@ function inverseClick() {
 }
 function refreshModeButton() {
     buttonMode.title = degreeMode ? "Currently in degree mode" : "Currently in radian mode";
-    buttonMode.innerHTML = degreeMode ? "DEG" : "RAD";
+    buttonMode.innerText = degreeMode ? "DEG" : "RAD";
 }
 function modeClick() {
     if (!workerLoaded) return;
@@ -1002,7 +1008,7 @@ simplifyButton.addEventListener("click", () => {
 if (!ENABLE_VARIABLES) {
     let varButton = getElementById("but_var") as HTMLButtonElement;
     varButton.disabled = true;
-    varButton.innerHTML = "";
+    varButton.innerText = "";
 }
 getElementById("but_var")!.addEventListener("click", () => {
     if (!ENABLE_VARIABLES || !workerLoaded) return;
