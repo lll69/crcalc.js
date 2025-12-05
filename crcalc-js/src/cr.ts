@@ -151,7 +151,7 @@ const sqrt = M.sqrt;
 const BI = BigInt;
 const Num = Number;
 
-class ExceptionBase extends Error {
+class CRExceptionBase extends Error {
     constructor(type: string, message?: string) {
         super(type + (message ? (": " + message) : message));
     }
@@ -164,19 +164,19 @@ class ExceptionBase extends Error {
  * This is likely to be a symptom of a diverging computation,
  * <I>e.g.</i> division by zero.
  */
-class PrecisionOverflowException extends ExceptionBase {
+class PrecisionOverflowException extends CRExceptionBase {
     constructor(message?: string) {
         super("PrecisionOverflowException", message);
     }
 }
 
-class ArithmeticException extends ExceptionBase {
+class ArithmeticException extends CRExceptionBase {
     constructor(message?: string) {
         super("ArithmeticException", message);
     }
 }
 
-class NumberFormatException extends ExceptionBase {
+class NumberFormatException extends CRExceptionBase {
     constructor(message?: string) {
         super("NumberFormatException", message);
     }
@@ -188,7 +188,7 @@ class ZeroDivisionException extends ArithmeticException {
     }
 }
 
-class AssertionError extends ExceptionBase {
+class AssertionError extends CRExceptionBase {
     constructor(message?: string) {
         super("AssertionError", message);
     }
@@ -3409,5 +3409,11 @@ export {
     BoundedRational,
     UnifiedReal,
     UnaryCRFunction,
-    UnaryCRFunctions
+    UnaryCRFunctions,
+    CRExceptionBase,
+    PrecisionOverflowException,
+    ArithmeticException,
+    NumberFormatException,
+    ZeroDivisionException,
+    AssertionError
 }
