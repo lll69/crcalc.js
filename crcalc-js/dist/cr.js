@@ -18,7 +18,7 @@ const round = M.round;
 const sqrt = M.sqrt;
 const BI = BigInt;
 const Num = Number;
-class ExceptionBase extends Error {
+class CRExceptionBase extends Error {
     constructor(type, message) {
         super(type + (message ? (": " + message) : message));
     }
@@ -30,17 +30,17 @@ class ExceptionBase extends Error {
  * This is likely to be a symptom of a diverging computation,
  * <I>e.g.</i> division by zero.
  */
-class PrecisionOverflowException extends ExceptionBase {
+class PrecisionOverflowException extends CRExceptionBase {
     constructor(message) {
         super("PrecisionOverflowException", message);
     }
 }
-class ArithmeticException extends ExceptionBase {
+class ArithmeticException extends CRExceptionBase {
     constructor(message) {
         super("ArithmeticException", message);
     }
 }
-class NumberFormatException extends ExceptionBase {
+class NumberFormatException extends CRExceptionBase {
     constructor(message) {
         super("NumberFormatException", message);
     }
@@ -50,7 +50,7 @@ class ZeroDivisionException extends ArithmeticException {
         super("Division by zero");
     }
 }
-class AssertionError extends ExceptionBase {
+class AssertionError extends CRExceptionBase {
     constructor(message) {
         super("AssertionError", message);
     }
@@ -2989,7 +2989,16 @@ UnifiedReal.sSqrts = Object.freeze([
     CR.valueOfN(7n).sqrt(),
     null,
     null,
-    CR.valueOfN(10n).sqrt()
+    CR.valueOfN(10n).sqrt(),
+    CR.valueOfN(11n).sqrt(),
+    null,
+    CR.valueOfN(13n).sqrt(),
+    CR.valueOfN(14n).sqrt(),
+    CR.valueOfN(15n).sqrt(),
+    null,
+    CR.valueOfN(17n).sqrt(),
+    null,
+    CR.valueOfN(19n).sqrt()
 ]);
 // Natural logs of small integers that we try to recognize.
 UnifiedReal.sLogs = Object.freeze([
@@ -3030,4 +3039,4 @@ UnifiedReal.PI_OVER_6 = new UnifiedReal(BoundedRational.SIXTH, UnifiedReal.CR_PI
 // Must be <= 30.
 UnifiedReal.EXTRA_PREC = 10;
 UnifiedReal.EXTRA_PREC_BIG = 10n;
-export { CR, BoundedRational, UnifiedReal, UnaryCRFunction, UnaryCRFunctions };
+export { CR, BoundedRational, UnifiedReal, UnaryCRFunction, UnaryCRFunctions, CRExceptionBase, PrecisionOverflowException, ArithmeticException, NumberFormatException, ZeroDivisionException, AssertionError };

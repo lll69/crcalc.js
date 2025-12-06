@@ -2307,7 +2307,16 @@ class UnifiedReal {
         CR.valueOfN(7n).sqrt(),
         null,
         null,
-        CR.valueOfN(10n).sqrt()]);
+        CR.valueOfN(10n).sqrt(),
+        CR.valueOfN(11n).sqrt(),
+        null,
+        CR.valueOfN(13n).sqrt(),
+        CR.valueOfN(14n).sqrt(),
+        CR.valueOfN(15n).sqrt(),
+        null,
+        CR.valueOfN(17n).sqrt(),
+        null,
+        CR.valueOfN(19n).sqrt()]);
 
     // Natural logs of small integers that we try to recognize.
     private static sLogs: readonly (CR | null)[] = Object.freeze([

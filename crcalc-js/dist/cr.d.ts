@@ -6,6 +6,31 @@
  * Copyright (c) 1999, Silicon Graphics, Inc.
  * Copyright (c) 2001-2004, Hewlett-Packard Development Company, L.P.
  */
+declare class CRExceptionBase extends Error {
+    constructor(type: string, message?: string);
+}
+/**
+ * Indicates that the number of bits of precision requested by
+ * a computation on constructive reals required more than 28 bits,
+ * and was thus in danger of overflowing an int.
+ * This is likely to be a symptom of a diverging computation,
+ * <I>e.g.</i> division by zero.
+ */
+declare class PrecisionOverflowException extends CRExceptionBase {
+    constructor(message?: string);
+}
+declare class ArithmeticException extends CRExceptionBase {
+    constructor(message?: string);
+}
+declare class NumberFormatException extends CRExceptionBase {
+    constructor(message?: string);
+}
+declare class ZeroDivisionException extends ArithmeticException {
+    constructor();
+}
+declare class AssertionError extends CRExceptionBase {
+    constructor(message?: string);
+}
 /**
  * Constructive real numbers, also known as recursive, or computable reals.
  * Each recursive real number is represented as an object that provides an
@@ -815,4 +840,4 @@ declare class UnifiedReal {
      */
     approxWholeNumberBitsGreaterThan(bound: number): boolean;
 }
-export { CR, BoundedRational, UnifiedReal, UnaryCRFunction, UnaryCRFunctions };
+export { CR, BoundedRational, UnifiedReal, UnaryCRFunction, UnaryCRFunctions, CRExceptionBase, PrecisionOverflowException, ArithmeticException, NumberFormatException, ZeroDivisionException, AssertionError };
