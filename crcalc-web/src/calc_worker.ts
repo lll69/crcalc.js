@@ -178,6 +178,10 @@ function getAdd(arg0: UnifiedReal, arg1: UnifiedReal): UnifiedReal {
     return cached;
 }
 
+function getSub(arg0: UnifiedReal, arg1: UnifiedReal): UnifiedReal {
+    return getAdd(arg0, getNegate(arg1));
+}
+
 function getMultiply(arg0: UnifiedReal, arg1: UnifiedReal): UnifiedReal {
     const cachedMap = getCachedMap(multiplyMap, arg0);
     let cached = cachedMap.get(arg1);
@@ -432,9 +436,27 @@ function tokenize(expr: string): TokenizeResult {
                             continue;
                         }
                     }
-                    if (token.length >= 4 && (lastChar === "n" || lastChar === "s" || lastChar === "t")) {
+                    if (token.length >= 5 && (lastChar === "h")) {
+                        possibleName = token.substring(token.length - 5);
+                        if (possibleName === "asinh" || possibleName === "acosh" || possibleName === "atanh") {
+                            const newItems = Array.prototype.slice.call(token, 0, token.length - 5).join("*");
+                            finalResult.push(...newItems);
+                            for (let j = 0; j < newItems.length; j++) {
+                                finalLocations.push(loc);
+                            }
+                            if (token.length > 5) {
+                                finalResult.push("*");
+                                finalLocations.push(loc);
+                            }
+                            finalResult.push(possibleName);
+                            finalLocations.push(loc);
+                            continue;
+                        }
+                    }
+                    if (token.length >= 4 && (lastChar === "n" || lastChar === "s" || lastChar === "t" || lastChar === "h")) {
                         possibleName = token.substring(token.length - 4);
-                        if (possibleName === "asin" || possibleName === "acos" || possibleName === "atan" || possibleName === "sqrt") {
+                        if (possibleName === "asin" || possibleName === "acos" || possibleName === "atan" || possibleName === "sqrt"
+                            || possibleName === "sinh" || possibleName === "cosh" || possibleName === "tanh") {
                             const newItems = Array.prototype.slice.call(token, 0, token.length - 4).join("*");
                             finalResult.push(...newItems);
                             for (let j = 0; j < newItems.length; j++) {
@@ -525,7 +547,9 @@ function tokenToRpn(tokenizeResult: TokenizeResult) {
         "ln", "log", "exp", "sqrt",
         "sin", "cos", "tan",
         "asin", "acos", "atan",
-        "arcsin", "arccos", "arctan"
+        "arcsin", "arccos", "arctan",
+        "sinh", "cosh", "tanh",
+        "asinh", "acosh", "atanh",
     ]));
     const rightAssocList = freezeObject(new Set([
         "unary+", "unary-", "unary+pow", "unary-pow", "^"
@@ -599,7 +623,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
         "ln", "log", "exp", "sqrt",
         "sin", "cos", "tan",
         "asin", "acos", "atan",
-        "arcsin", "arccos", "arctan"
+        "arcsin", "arccos", "arctan",
+        "sinh", "cosh", "tanh",
+        "asinh", "acosh", "atanh",
     ]));
     const tokenizeResult = tokenize(expr);
     const rpnResult = tokenToRpn(tokenizeResult);
@@ -621,7 +647,7 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         stack.push(getAdd(arg0, arg1));
                         break;
                     case "-":
-                        stack.push(getAdd(arg0, getNegate(arg1)));
+                        stack.push(getSub(arg0, arg1));
                         break;
                     case "*":
                         stack.push(getMultiply(arg0, arg1));
@@ -734,6 +760,27 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         } else {
                             stack.push(getATan(arg0));
                         }
+                        break;
+                    case "sinh":
+                        stack.push(getDivide(getSub(getPowUR(UR_E, arg0), getPowUR(UR_E, getNegate(arg0))), UnifiedReal.TWO));
+                        break;
+                    case "cosh":
+                        stack.push(getDivide(getAdd(getPowUR(UR_E, arg0), getPowUR(UR_E, getNegate(arg0))), UnifiedReal.TWO));
+                        break;
+                    case "tanh": {
+                        const t1 = getPowUR(UR_E, arg0);
+                        const t2 = getPowUR(UR_E, getNegate(arg0));
+                        stack.push(getDivide(getSub(t1, t2), getAdd(t1, t2)));
+                        break;
+                    }
+                    case "asinh":
+                        stack.push(getLn(getAdd(arg0, getSqrt(getAdd(getMultiply(arg0, arg0), UnifiedReal.ONE)))));
+                        break;
+                    case "acosh":
+                        stack.push(getLn(getAdd(arg0, getSqrt(getSub(getMultiply(arg0, arg0), UnifiedReal.ONE)))));
+                        break;
+                    case "atanh":
+                        stack.push(getDivide(getLn(getDivide(getAdd(UnifiedReal.ONE, arg0), getSub(UnifiedReal.ONE, arg0))), UnifiedReal.TWO));
                         break;
                 }
             } catch (e) {

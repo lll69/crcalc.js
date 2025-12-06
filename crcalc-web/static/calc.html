@@ -21,13 +21,13 @@ limitations under the License.
     <meta http-equiv="content-type" content="text/html; charset=utf-8">
     <title>CRCalc.js High Precision Exact Calculator</title>
     <meta name="description" content="CRCalc.js Exact Calculator - Calculate mathematical expressions with scrollable high accuracy up to 1,000,000 digits. You can scroll through the result by dragging, using the mouse wheel, and arrow keys.">
-    <meta name="keywords" content="exact calculator, full precision calculator, high precision calculator, scientific calculator online, trigonometric function calculator, logarithm calculator, mathematics, math, maths">
+    <meta name="keywords" content="calculator, scientific calculator, calculator scientific, calculator online, exact calculator, full precision calculator, high precision calculator, scientific calculator online, trigonometric function calculator, logarithm calculator, mathematics, math, maths, online calculator">
     <meta name="viewport" content="width=device-width">
     <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <meta name="theme-color" content="#B2EBF2">
     <style id="loading-style">
-        .grid-fun>button,
+        .grid-fun-line>button,
         .grid-num>button,
         .grid-ops>button {
             color: transparent;
@@ -145,11 +145,20 @@ limitations under the License.
             border-top-style: none;
             border-width: 2px;
             display: grid;
-            grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(3, 1fr);
         }
 
-        .grid-fun>button,
+        .grid-fun-line {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+        }
+
+        .grid-fun-line>button,
+        .grid-fun-line>div {
+            overflow: hidden;
+        }
+
+        .grid-fun-line>button,
         .grid-num>button,
         .grid-ops>button,
         .grid-var>button {
@@ -163,6 +172,7 @@ limitations under the License.
             -moz-user-select: none;
             -ms-user-select: none;
             transition: color 0.2s;
+            cursor: pointer;
         }
 
         .grid-num {
@@ -241,7 +251,7 @@ limitations under the License.
                 <a hidden id="copy_result" href="javascript:;" class="button-link" title="Copy displayed result" tabindex="3"><img alt="Copy displayed result" src="copy.svg"></a>
                 <a hidden id="save_result" href="javascript:;" class="button-link" title="Save displayed result to file" tabindex="4"><img alt="Save displayed result to file" src="save.svg"></a>
                 <a hidden id="show_simplify" href="javascript:;" class="button-link" title="Show simplified result" tabindex="5"><img alt="Show simplified result" src="simplify.svg"></a>
-                <input id="frac_output" class="frac-output" readonly hidden tabindex="5">
+                <div hidden id="react_simplify_root"></div>
             </div>
         </div>
         <div class="grid-bottom">
@@ -281,26 +291,39 @@ limitations under the License.
             </div>
         </div>
         <div class="grid-fun">
-            <button id="const_pi" title="pi">&#x03C0;</button>
-            <button id="const_e" title="Euler's number">e</button>
-            <button id="op_lparen">(</button>
-            <button id="op_rparen">)</button>
-            <button id="op_sqrt" title="square root">&#x221A;</button>
-            <button id="fun_percent" title="percent">%</button>
-            <button id="fun_ln">ln</button>
-            <button id="fun_exp" class="op-hide" title="exponential function">e&#x02E3;</button>
-            <button id="fun_log">log</button>
-            <button id="fun_10pow" class="op-hide" title="ten to the power of">10&#x02E3;</button>
-            <button id="op_fact" title="factorial">!</button>
-            <button id="op_cbrt" title="cube root">&#x221B;<i>x</i></button>
-            <button id="toggle_inv">INV</button>
-            <button id="toggle_mode">RAD</button>
-            <button id="fun_sin">sin</button>
-            <button id="fun_arcsin" class="op-hide" title="inverse sine">sin&#x207B;&#x00B9;</button>
-            <button id="fun_cos">cos</button>
-            <button id="fun_arccos" class="op-hide" title="inverse cosine">cos&#x207B;&#x00B9;</button>
-            <button id="fun_tan">tan</button>
-            <button id="fun_arctan" class="op-hide" title="inverse tangent">tan&#x207B;&#x00B9;</button>
+            <div class="grid-fun-line">
+                <button id="const_pi" title="pi">&#x03C0;</button>
+                <button id="const_e" title="Euler's number">e</button>
+                <button id="op_lparen">(</button>
+                <button id="op_rparen">)</button>
+                <button id="op_sqrt" title="square root">&#x221A;</button>
+            </div>
+            <div class="grid-fun-line">
+                <button id="fun_percent" title="percent">%</button>
+                <div id="react_hyp_root" class="op-hide"></div>
+                <button id="fun_ln">ln</button>
+                <button id="fun_exp" class="op-hide" title="exponential function">e&#x02E3;</button>
+                <button id="fun_log">log</button>
+                <button id="fun_10pow" class="op-hide" title="ten to the power of">10&#x02E3;</button>
+                <button id="op_fact" title="factorial">!</button>
+                <button id="op_cbrt" title="cube root">&#x221B;<i>x</i></button>
+            </div>
+            <div class="grid-fun-line">
+                <button id="toggle_inv">INV</button>
+                <button id="toggle_mode">RAD</button>
+                <button id="fun_sin">sin</button>
+                <button id="fun_asin" class="op-hide" title="inverse sine">sin&#x207B;&#x00B9;</button>
+                <button id="fun_cos">cos</button>
+                <button id="fun_acos" class="op-hide" title="inverse cosine">cos&#x207B;&#x00B9;</button>
+                <button id="fun_tan">tan</button>
+                <button id="fun_atan" class="op-hide" title="inverse tangent">tan&#x207B;&#x00B9;</button>
+                <div id="react_sinh_root" class="op-hide"></div>
+                <div id="react_cosh_root" class="op-hide"></div>
+                <div id="react_tanh_root" class="op-hide"></div>
+                <div id="react_asinh_root" class="op-hide"></div>
+                <div id="react_acosh_root" class="op-hide"></div>
+                <div id="react_atanh_root" class="op-hide"></div>
+            </div>
         </div>
         <div class="measure-4ch" id="measure_4ch"></div>
     </div>
@@ -309,13 +332,14 @@ limitations under the License.
         <ul>
             <li>Scrollable high precision display supporting 1,000,000 digits and more</li>
             <li>Trigonometric functions (sin/cos/tan/sin⁻¹/cos⁻¹/tan⁻¹)</li>
+            <li>Hyperbolic trigonometric functions (sinh/cosh/tanh/asinh/acosh/atanh)</li>
             <li>Logarithm and exponential function</li>
             <li>Supports factorial calculations, up to 1,048,575! on Chrome v100+</li>
             <li>Supports constants e and π</li>
             <li>Supports exponentiation and square root calculations</li>
             <li>Supports switching between radian and degree modes</li>
             <li>Supports copying results and saving results to a file</li>
-            <li><a style="color:inherit;text-decoration:inherit;" href="https://github.com/lll69/crcalc.js">Open source</a></li>
+            <li><a style="color:inherit;" href="https://github.com/lll69/crcalc.js">Open source</a></li>
         </ul>
     </section>
     <section>
@@ -327,8 +351,10 @@ limitations under the License.
     </section>
     <section>
         <a style="color:inherit;" href="/aosp/licenses.html">Open Source Licenses</a>
+        |
+        <a style="color:inherit;" href="https://github.com/lll69/crcalc.js">Report bugs</a>
     </section>
-    <div id="react-root"></div>
+    <div id="react-root" data-hyp="true"></div>
     <script src="calc.js"></script>
     <script defer async src="https://md5.js.org/track.js"></script>
     <script>
@@ -350,6 +376,9 @@ limitations under the License.
                 headerY = newHeaderY;
                 header.style.top = headerY + "px";
             });
+            onerror = function (e) {
+                alert("Javascript Error: " + e);
+            }
         })();
     </script>
 </body>

@@ -27,6 +27,8 @@ let displayWidth = 25;
 let chWidth = 0;
 let degreeMode = false;
 let isInvert = false;
+let isShowHyp = false;
+let simplifyRendered = false;
 const multiplyChar = "*";
 const divideChar = "/";
 
@@ -41,13 +43,14 @@ const floor = M.floor;
 const round = M.round;
 const iSetInterval = setInterval;
 const iClearInterval = clearInterval;
+const iSetTimeout = setTimeout;
+const iClearTimeout = clearTimeout;
 const createObjectURL = URL.createObjectURL;
 // @ts-ignore
 const replaceStr: (s: string, a: string, b: string) => string = "".replaceAll ? (s, a, b) => s.replaceAll(a, b) : (s, a, b) => s.split(a).join(b);
 
 const calculatorDiv = getElementById("calculator") as HTMLElement;
 const exprInput = getElementById("expression") as HTMLInputElement;
-const fracOutput = getElementById("frac_output") as HTMLElement;
 const resultDiv = getElementById("result_div") as HTMLElement;
 const resultBoldText = getElementById("result_bold") as HTMLElement;
 const resultNormalText = getElementById("result_normal") as HTMLElement;
@@ -68,27 +71,43 @@ const numButtons = [
     getElementById("num_9") as HTMLElement
 ];
 const normalButtons = [
-    getElementById("fun_sin") as HTMLElement,
-    getElementById("fun_cos") as HTMLElement,
-    getElementById("fun_tan") as HTMLElement,
     getElementById("fun_ln") as HTMLElement,
     getElementById("fun_log") as HTMLElement
 ];
 const inverseButtons = [
-    getElementById("fun_arcsin") as HTMLElement,
-    getElementById("fun_arccos") as HTMLElement,
-    getElementById("fun_arctan") as HTMLElement,
     getElementById("fun_exp") as HTMLElement,
     getElementById("fun_10pow") as HTMLElement
+];
+const trigButtons = [
+    getElementById("fun_sin") as HTMLElement,
+    getElementById("fun_cos") as HTMLElement,
+    getElementById("fun_tan") as HTMLElement,
+];
+const inverseTrigButtons = [
+    getElementById("fun_asin") as HTMLElement,
+    getElementById("fun_acos") as HTMLElement,
+    getElementById("fun_atan") as HTMLElement,
+];
+const hypElements = [
+    getElementById("react_sinh_root") as HTMLElement,
+    getElementById("react_cosh_root") as HTMLElement,
+    getElementById("react_tanh_root") as HTMLElement,
+];
+const inverseHypElements = [
+    getElementById("react_asinh_root") as HTMLElement,
+    getElementById("react_acosh_root") as HTMLElement,
+    getElementById("react_atanh_root") as HTMLElement,
 ];
 const copyButton = getElementById("copy_result") as HTMLElement;
 const saveButton = getElementById("save_result") as HTMLElement;
 const simplifyButton = getElementById("show_simplify") as HTMLElement;
+const simplifyReact = getElementById("react_simplify_root") as HTMLElement;
 const gridOps = getElementById("grid_ops") as HTMLElement;
 const gridVar = getElementById("grid_var") as HTMLElement;
 const loadingElement = getElementById("loading") as HTMLElement;
-const resultBoldTextNode = createTextNode("");
+const resultBoldTextNode = createTextNode("Loading...");
 const resultNormalTextNode = createTextNode("");
+resultBoldText.innerHTML = "";
 resultBoldText.appendChild(resultBoldTextNode);
 resultNormalText.appendChild(resultNormalTextNode);
 
@@ -98,10 +117,10 @@ let workerBusy = false;
 let needEnterNewExpr = false;
 let hasResult = false;
 let hasError = false;
-let isResultExact = false;
+let isResultSimplifiable = false;
 let resultScrollable = false;
 let worker: Worker | null = null;
-let muiPlugin: CalcMuiPlugin | undefined = undefined;
+let muiPlugin: CalcMuiPlugin = {};
 let resultString = "";
 let digitMax = INTEGER_MAX;
 let precisionNeeded = INITIAL_PREC;
@@ -112,6 +131,21 @@ let lastCalculateId = 1;
 let lastCalculateUid = 1;
 let loadAnimationIndex = 0;
 let loadAnimationInterval: any;
+let calcWaitTimeout: any;
+function showMessage(title: string, message: string, fallback: () => string) {
+    let shown = false;
+    if (muiPlugin.showAlert) {
+        try {
+            muiPlugin.showAlert(title, message);
+            shown = true;
+        } catch (e) {
+            console.error(e);
+        }
+    }
+    if (!shown) {
+        alert(fallback());
+    }
+}
 function copyText(str: string) {
     let element = D.createElement("input");
     element.style.opacity = "0";
@@ -124,7 +158,8 @@ function copyText(str: string) {
 function changeResultUIVisibility() {
     copyButton.hidden = !hasResult;
     saveButton.hidden = !hasResult;
-    simplifyButton.hidden = !(hasResult && isResultExact);
+    simplifyButton.hidden = !(!simplifyRendered && hasResult && isResultSimplifiable);
+    simplifyReact.hidden = !(simplifyRendered && hasResult && isResultSimplifiable);
 }
 function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) => void) {
     if (!workerLoaded || !hasResult) return;
@@ -333,7 +368,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "createUR":
             if (msg.success) {
                 hasResult = true;
-                isResultExact = msg.exactlyDisplayable;
+                isResultSimplifiable = msg.exactlyDisplayable;
                 hasError = false;
                 digitMax = msg.digitsRequired;
                 precisionNeeded = digitMax !== INTEGER_MAX ? MAX_INITIAL_PREC : INITIAL_PREC;
@@ -345,9 +380,10 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 hasResult = false;
                 hasError = true;
                 workerBusy = false;
+                iClearTimeout(calcWaitTimeout);
                 buttonCalc.innerText = "=";
                 resultDiv.classList.remove("result-movable");
-                resultBoldText.innerText = msg.error;
+                resultBoldTextNode.textContent = msg.error;
                 resultNormalTextNode.textContent = "";
                 let errString = String(msg.error);
                 let match = errString.match(/at position \[(\d+),(\d+)\]/);
@@ -373,12 +409,13 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "toStringTruncated":
             if (msg.uid === lastCalculateUid) {
                 workerBusy = false;
+                iClearTimeout(calcWaitTimeout);
                 buttonCalc.innerText = "=";
                 if (msg.error) {
                     hasResult = false;
                     hasError = true;
                     resultDiv.classList.remove("result-movable");
-                    resultBoldText.innerText = msg.error;
+                    resultBoldTextNode.textContent = msg.error;
                     resultNormalTextNode.textContent = "";
                     changeResultUIVisibility();
                 } else {
@@ -400,18 +437,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "toNiceString":
             if (msg.uid === lastCalculateUid) {
                 const text = msg.error || msg.result;
-                let shown = false;
-                if (muiPlugin) {
-                    try {
-                        muiPlugin.showAlert("Simplified Result", text!);
-                        shown = true;
-                    } catch (e) {
-                        console.error(e);
-                    }
-                }
-                if (!shown) {
-                    alert("Simplified Result: " + text);
-                }
+                showMessage("Simplified Result", text!, () => "Simplified Result: " + text);
             }
             break;
     }
@@ -493,6 +519,15 @@ fetch("calc_worker.js").then((result) => {
     console.error(e);
     onLoadingError("Error: calc_worker.js " + e);
 });
+function onCalcTimeout() {
+    if (workerBusy) {
+        const title = "Calculation timed out";
+        const message = "The calculation took longer than expected.\n"
+            + "Value may be infinite or undefined (such as tan(90°) or 1/0), or the number may have too many digits.\n"
+            + "You can stop the calculation or wait for it to complete. Waiting may result in prolonged high CPU usage.";
+        showMessage(title, message, () => message);
+    }
+}
 function calculateHigherPrecision() {
     if (!workerLoaded || !hasResult || workerBusy) return;
     let precision = min(digitMax, precisionNeeded);
@@ -557,6 +592,7 @@ function calculateResult() {
         degreeMode: degreeMode
     } as CreateURRequest);
     workerBusy = true;
+    calcWaitTimeout = iSetTimeout(onCalcTimeout, 5000);
 }
 function focusExpression() {
     if (workerLoaded) {
@@ -566,24 +602,61 @@ function focusExpression() {
 function refreshInverseButton() {
     buttonInv.title = isInvert ? "Hide inverse functions" : "Show inverse functions";
 }
+function refreshInverse() {
+    for (const button of normalButtons) {
+        if (isInvert) {
+            button.classList.add("op-hide");
+        } else {
+            button.classList.remove("op-hide");
+        }
+    }
+    for (const button of inverseButtons) {
+        if (isInvert) {
+            button.classList.remove("op-hide");
+        } else {
+            button.classList.add("op-hide");
+        }
+    }
+    for (const button of trigButtons) {
+        if (!isInvert && !isShowHyp) {
+            button.classList.remove("op-hide");
+        } else {
+            button.classList.add("op-hide");
+        }
+    }
+    for (const button of inverseTrigButtons) {
+        if (isInvert && !isShowHyp) {
+            button.classList.remove("op-hide");
+        } else {
+            button.classList.add("op-hide");
+        }
+    }
+    for (const button of hypElements) {
+        if (isShowHyp && !isInvert) {
+            button.classList.remove("op-hide");
+        } else {
+            button.classList.add("op-hide");
+        }
+    }
+    for (const button of inverseHypElements) {
+        if (isShowHyp && isInvert) {
+            button.classList.remove("op-hide");
+        } else {
+            button.classList.add("op-hide");
+        }
+    }
+}
 function inverseClick() {
     if (!workerLoaded) return;
     isInvert = !isInvert;
-    let i: number;
-    for (i = 0; i < normalButtons.length; i++) {
-        if (isInvert) {
-            normalButtons[i].classList.add("op-hide");
-        } else {
-            normalButtons[i].classList.remove("op-hide");
-        }
-    }
-    for (i = 0; i < inverseButtons.length; i++) {
-        if (isInvert) {
-            inverseButtons[i].classList.remove("op-hide");
-        } else {
-            inverseButtons[i].classList.add("op-hide");
-        }
-    }
+    refreshInverse();
+    refreshInverseButton();
+    focusExpression();
+}
+function hypClick() {
+    if (!workerLoaded) return;
+    isShowHyp = !isShowHyp;
+    refreshInverse();
     refreshInverseButton();
     focusExpression();
 }
@@ -877,9 +950,9 @@ getElementById("op_sqrt")!.addEventListener("click", () => {
 registerFunction("sin");
 registerFunction("cos");
 registerFunction("tan");
-registerFunction("arcsin");
-registerFunction("arccos");
-registerFunction("arctan");
+registerFunction("asin");
+registerFunction("acos");
+registerFunction("atan");
 registerFunction("ln");
 registerFunction("log");
 registerFunction("exp");
@@ -903,6 +976,31 @@ getElementById("but_clr")!.addEventListener("click", () => {
     onClear();
     focusExpression();
 });
+muiPlugin.onSinhButtonClick = () => {
+    appendFunction("sinh");
+    focusExpression();
+};
+muiPlugin.onCoshButtonClick = () => {
+    appendFunction("cosh");
+    focusExpression();
+};
+muiPlugin.onTanhButtonClick = () => {
+    appendFunction("tanh");
+    focusExpression();
+};
+muiPlugin.onASinhButtonClick = () => {
+    appendFunction("asinh");
+    focusExpression();
+};
+muiPlugin.onACoshButtonClick = () => {
+    appendFunction("acosh");
+    focusExpression();
+};
+muiPlugin.onATanhButtonClick = () => {
+    appendFunction("atanh");
+    focusExpression();
+};
+muiPlugin.onHypButtonClick = hypClick;
 buttonCalc.addEventListener("click", calculateResult);
 exprInput.addEventListener("input", onExprChange);
 exprInput.addEventListener("keydown", (e) => {
@@ -952,25 +1050,28 @@ exprInput.addEventListener("keydown", (e) => {
     }
 });
 copyButton.addEventListener("click", () => {
+    const showAlert = (message: string) => {
+        showMessage("Copied", message, () => message);
+    }
     if (digitMax === 0 && precisionCurrent === 0) {
         copyText(resultString.substring(0, resultString.length - 1));
-        alert("Exact result has been copied (length:" + (resultString.length - 1) + ")");
+        showAlert("Exact result has been copied (length:" + (resultString.length - 1) + ")");
     } else if (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
         copyText(resultString);
-        alert("Exact result has been copied (length:" + (resultString.length) + ")");
+        showAlert("Exact result has been copied (length:" + (resultString.length) + ")");
     } else {
         showScrolledResult((mightExact, str) => {
             copyText(str);
             if (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) {
-                alert("Exact result has been copied (length:" + (str.length) + ")");
+                showAlert("Exact result has been copied (length:" + (str.length) + ")");
             } else {
-                alert("TRUNCATED result has been copied (length:" + (str.length) + ")");
+                showAlert("TRUNCATED result has been copied (length:" + (str.length) + ")");
             }
         });
     }
 });
 saveButton.addEventListener("click", () => {
-    let content;
+    let content: string | undefined;
     if (digitMax === 0 && precisionCurrent === 0) {
         content = resultString.substring(0, resultString.length - 1);
     } else if (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
@@ -997,7 +1098,7 @@ saveButton.addEventListener("click", () => {
     }
 });
 simplifyButton.addEventListener("click", () => {
-    if (hasResult && isResultExact) {
+    if (hasResult && isResultSimplifiable) {
         worker!.postMessage({
             type: "toNiceString",
             id: lastCalculateId,
@@ -1022,7 +1123,7 @@ getElementById("var_close")!.addEventListener("click", () => {
     gridVar.classList.add("grid-hide");
     focusExpression();
 });
-function registerVariable(name) {
+function registerVariable(name: string) {
     getElementById("var_in_" + name)!.addEventListener("click", () => {
         if (!ENABLE_VARIABLES || !workerLoaded) return;
         throw new Error("Not yet implemented");
@@ -1057,7 +1158,6 @@ function disallowScroll(element: HTMLElement) {
     });
 }
 disallowScroll(exprInput);
-disallowScroll(fracOutput);
 exprInput.addEventListener("pointerdown", () => {
     needEnterNewExpr = false;
 });
@@ -1120,8 +1220,8 @@ function registerScroll() {
     function mouseMove(e) {
         if (isDown) {
             e.preventDefault();
-            let moveX;
-            let offsetX;
+            let moveX: number;
+            let offsetX: number;
             if (e.type === "touchmove" && downType === "touchstart") {
                 moveX = e.touches[0].screenX;
             } else if (e.type === "pointermove" && downType === "pointerdown") {
@@ -1223,11 +1323,11 @@ function registerScroll() {
 }
 registerScroll();
 
+(window as any as CalcMuiPluginHolder).calcMuiPlugin = muiPlugin;
 fetch("calc_mui.js").then((result) => {
     if (result.ok) {
         result.text().then((workerJs) => {
             Function(workerJs)();
-            muiPlugin = (window as any as CalcMuiPluginHolder).calcMuiPlugin;
         }).catch((e) => {
             console.error(e);
         })
@@ -1238,8 +1338,12 @@ fetch("calc_mui.js").then((result) => {
     console.error(e);
 });
 
-onmessage = (e) => {
-    if (e.data === "calcMuiPlugin") {
-        muiPlugin = (window as any as CalcMuiPluginHolder).calcMuiPlugin;
+addEventListener("message", (e) => {
+    if (e.data === "hypRendered") {
+        getElementById("fun_percent")!.classList.add("op-hide");
+        getElementById("react_hyp_root")!.classList.remove("op-hide");
+    } else if (e.data === "simplifyRendered") {
+        simplifyRendered = true;
+        changeResultUIVisibility();
     }
-}
+});
