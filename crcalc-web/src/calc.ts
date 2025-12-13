@@ -29,6 +29,7 @@ let degreeMode = false;
 let isInvert = false;
 let isShowHyp = false;
 let simplifyRendered = false;
+let invRendered = false;
 const multiplyChar = "*";
 const divideChar = "/";
 
@@ -55,6 +56,7 @@ const resultDiv = getElementById("result_div") as HTMLElement;
 const resultBoldText = getElementById("result_bold") as HTMLElement;
 const resultNormalText = getElementById("result_normal") as HTMLElement;
 const buttonInv = getElementById("toggle_inv") as HTMLElement;
+const invReact = getElementById("react_inv_root") as HTMLElement;
 const buttonCalc = getElementById("but_eq") as HTMLElement;
 const buttonMode = getElementById("toggle_mode") as HTMLElement;
 const measureDiv = getElementById("measure_4ch") as HTMLElement;
@@ -111,6 +113,7 @@ resultBoldText.innerHTML = "";
 resultBoldText.appendChild(resultBoldTextNode);
 resultNormalText.appendChild(resultNormalTextNode);
 
+const muiPlugin: CalcMuiPlugin = {};
 let workerContent: string | null = null;
 let workerLoaded = false;
 let workerBusy = false;
@@ -120,7 +123,6 @@ let hasError = false;
 let isResultSimplifiable = false;
 let resultScrollable = false;
 let worker: Worker | null = null;
-let muiPlugin: CalcMuiPlugin = {};
 let resultString = "";
 let digitMax = INTEGER_MAX;
 let precisionNeeded = INITIAL_PREC;
@@ -574,6 +576,7 @@ function calculateResult() {
     if (workerBusy) {
         reInitWorker();
         buttonCalc.innerText = "=";
+        iClearTimeout(calcWaitTimeout);
         return;
     }
     clearResult();
@@ -592,6 +595,7 @@ function calculateResult() {
         degreeMode: degreeMode
     } as CreateURRequest);
     workerBusy = true;
+    iClearTimeout(calcWaitTimeout);
     calcWaitTimeout = iSetTimeout(onCalcTimeout, 5000);
 }
 function focusExpression() {
@@ -601,6 +605,16 @@ function focusExpression() {
 }
 function refreshInverseButton() {
     buttonInv.title = isInvert ? "Hide inverse functions" : "Show inverse functions";
+    invReact.title = isInvert ? "Hide inverse functions" : "Show inverse functions";
+    if (invRendered) {
+        if (isInvert) {
+            buttonInv.classList.add("op-hide");
+            invReact.classList.remove("op-hide");
+        } else {
+            buttonInv.classList.remove("op-hide");
+            invReact.classList.add("op-hide");
+        }
+    }
 }
 function refreshInverse() {
     for (const button of normalButtons) {
@@ -653,9 +667,9 @@ function inverseClick() {
     refreshInverseButton();
     focusExpression();
 }
-function hypClick() {
+function hypClick(show: boolean) {
     if (!workerLoaded) return;
-    isShowHyp = !isShowHyp;
+    isShowHyp = show;
     refreshInverse();
     refreshInverseButton();
     focusExpression();
@@ -1001,6 +1015,7 @@ muiPlugin.onATanhButtonClick = () => {
     focusExpression();
 };
 muiPlugin.onHypButtonClick = hypClick;
+muiPlugin.onInvButtonClick = inverseClick;
 buttonCalc.addEventListener("click", calculateResult);
 exprInput.addEventListener("input", onExprChange);
 exprInput.addEventListener("keydown", (e) => {
@@ -1282,7 +1297,7 @@ function registerScroll() {
         }
     });
     resultDiv.addEventListener("keydown", (e) => {
-        let newScrollOffset;
+        let newScrollOffset: number;
         switch (e.key) {
             case "ArrowLeft":
             case "ArrowUp":
@@ -1326,8 +1341,8 @@ registerScroll();
 (window as any as CalcMuiPluginHolder).calcMuiPlugin = muiPlugin;
 fetch("calc_mui.js").then((result) => {
     if (result.ok) {
-        result.text().then((workerJs) => {
-            Function(workerJs)();
+        result.text().then((content) => {
+            Function(content)();
         }).catch((e) => {
             console.error(e);
         })
@@ -1345,5 +1360,24 @@ addEventListener("message", (e) => {
     } else if (e.data === "simplifyRendered") {
         simplifyRendered = true;
         changeResultUIVisibility();
+    } else if (e.data === "invRendered") {
+        invRendered = true;
+        refreshInverseButton();
     }
 });
+
+if (!location.toString().startsWith("file:")) {
+    fetch("/counter.js").then((result) => {
+        if (result.ok) {
+            result.text().then((content) => {
+                Function(content)();
+            }).catch((e) => {
+                console.error(e);
+            })
+        } else {
+            console.error("Error: counter.js status=" + result.status);
+        }
+    }).catch((e) => {
+        console.error(e);
+    });
+}

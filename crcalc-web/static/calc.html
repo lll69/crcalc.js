@@ -158,6 +158,10 @@ limitations under the License.
             overflow: hidden;
         }
 
+        .grid-fun-line>div>button {
+            cursor: pointer;
+        }
+
         .grid-fun-line>button,
         .grid-num>button,
         .grid-ops>button,
@@ -310,6 +314,7 @@ limitations under the License.
             </div>
             <div class="grid-fun-line">
                 <button id="toggle_inv">INV</button>
+                <div id="react_inv_root" class="op-hide"></div>
                 <button id="toggle_mode">RAD</button>
                 <button id="fun_sin">sin</button>
                 <button id="fun_asin" class="op-hide" title="inverse sine">sin&#x207B;&#x00B9;</button>
@@ -354,9 +359,9 @@ limitations under the License.
         |
         <a style="color:inherit;" href="https://github.com/lll69/crcalc.js">Report bugs</a>
     </section>
-    <div id="react-root" data-hyp="true"></div>
+    <div id="react-root" data-hyp="true" data-inv="true"></div>
+    <script>window.onerror = function (e) { alert("Javascript Error: " + e); }</script>
     <script src="calc.js"></script>
-    <script defer async src="https://md5.js.org/track.js"></script>
     <script>
         (function () {
             let lastScrollTop = 0;
@@ -376,9 +381,6 @@ limitations under the License.
                 headerY = newHeaderY;
                 header.style.top = headerY + "px";
             });
-            onerror = function (e) {
-                alert("Javascript Error: " + e);
-            }
         })();
     </script>
 </body>

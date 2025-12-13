@@ -7,7 +7,7 @@ import DialogActions from '@mui/material/DialogActions';
 import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
-import { CalcMuiPluginHolder } from './calc_mui_types';
+import { CalcMuiPlugin, CalcMuiPluginHolder } from './calc_mui_types';
 
 const themeProps = {
     palette: {
@@ -23,17 +23,17 @@ const AlertDialog = () => {
     const [alertText, setAlertText] = React.useState("");
 
     const closeAlert = () => {
-        setOpenAlert(false);
         if (location.hash === "##mui-dialog") {
             history.back();
         }
+        setOpenAlert(false);
     };
 
     const showAlert = (title: string, text: string) => {
+        history.pushState({}, "", "##mui-dialog");
         setAlertTitle(title);
         setAlertText(text);
         setOpenAlert(true);
-        history.pushState({}, "", "##mui-dialog");
     }
 
     React.useEffect(() => {
@@ -42,6 +42,9 @@ const AlertDialog = () => {
             if (location.hash !== "##mui-dialog" && openAlert) {
                 closeAlert();
             }
+        }
+        if (location.hash === "##mui-dialog" && !openAlert) {
+            location.hash = "##";
         }
         addEventListener("hashchange", hashChange);
 
@@ -114,6 +117,20 @@ const SimplifyButtonApp = ({ click }: { click: () => void }) => {
     )
 };
 
+const HypButtonApp = ({ plugin }: { plugin: CalcMuiPlugin }) => {
+    const [show, setShow] = React.useState(false);
+    const click = () => {
+        const newShow = !show;
+        plugin.onHypButtonClick && plugin.onHypButtonClick(newShow);
+        setShow(newShow);
+    }
+    return show ? (
+        <ButtonApp text="HYP" click={click} />
+    ) : (
+        <button style={{ width: "100%", height: "100%", fontSize: "1em", minWidth: "0" }} onClick={click}>HYP</button>
+    )
+};
+
 if (!(window as any as CalcMuiPluginHolder).calcMuiPlugin) {
     (window as any as CalcMuiPluginHolder).calcMuiPlugin = {};
 }
@@ -127,7 +144,7 @@ ReactDOM.createRoot(reactRoot).render(
 
 if (reactRoot.dataset.hyp === "true") {
     ReactDOM.createRoot(getElementById("react_hyp_root")!).render(
-        <ButtonApp text="HYP" click={() => { plugin.onHypButtonClick && plugin.onHypButtonClick() }} />
+        <HypButtonApp plugin={plugin} />
     );
     ReactDOM.createRoot(getElementById("react_sinh_root")!).render(
         <ButtonApp text="sinh" click={() => { plugin.onSinhButtonClick && plugin.onSinhButtonClick() }} />
@@ -155,4 +172,10 @@ if (reactRoot.dataset.simp === "true") {
         <SimplifyButtonApp click={() => link.click()} />
     );
     postMessage("simplifyRendered");
+}
+if (reactRoot.dataset.inv === "true") {
+    ReactDOM.createRoot(getElementById("react_inv_root")!).render(
+        <ButtonApp text="INV" click={() => { plugin.onInvButtonClick && plugin.onInvButtonClick() }} />
+    );
+    postMessage("invRendered");
 }

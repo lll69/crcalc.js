@@ -2,5 +2,8 @@
     "workspaces": [
         "crcalc-js",
         "crcalc-web"
-    ]
+    ],
+    "scripts": {
+        "build-web": "cd crcalc-web && npm run build"
+    }
 }
