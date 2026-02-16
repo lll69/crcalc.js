@@ -1230,6 +1230,9 @@ function registerScroll() {
             lastSpeed = 0;
             isDown = true;
             resultDiv.focus({ preventScroll: true });
+            if (!resultDiv.classList.contains("result-movable-active")) {
+                resultDiv.classList.add("result-movable-active");
+            }
         }
     }
     function mouseMove(e) {
@@ -1273,6 +1276,7 @@ function registerScroll() {
             if (abs(lastSpeed) > chWidth) {
                 lastInterval = iSetInterval(timedScroll, SCROLL_TICK);
             }
+            resultDiv.classList.remove("result-movable-active");
         }
     }
     const P = { passive: false };

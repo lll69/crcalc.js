@@ -36,6 +36,7 @@ limitations under the License.
     <style>
         body {
             margin: 0;
+            font-family: Roboto, sans-serif;
         }
 
         .header {
@@ -58,7 +59,7 @@ limitations under the License.
             min-width: 16ch;
             max-width: 26ch;
             font-size: 2em;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Roboto Mono', 'JetBrains Mono', 'Courier New', Courier, monospace;
         }
 
         .display {
@@ -71,7 +72,7 @@ limitations under the License.
 
         .display>input {
             font-size: 1em;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Roboto Mono', 'JetBrains Mono', 'Courier New', Courier, monospace;
             border: none;
             min-width: 0;
         }
@@ -104,6 +105,11 @@ limitations under the License.
             pointer-events: none;
         }
 
+        .result-movable:active, .result-movable-active {
+            cursor: grabbing;
+        }
+
+
         .no-select {
             user-select: none;
             -webkit-user-select: none;
@@ -123,7 +129,7 @@ limitations under the License.
 
         .frac-output {
             font-size: 1em;
-            font-family: 'Courier New', Courier, monospace;
+            font-family: 'Roboto Mono', 'JetBrains Mono', 'Courier New', Courier, monospace;
             flex-grow: 1;
             text-align: right;
             border: none;
@@ -170,7 +176,7 @@ limitations under the License.
             overflow: hidden;
             height: 1.5em;
             font-size: 1em;
-            font-family: initial;
+            font-family: Roboto, sans-serif;
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
@@ -231,7 +237,15 @@ limitations under the License.
         section {
             margin: 8px;
         }
+
+        #react_hyp_root,
+        #react_sinh_root,
+        #react_cosh_root,
+        #react_tanh_root {
+            height: 1.5em;
+        }
     </style>
+    <link rel="stylesheet" href="roboto.css">
     <link rel="preload" as="image" href="copy.svg">
     <link rel="preload" as="image" href="save.svg">
     <link rel="preload" as="image" href="simplify.svg">
