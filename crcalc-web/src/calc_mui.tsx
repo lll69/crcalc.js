@@ -8,6 +8,7 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { CalcMuiPlugin, CalcMuiPluginHolder } from './calc_mui_types';
+import { FormControlLabel, Radio, RadioGroup } from '@mui/material';
 
 const themeProps = {
     palette: {
@@ -15,26 +16,30 @@ const themeProps = {
             main: "#00BCD4"
         }
     }
-}
+};
+
+const hiddenStyle = {
+    display: "none !important"
+};
 
 const AlertDialog = () => {
     const [openAlert, setOpenAlert] = React.useState(false);
     const [alertTitle, setAlertTitle] = React.useState("");
     const [alertText, setAlertText] = React.useState("");
 
-    const closeAlert = () => {
+    const closeAlert = React.useCallback(() => {
         if (location.hash === "##mui-dialog") {
             history.back();
         }
         setOpenAlert(false);
-    };
+    }, []);
 
-    const showAlert = (title: string, text: string) => {
+    const showAlert = React.useCallback((title: string, text: string) => {
         history.pushState({}, "", "##mui-dialog");
         setAlertTitle(title);
         setAlertText(text);
         setOpenAlert(true);
-    }
+    }, []);
 
     React.useEffect(() => {
         (window as any as CalcMuiPluginHolder).calcMuiPlugin.showAlert = showAlert;
@@ -59,8 +64,7 @@ const AlertDialog = () => {
             open={openAlert}
             onClose={closeAlert}
             aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-        >
+            aria-describedby="alert-dialog-description">
             <DialogTitle id="alert-dialog-title">
                 {alertTitle}
             </DialogTitle>
@@ -78,13 +82,83 @@ const AlertDialog = () => {
     );
 };
 
+const OptionDialog = () => {
+    const [openAlert, setOpenAlert] = React.useState(false);
+    const [showExact, setShowExact] = React.useState(false);
+
+    const closeAlert = React.useCallback(() => {
+        if (location.hash === "##mui-dialog-save") {
+            history.back();
+        }
+        setOpenAlert(false);
+    }, []);
+
+    const showAlert = React.useCallback((showExact: boolean) => {
+        history.pushState({}, "", "##mui-dialog-save");
+        setShowExact(showExact);
+        setOpenAlert(true);
+    }, []);
+
+    React.useEffect(() => {
+        (window as any as CalcMuiPluginHolder).calcMuiPlugin.showSaveOption = showAlert;
+        const hashChange = () => {
+            if (location.hash !== "##mui-dialog-save" && openAlert) {
+                closeAlert();
+            }
+        }
+        if (location.hash === "##mui-dialog-save" && !openAlert) {
+            location.hash = "##";
+        }
+        addEventListener("hashchange", hashChange);
+
+        return () => {
+            (window as any as CalcMuiPluginHolder).calcMuiPlugin.showSaveOption = undefined;
+            removeEventListener("hashchange", hashChange);
+        };
+    });
+
+    const handleChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
+        if (plugin.onSaveClick) plugin.onSaveClick(event.target.value);
+        closeAlert();
+    }, []);
+
+    return (
+        <Dialog
+            open={openAlert}
+            onClose={closeAlert}
+            aria-labelledby="alert-dialog-title"
+            aria-describedby="alert-dialog-description">
+            <DialogTitle id="alert-dialog-title">
+                Save Result
+            </DialogTitle>
+            <DialogContent>
+                <RadioGroup
+                    id="alert-dialog-description"
+                    value="choose"
+                    onChange={handleChange}>
+                    <FormControlLabel value="choose" control={<Radio />} label="Choose Option" sx={hiddenStyle} />
+                    <FormControlLabel value="exact" control={<Radio />} label="Save Exact Result" sx={showExact ? undefined : hiddenStyle} />
+                    <FormControlLabel value="truncated" control={<Radio />} label="Save Truncated Result" />
+                    <FormControlLabel value="integer" control={<Radio />} label="Save Integer Part" />
+                </RadioGroup>
+            </DialogContent>
+            <DialogActions>
+                <Button onClick={closeAlert}>
+                    Cancel
+                </Button>
+            </DialogActions>
+        </Dialog>
+    );
+}
+
 const DialogApp = () => {
-    const theme = createTheme(themeProps);
+    const theme = React.useMemo(() => createTheme(themeProps), []);
     return (
         <React.StrictMode>
             <StyledEngineProvider injectFirst>
                 <ThemeProvider theme={theme}>
                     <AlertDialog />
+                    <OptionDialog />
                 </ThemeProvider>
             </StyledEngineProvider>
         </React.StrictMode>
@@ -92,7 +166,7 @@ const DialogApp = () => {
 };
 
 const ButtonApp = ({ text, click }: { text: string, click: () => void }) => {
-    const theme = createTheme(themeProps);
+    const theme = React.useMemo(() => createTheme(themeProps), []);
     return (
         <React.StrictMode>
             <StyledEngineProvider injectFirst>
@@ -105,7 +179,7 @@ const ButtonApp = ({ text, click }: { text: string, click: () => void }) => {
 };
 
 const SimplifyButtonApp = ({ click }: { click: () => void }) => {
-    const theme = createTheme(themeProps);
+    const theme = React.useMemo(() => createTheme(themeProps), []);
     return (
         <React.StrictMode>
             <StyledEngineProvider injectFirst>

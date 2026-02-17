@@ -101,6 +101,8 @@ const inverseHypElements = [
     getElementById("react_atanh_root") as HTMLElement,
 ];
 const copyButton = getElementById("copy_result") as HTMLElement;
+const copyTruncatedButton = getElementById("copy_truncated") as HTMLElement;
+const copyIntegerButton = getElementById("copy_integer") as HTMLElement;
 const saveButton = getElementById("save_result") as HTMLElement;
 const simplifyButton = getElementById("show_simplify") as HTMLElement;
 const simplifyReact = getElementById("react_simplify_root") as HTMLElement;
@@ -158,16 +160,22 @@ function copyText(str: string) {
     element.remove();
 }
 function changeResultUIVisibility() {
-    copyButton.hidden = !hasResult;
+    copyButton.hidden = copyTruncatedButton.hidden = copyIntegerButton.hidden = !hasResult;
     saveButton.hidden = !hasResult;
     simplifyButton.hidden = !(!simplifyRendered && hasResult && isResultSimplifiable);
     simplifyReact.hidden = !(simplifyRendered && hasResult && isResultSimplifiable);
 }
-function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) => void) {
+function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) => void, truncate?: boolean) {
     if (!workerLoaded || !hasResult) return;
     const resultLength = resultString.endsWith(".") ? (resultString.length - 1) : resultString.length;
     const shouldEnableSelect = (digitMax !== INTEGER_MAX && resultLength <= displayWidth);
     resultScrollable = !shouldEnableSelect;
+    if (pointIndex === -1) {
+        pointIndex = resultString.indexOf(".");
+        if (pointIndex === -1) {
+            pointIndex = resultString.length;
+        }
+    }
     if (shouldEnableSelect) {
         if (copyCallback) {
             copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
@@ -183,12 +191,6 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
         }
         resultDiv.classList.remove("result-movable");
         return;
-    }
-    if (pointIndex === -1) {
-        pointIndex = resultString.indexOf(".");
-        if (pointIndex === -1) {
-            pointIndex = resultString.length;
-        }
     }
     let rightIndex = scrollOffset + displayWidth;
     if (rightIndex > resultLength) {
@@ -246,7 +248,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
                         scientific = resultString[0] + "." + resultString.substring(1, rightIndex - powerOfTenLength - 1) + "E" + powerOfTen
                     }
                     if (copyCallback) {
-                        if (digitMax === INTEGER_MAX) {
+                        if (digitMax === INTEGER_MAX || truncate) {
                             copyCallback(false, scientific);
                         } else {
                             copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
@@ -260,7 +262,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
             }
             if (!usedScientific) {
                 if (copyCallback) {
-                    if (digitMax === INTEGER_MAX) {
+                    if (digitMax === INTEGER_MAX || truncate) {
                         copyCallback(false, resultString.substring(0, rightIndex - newOffsetStrLength) + "E" + newOffsetStr);
                     } else {
                         copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
@@ -272,7 +274,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
             }
         } else {
             if (copyCallback) {
-                if (digitMax === INTEGER_MAX) {
+                if (digitMax === INTEGER_MAX || truncate) {
                     copyCallback(false, resultString.substring(0, rightIndex - newOffsetStrLength) + "E" + newOffsetStr);
                 } else {
                     copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
@@ -285,7 +287,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
     } else if (scrollOffset === 0 || scrollOffset + 4 <= pointIndex) {
         rightIndex = min(scrollOffset + displayWidth, resultString.length);
         if (copyCallback) {
-            if (digitMax === INTEGER_MAX) {
+            if (digitMax === INTEGER_MAX || truncate) {
                 copyCallback(false, resultString.substring(0, rightIndex));
             } else {
                 copyCallback(true, digitMax === 0 ? resultString.substring(0, resultString.length - 1) : resultString);
@@ -342,6 +344,46 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
             precisionNeeded = min(digitMax, precisionNeeded);
             calculateHigherPrecision();
         }
+    }
+}
+function saveText(content: string, name: string) {
+    let url = createObjectURL(new Blob([content], { type: "text/plain" }));
+    let element = D.createElement("a");
+    element.href = url;
+    element.download = name;
+    D.body.appendChild(element);
+    element.click();
+    element.remove();
+}
+function copyResult(save: boolean, truncate: boolean) {
+    const showAlert = (message: string) => {
+        showMessage("Copied", message, () => message);
+    }
+    let content: string;
+    let exact: boolean;
+    if (!truncate && digitMax === 0 && precisionCurrent === 0) {
+        content = (resultString.substring(0, resultString.length - 1));
+        exact = true;
+    } else if (!truncate && digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
+        content = (resultString);
+        exact = true;
+    } else {
+        content = "";
+        exact = false;
+        showScrolledResult((mightExact, str) => {
+            content = (str);
+            exact = (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax)));
+        }, truncate);
+    }
+    if (!save) {
+        copyText(content);
+        if (exact) {
+            showAlert("Exact result has been copied (length:" + (content.length) + ")");
+        } else {
+            showAlert("TRUNCATED result has been copied (length:" + (content.length) + ")");
+        }
+    } else {
+        saveText(content, exact ? "output_exact.txt" : "output_truncated.txt");
     }
 }
 function scrollToErrorIfNeeded(e: string, str: string) {
@@ -1064,61 +1106,54 @@ exprInput.addEventListener("keydown", (e) => {
             break;
     }
 });
-copyButton.addEventListener("click", () => {
-    const showAlert = (message: string) => {
-        showMessage("Copied", message, () => message);
-    }
-    if (digitMax === 0 && precisionCurrent === 0) {
-        copyText(resultString.substring(0, resultString.length - 1));
-        showAlert("Exact result has been copied (length:" + (resultString.length - 1) + ")");
-    } else if (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
-        copyText(resultString);
-        showAlert("Exact result has been copied (length:" + (resultString.length) + ")");
+copyButton.addEventListener("click", () => copyResult(false, false));
+copyTruncatedButton.addEventListener("click", () => copyResult(false, true));
+function copyOrSaveInteger(save: boolean) {
+    const content = resultString.substring(0, pointIndex);
+    if (save) {
+        saveText(content, "output_integer.txt");
     } else {
-        showScrolledResult((mightExact, str) => {
-            copyText(str);
-            if (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) {
-                showAlert("Exact result has been copied (length:" + (str.length) + ")");
-            } else {
-                showAlert("TRUNCATED result has been copied (length:" + (str.length) + ")");
-            }
-        });
+        const showAlert = (message: string) => {
+            showMessage("Copied", message, () => message);
+        }
+        copyText(content);
+        showAlert("Integer part has been copied (length:" + (content.length) + ")");
     }
-});
+}
+copyIntegerButton.addEventListener("click", () => copyOrSaveInteger(false));
 saveButton.addEventListener("click", () => {
-    let content: string | undefined;
-    if (digitMax === 0 && precisionCurrent === 0) {
-        content = resultString.substring(0, resultString.length - 1);
-    } else if (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax) {
-        content = resultString;
-    }
-    if (content) {
-        let url = createObjectURL(new Blob([content], { type: "text/plain" }));
-        let element = D.createElement("a");
-        element.href = url;
-        element.download = "output_exact.txt";
-        D.body.appendChild(element);
-        element.click();
-        element.remove();
+    if (muiPlugin.showSaveOption) {
+        const exact = (digitMax === 0 && precisionCurrent === 0) || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax);
+        muiPlugin.showSaveOption(exact);
     } else {
-        showScrolledResult((mightExact, str) => {
-            let url = createObjectURL(new Blob([str], { type: "text/plain" }));
-            let element = D.createElement("a");
-            element.href = url;
-            element.download = (mightExact && (digitMax === 0 || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax))) ? "output_exact.txt" : "output_truncated.txt";
-            D.body.appendChild(element);
-            element.click();
-            element.remove();
-        });
+        copyResult(true, false);
     }
 });
+muiPlugin.onSaveClick = (option: string) => {
+    switch (option) {
+        case "exact":
+            copyResult(true, false);
+            break;
+        case "truncated":
+            copyResult(true, true);
+            break;
+        case "integer":
+            copyOrSaveInteger(true);
+            break;
+    }
+};
 simplifyButton.addEventListener("click", () => {
     if (hasResult && isResultSimplifiable) {
-        worker!.postMessage({
-            type: "toNiceString",
-            id: lastCalculateId,
-            uid: ++lastCalculateUid,
-        } as ToNiceStringRequest);
+        if (digitMax === 0) {
+            const message = "Integers cannot be simplified";
+            showMessage("Error", message, () => message);
+        } else {
+            worker!.postMessage({
+                type: "toNiceString",
+                id: lastCalculateId,
+                uid: ++lastCalculateUid,
+            } as ToNiceStringRequest);
+        }
     }
 });
 if (!ENABLE_VARIABLES) {

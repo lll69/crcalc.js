@@ -24,7 +24,7 @@ module.exports = {
             patterns: [
                 { from: "static", to: "" },
                 { from: "../node_modules/@fontsource/roboto-mono/files/roboto-mono-*-(400|700)-(normal|italic).(woff|woff2)", to: "fonts/[name][ext]" },
-                { from: "../node_modules/@fontsource/roboto/files/roboto-*-(400|700)-(normal|italic).(woff|woff2)", to: "fonts/[name][ext]" },
+                { from: "../node_modules/@fontsource/roboto/files/roboto-*-(300|400|500|700)-(normal|italic).(woff|woff2)", to: "fonts/[name][ext]" },
             ]
         })
     ],
