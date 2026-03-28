@@ -2904,8 +2904,8 @@ class UnifiedReal {
         if (asBI < 0n) {
             throw new ArithmeticException("Negative factorial argument");
         }
-        if (CR_bitLength_n(asBI) > 20) {
-            // Will fail.  LongValue() may not work. Punt now.
+        if (CR_bitLength_n(asBI) > 24) {
+            // May fail. Punt now.
             throw new ArithmeticException("Factorial argument too big");
         }
         let biResult = UnifiedReal.genFactorial(asBI, 1n);
