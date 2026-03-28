@@ -2,7 +2,8 @@
 
 Constructive Real Calculating library modified from AOSP
 
-[Open CRCalc.js Exact Calculator](https://crcalc.js.org/calc.html)
+[Open CRCalc.js Exact Calculator](https://crcalc.js.org/calc.html)  
+[Factorial Calculator](https://crcalc.js.org/fact.html)
 
 [Details of the AOSP](https://crcalc.js.org/aosp/)
 

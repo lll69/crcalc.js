@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>High Precision Factorial Calculator | Compute n! up to 16,777,215</title>
+    <meta name="description" content="Calculate exact factorials online with high precision. Supports large numbers up to 16,777,215 using CRCalc.js library. Fast, accurate, and downloadable results.">
+    <meta name="keywords" content="factorial calculator, large factorial, n factorial, high precision calculator, crcalc.js, online math tool, big integer factorial">
+    <meta name="author" content="CRCalc.js Demo">
+
+    <!-- Open Graph / Social Media Meta Tags -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="High Precision Factorial Calculator">
+    <meta property="og:description" content="Compute exact factorials for numbers up to 16,777,215. Instant results with download option.">
+    <meta property="og:url" content="https://crcalc.js.org/fact.html">
+    <link rel="canonical" href="https://crcalc.js.org/fact.html">
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+        {
+            "@context": "https://schema.org",
+            "@type": "WebApplication",
+            "name": "Factorial Calculator",
+            "description": "A high-precision web-based factorial calculator.",
+            "applicationCategory": "MathematicalApplication",
+            "operatingSystem": "Any",
+            "offers": {
+                "@type": "Offer",
+                "price": "0",
+                "priceCurrency": "USD"
+            },
+            "featureList": [
+                "Calculates n! for n up to 16,777,215",
+                "Exact integer arithmetic",
+                "Download results as text file"
+            ]
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            width: 100%;
+            max-width: 800px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2rem;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .footer {
+            text-align: center;
+            color: #fff;
+            margin-top: 30px;
+            font-size: 1rem;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="number"] {
+            flex: 1;
+            padding: 15px 20px;
+            font-size: 1.2rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 15px 30px;
+            font-size: 1.1rem;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            background: #f8f9fa;
+            padding: 10px 15px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        .result-container {
+            background: #1e1e1e;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 150px;
+            position: relative;
+        }
+
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .result-label {
+            color: #888;
+            font-size: 0.85rem;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 8px;
+        }
+
+        .copy-btn,
+        .download-btn {
+            background: #333;
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 5px;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover,
+        .download-btn:hover {
+            background: #555;
+        }
+
+        .result-box {
+            font-family: 'Courier New', Consolas, monospace;
+            color: #0f0;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            word-break: break-all;
+            padding-right: 10px;
+            white-space: pre-wrap;
+        }
+
+        .result-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .result-box::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .result-box::-webkit-scrollbar-thumb {
+            background: #666;
+            border-radius: 4px;
+        }
+
+        .result-box::-webkit-scrollbar-thumb:hover {
+            background: #888;
+        }
+
+        .result-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .stat-item {
+            background: #f0f0f0;
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-top: 4px;
+        }
+
+        .error {
+            color: #ff4444;
+            text-align: center;
+            padding: 20px;
+            font-weight: 500;
+        }
+
+        .loading {
+            color: #888;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .examples {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .examples-title {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .example-btns {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .example-btn {
+            padding: 8px 16px;
+            background: #f0f0f0;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #333;
+            transition: background 0.2s;
+        }
+
+        .example-btn:hover {
+            background: #e0e0e0;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 25px;
+            }
+
+            h1 {
+                font-size: 1.5rem;
+            }
+
+            .input-group {
+                flex-direction: column;
+            }
+
+            button {
+                width: 100%;
+            }
+
+            .action-btns {
+                width: 100%;
+                justify-content: flex-end;
+            }
+        }
+
+        @media (prefers-color-scheme: dark) {
+            body {
+                background: linear-gradient(135deg, #384580 0%, #38234d 100%);
+            }
+
+            button {
+                background: linear-gradient(135deg, #384580 0%, #38234d 100%);
+            }
+
+            .container {
+                background: rgba(0, 0, 0, 0.6);
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            }
+
+            h1 {
+                color: #eee;
+            }
+
+            .subtitle {
+                color: #ccc;
+            }
+
+            .footer {
+                color: #ccc;
+            }
+
+            input[type="number"] {
+                border: 2px solid #191919;
+                background-color: #1e1e1e;
+                color: #fff;
+            }
+
+            .info-bar {
+                background: #191919;
+                color: #fff;
+            }
+
+            button:disabled {
+                background: #222;
+            }
+
+            .stat-item {
+                background: #1c1c1c;
+            }
+
+            .stat-label {
+                color: #ccc;
+            }
+
+            .stat-value {
+                color: #fff;
+            }
+
+            .examples {
+                border-top: 1px solid #333;
+            }
+
+            .examples-title {
+                font-size: 0.9rem;
+                color: #fff;
+                margin-bottom: 10px;
+            }
+
+            .example-btn {
+                background: #1e1e1e;
+                color: #fff;
+            }
+
+            .example-btn:hover {
+                background: #1c1c1c;
+            }
+        }
+    </style>
+    <style id="non-firefox">
+        .firefox {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <main class="container">
+        <header>
+            <h1>🧮 Factorial Calculator</h1>
+            <p class="subtitle">High Precision Exact Arithmetic | Supported Range (Chrome): 0 - 16,777,215<br>Based on <a style="color:inherit;" href="/">CRCalc.js</a> | <a style="color:inherit;" href="/">Open Source</a></p>
+        </header>
+
+        <section aria-label="Calculator Input">
+            <div class="input-group">
+                <input type="number" id="numberInput" placeholder="Enter integer n (0 - 16,777,215)" min="0" max="16777215" value="100">
+                <button id="calcBtn" aria-label="Calculate Factorial">Calculate n!</button>
+            </div>
+            <p class="subtitle firefox">Note: Firefox supports fewer bits of computation than Chrome or Chromium-based browsers</p>
+        </section>
+
+        <section class="info-bar">
+            <span>⏱️ Computation Time: <strong id="calcTime">-</strong></span>
+            <span>📊 Total Digits: <strong id="digitCount">-</strong></span>
+        </section>
+
+        <section class="result-container">
+            <div class="result-header">
+                <span class="result-label">Result</span>
+                <div class="action-btns">
+                    <button class="btn-secondary" id="copyBtn" disabled>📋 Copy</button>
+                    <button class="btn-secondary" id="downloadBtn" disabled>💾 Download</button>
+                </div>
+            </div>
+            <div class="result-box" id="resultBox" aria-label="Calculation Result"><span style="color: #666;">Enter a number and click Calculate...</span></div>
+        </section>
+
+        <section class="result-stats" aria-label="Result Statistics">
+            <div class="stat-item">
+                <span class="stat-label">Binary Bits</span>
+                <div class="stat-value" id="binaryBits">-</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Download Size</span>
+                <div class="stat-value" id="sizeValue">-</div>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Trailing Zeros</span>
+                <div class="stat-value" id="trailingZeros">-</div>
+            </div>
+        </section>
+
+        <section class="examples-section">
+            <div class="examples-title">Quick Examples:</div>
+            <div class="example-btns">
+                <button class="example-btn" data-value="10">10!</button>
+                <button class="example-btn" data-value="50">50!</button>
+                <button class="example-btn" data-value="100">100!</button>
+                <button class="example-btn" data-value="1000">1000!</button>
+                <button class="example-btn" data-value="10000">10000!</button>
+                <button class="example-btn" data-value="1000000">1,000,000!</button>
+            </div>
+        </section>
+    </main>
+
+    <p class="footer">Perform more precise calculations with the <a style="color:inherit" href="/calc.html">CRCalc.js Exact Calculator</a>!</p>
+
+    <script src="fact.js" onerror="alert('Failed to load the page');document.querySelector('#calcBtn').disabled=!0;"></script>
+</body>
+
+</html>
