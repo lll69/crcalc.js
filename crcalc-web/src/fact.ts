@@ -208,4 +208,20 @@ if (navigator && navigator.userAgent && navigator.userAgent.indexOf("Firefox") >
 // Initial Calculation
 doCalculation();
 
+if (!location.toString().startsWith("file:")) {
+    fetch("/counter.js").then((result) => {
+        if (result.ok) {
+            result.text().then((content) => {
+                Function(content)();
+            }).catch((e) => {
+                console.error(e);
+            })
+        } else {
+            console.error("Error: counter.js status=" + result.status);
+        }
+    }).catch((e) => {
+        console.error(e);
+    });
+}
+
 export { };
