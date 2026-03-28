@@ -3,3 +3,6 @@ description: Constructive Real Calculating library
 show_downloads: false
 theme: jekyll-theme-slate
 url: "https://crcalc.js.org"
+site:
+  github:
+    repository_url: "https://github.com/lll69/crcalc.js"
