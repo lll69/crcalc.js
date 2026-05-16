@@ -219,11 +219,11 @@ function CR_signum_n(x: bigint): number {
 }
 
 function CR_bitLength_n(t: bigint): number {
-    if (t === 0n) {
-        return 0;
-    }
     if (t < 0n) {
         t = -1n - t;
+    }
+    if (t === 0n) {
+        return 0;
     }
     let result = 0;
     let t2 = t >> 1048576n;
