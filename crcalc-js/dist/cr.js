@@ -1,10 +1,11 @@
 /*!
  * crcalc.js
- * Copyright 2025 lll69, Licensed under the Apache License, Version 2.0
+ * Copyright 2025-2026 lll69, Licensed under the Apache License, Version 2.0
  * Copyright (C) 2016 The Android Open Source Project, Licensed under the Apache License, Version 2.0
  * Copyright (C) 2015 The Android Open Source Project, Licensed under the Apache License, Version 2.0
  * Copyright (c) 1999, Silicon Graphics, Inc.
  * Copyright (c) 2001-2004, Hewlett-Packard Development Company, L.P.
+ * Visit https://crcalc.js.org/aosp/licenses.html to view the full license text.
  */
 const M = Math;
 const LN2 = M.LN2;
@@ -76,32 +77,17 @@ function CR_signum_n(x) {
     return (x < 0n) ? -1 : (x === 0n) ? 0 : 1;
 }
 function CR_bitLength_n(t) {
-    if (t === 0n) {
-        return 0;
-    }
     if (t < 0n) {
         t = -1n - t;
     }
-    let result = 0;
-    let t2 = t >> 1048576n;
-    while (t2 !== 0n) {
-        result += 1048576;
-        t = t2;
-        t2 = t >> 1048576n;
+    if (t === 0n) {
+        return 0;
     }
-    t2 = t >> 1024n;
-    while (t2 !== 0n) {
-        result += 1024;
-        t = t2;
-        t2 = t >> 1024n;
+    let l = 0n, r = 1n, m;
+    while ((1n << r) <= t) {
+        l = r;
+        r <<= 1n;
     }
-    t2 = t >> 64n;
-    while (t2 !== 0n) {
-        result += 64;
-        t = t2;
-        t2 = t >> 64n;
-    }
-    let l = 0n, r = 64n, m;
     while (l < r) {
         m = (l + r + 1n) >> 1n;
         if ((t >> m) === 0n) {
@@ -111,7 +97,7 @@ function CR_bitLength_n(t) {
             l = m;
         }
     }
-    return result + Num(l) + 1;
+    return Num(l) + 1;
 }
 /** Multiply k by 2**n. */
 function CR_shift(k, n) {

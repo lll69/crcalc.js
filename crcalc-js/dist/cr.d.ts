@@ -1,10 +1,11 @@
 /*!
  * crcalc.js
- * Copyright 2025 lll69, Licensed under the Apache License, Version 2.0
+ * Copyright 2025-2026 lll69, Licensed under the Apache License, Version 2.0
  * Copyright (C) 2016 The Android Open Source Project, Licensed under the Apache License, Version 2.0
  * Copyright (C) 2015 The Android Open Source Project, Licensed under the Apache License, Version 2.0
  * Copyright (c) 1999, Silicon Graphics, Inc.
  * Copyright (c) 2001-2004, Hewlett-Packard Development Company, L.P.
+ * Visit https://crcalc.js.org/aosp/licenses.html to view the full license text.
  */
 declare class CRExceptionBase extends Error {
     constructor(type: string, message?: string);
