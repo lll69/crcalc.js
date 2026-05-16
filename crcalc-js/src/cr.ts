@@ -226,26 +226,11 @@ function CR_bitLength_n(t: bigint): number {
     if (t === 0n) {
         return 0;
     }
-    let result = 0;
-    let t2 = t >> 1048576n;
-    while (t2 !== 0n) {
-        result += 1048576;
-        t = t2;
-        t2 = t >> 1048576n;
+    let l = 0n, r = 1n, m:bigint;
+    while ((1n << r) <= t) {
+        l = r;
+        r <<= 1n;
     }
-    t2 = t >> 1024n;
-    while (t2 !== 0n) {
-        result += 1024;
-        t = t2;
-        t2 = t >> 1024n;
-    }
-    t2 = t >> 64n;
-    while (t2 !== 0n) {
-        result += 64;
-        t = t2;
-        t2 = t >> 64n;
-    }
-    let l = 0n, r = 64n, m: bigint;
     while (l < r) {
         m = (l + r + 1n) >> 1n;
         if ((t >> m) === 0n) {
@@ -254,7 +239,7 @@ function CR_bitLength_n(t: bigint): number {
             l = m;
         }
     }
-    return result + Num(l) + 1;
+    return Num(l) + 1;
 }
 
 /** Multiply k by 2**n. */
