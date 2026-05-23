@@ -115,6 +115,7 @@ resultBoldText.innerHTML = "";
 resultBoldText.appendChild(resultBoldTextNode);
 resultNormalText.appendChild(resultNormalTextNode);
 
+const crL10N = window["crL10N"] || {};
 const muiPlugin: CalcMuiPlugin = {};
 let workerContent: string | null = null;
 let workerLoaded = false;
@@ -322,7 +323,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
                 copyCallback(false, resultString);
                 return;
             }
-            resultBoldTextNode.textContent = "Calculating...";
+            resultBoldTextNode.textContent = crL10N["calculating"] || "Calculating...";
             precisionNeeded = max(scrollOffset - pointIndex + newOffsetStrLength * 2, precisionCurrent + PREC_INCREMENT * min(1024, 1 + floor(scrollOffset / 1600)));
             calculateHigherPrecision();
         } else {
@@ -357,7 +358,7 @@ function saveText(content: string, name: string) {
 }
 function copyResult(save: boolean, truncate: boolean) {
     const showAlert = (message: string) => {
-        showMessage("Copied", message, () => message);
+        showMessage(crL10N["copied"] || "Copied", message, () => message);
     }
     let content: string;
     let exact: boolean;
@@ -378,9 +379,9 @@ function copyResult(save: boolean, truncate: boolean) {
     if (!save) {
         copyText(content);
         if (exact) {
-            showAlert("Exact result has been copied (length:" + (content.length) + ")");
+            showAlert((crL10N["exactCopied"] || "Exact result has been copied (length:") + (content.length) + ")");
         } else {
-            showAlert("TRUNCATED result has been copied (length:" + (content.length) + ")");
+            showAlert((crL10N["truncatedCopied"] || "TRUNCATED result has been copied (length:") + (content.length) + ")");
         }
     } else {
         saveText(content, exact ? "output_exact.txt" : "output_truncated.txt");
@@ -404,7 +405,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 clearResult();
                 focusExpression();
                 if (navigator.userAgent.indexOf("Firefox") >= 0) {
-                    loadingElement.innerText = "When performing exponentiation and factorial calculations, Chrome/Edge may be faster than Firefox and can compute more digits.";
+                    loadingElement.innerText = crL10N["firefoxNotice"] || "When performing exponentiation and factorial calculations, Chrome/Edge may be faster than Firefox and can compute more digits.";
                     loadingElement.hidden = false;
                 }
             }
@@ -481,7 +482,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "toNiceString":
             if (msg.uid === lastCalculateUid) {
                 const text = msg.error || msg.result;
-                showMessage("Simplified Result", text!, () => "Simplified Result: " + text);
+                showMessage(crL10N["simplifiedResult"] || "Simplified Result", text!, () => (crL10N["simplifiedResult2"] || "Simplified Result: ") + text);
             }
             break;
     }
@@ -516,7 +517,7 @@ function onLoadingError(e: string) {
     exprInput.readOnly = true;
     exprInput.value = e;
     resultDiv.classList.remove("result-movable");
-    resultBoldTextNode.textContent = "Try refreshing the page.";
+    resultBoldTextNode.textContent = crL10N["tryRefresh"] || "Try refreshing the page.";
     resultNormalTextNode.textContent = "";
     Array.prototype.forEach.call(calculatorDiv.getElementsByTagName("button"), (e) => {
         e.disabled = true;
@@ -547,7 +548,7 @@ function onExprChange() {
 }
 loadAnimationInterval = iSetInterval(showLoadAnimation, 100);
 
-fetch("calc_worker.js").then((result) => {
+fetch("/calc_worker.js").then((result) => {
     if (result.ok) {
         result.text().then((workerJs) => {
             iClearInterval(loadAnimationInterval);
@@ -646,8 +647,7 @@ function focusExpression() {
     }
 }
 function refreshInverseButton() {
-    buttonInv.title = isInvert ? "Hide inverse functions" : "Show inverse functions";
-    invReact.title = isInvert ? "Hide inverse functions" : "Show inverse functions";
+    buttonInv.title = invReact.title = isInvert ? (crL10N["hideInv"] || "Hide inverse functions") : (crL10N["showInv"] || "Show inverse functions");
     if (invRendered) {
         if (isInvert) {
             buttonInv.classList.add("op-hide");
@@ -717,7 +717,7 @@ function hypClick(show: boolean) {
     focusExpression();
 }
 function refreshModeButton() {
-    buttonMode.title = degreeMode ? "Currently in degree mode" : "Currently in radian mode";
+    buttonMode.title = degreeMode ? (crL10N["currDeg"] || "Currently in degree mode") : (crL10N["currRad"] || "Currently in radian mode");
     buttonMode.innerText = degreeMode ? "DEG" : "RAD";
 }
 function modeClick() {
@@ -1117,7 +1117,7 @@ function copyOrSaveInteger(save: boolean) {
             showMessage("Copied", message, () => message);
         }
         copyText(content);
-        showAlert("Integer part has been copied (length:" + (content.length) + ")");
+        showAlert((crL10N["integerCopied"] || "Integer part has been copied (length:") + (content.length) + ")");
     }
 }
 copyIntegerButton.addEventListener("click", () => copyOrSaveInteger(false));
@@ -1145,8 +1145,8 @@ muiPlugin.onSaveClick = (option: string) => {
 simplifyButton.addEventListener("click", () => {
     if (hasResult && isResultSimplifiable) {
         if (digitMax === 0) {
-            const message = "Integers cannot be simplified";
-            showMessage("Error", message, () => message);
+            const message = crL10N["simplifyInteger"] || "Integers cannot be simplified";
+            showMessage(crL10N["error"] || "Error", message, () => message);
         } else {
             worker!.postMessage({
                 type: "toNiceString",
@@ -1378,7 +1378,7 @@ function registerScroll() {
 registerScroll();
 
 (window as any as CalcMuiPluginHolder).calcMuiPlugin = muiPlugin;
-fetch("calc_mui.js").then((result) => {
+fetch("/calc_mui.js").then((result) => {
     if (result.ok) {
         result.text().then((content) => {
             Function(content)();

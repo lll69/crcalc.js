@@ -10,6 +10,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 import { CalcMuiPlugin, CalcMuiPluginHolder } from './calc_mui_types';
 import { FormControlLabel, Radio, RadioGroup } from '@mui/material';
 
+const crL10N = window["crL10N"] || {};
+
 const themeProps = {
     palette: {
         primary: {
@@ -75,7 +77,7 @@ const AlertDialog = () => {
             </DialogContent>
             <DialogActions>
                 <Button onClick={closeAlert} autoFocus>
-                    OK
+                    {crL10N["ok"] || "OK"}
                 </Button>
             </DialogActions>
         </Dialog>
@@ -129,22 +131,22 @@ const OptionDialog = () => {
             aria-labelledby="alert-dialog-title"
             aria-describedby="alert-dialog-description">
             <DialogTitle id="alert-dialog-title">
-                Save Result
+                {crL10N["saveResult"] || "Save Result"}
             </DialogTitle>
             <DialogContent>
                 <RadioGroup
                     id="alert-dialog-description"
                     value="choose"
                     onChange={handleChange}>
-                    <FormControlLabel value="choose" control={<Radio />} label="Choose Option" sx={hiddenStyle} />
-                    <FormControlLabel value="exact" control={<Radio />} label="Save Exact Result" sx={showExact ? undefined : hiddenStyle} />
-                    <FormControlLabel value="truncated" control={<Radio />} label="Save Truncated Result" />
-                    <FormControlLabel value="integer" control={<Radio />} label="Save Integer Part" />
+                    <FormControlLabel value="choose" control={<Radio />} label={crL10N["chooseOption"] || "Choose Option"} sx={hiddenStyle} />
+                    <FormControlLabel value="exact" control={<Radio />} label={crL10N["exactSave"] || "Save Exact Result"} sx={showExact ? undefined : hiddenStyle} />
+                    <FormControlLabel value="truncated" control={<Radio />} label={crL10N["truncatedSave"] || "Save Truncated Result"} />
+                    <FormControlLabel value="integer" control={<Radio />} label={crL10N["integerSave"] || "Save Integer Part"} />
                 </RadioGroup>
             </DialogContent>
             <DialogActions>
                 <Button onClick={closeAlert}>
-                    Cancel
+                    {crL10N["cancel"] || "Cancel"}
                 </Button>
             </DialogActions>
         </Dialog>
