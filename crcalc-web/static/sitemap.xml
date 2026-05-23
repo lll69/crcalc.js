@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>https://crcalc.js.org/</loc>
+        <lastmod>2026-03-28T11:34:44.000Z</lastmod>
+    </url>
+    <url>
+        <loc>https://crcalc.js.org/calc.html</loc>
+        <lastmod>2026-03-28T11:23:40.000Z</lastmod>
+    </url>
+    <url>
+        <loc>https://crcalc.js.org/fact.html</loc>
+        <lastmod>2026-03-28T11:48:56.000Z</lastmod>
+    </url>
+    <url>
+        <loc>https://crcalc.js.org/aosp/</loc>
+        <lastmod>2026-05-23T10:39:09.000Z</lastmod>
+    </url>
+    <url>
+        <loc>https://crcalc.js.org/aosp/arithmetic-overview.html</loc>
+        <lastmod>2015-08-12T02:23:02.000Z</lastmod>
+    </url>
+    <url>
+        <loc>https://crcalc.js.org/aosp/implementation-overview.html</loc>
+        <lastmod>2015-08-12T02:23:02.000Z</lastmod>
+    </url>
+    <url>
+        <loc>https://crcalc.js.org/aosp/licenses.html</loc>
+        <lastmod>2025-05-03T02:49:47.000Z</lastmod>
+    </url>
+</urlset>
