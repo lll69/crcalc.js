@@ -1114,7 +1114,7 @@ function copyOrSaveInteger(save: boolean) {
         saveText(content, "output_integer.txt");
     } else {
         const showAlert = (message: string) => {
-            showMessage("Copied", message, () => message);
+            showMessage(crL10N["copied"] || "Copied", message, () => message);
         }
         copyText(content);
         showAlert((crL10N["integerCopied"] || "Integer part has been copied (length:") + (content.length) + ")");
