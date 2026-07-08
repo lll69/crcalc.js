@@ -30,6 +30,7 @@ let isInvert = false;
 let isShowHyp = false;
 let simplifyRendered = false;
 let invRendered = false;
+let hypRendered = false;
 const multiplyChar = "*";
 const divideChar = "/";
 
@@ -395,6 +396,12 @@ function scrollToErrorIfNeeded(e: string, str: string) {
         resultDiv.scrollLeft = chWidth * str.length;
     }
 }
+function changeHypButtonIfNeeded() {
+    if (hypRendered && workerLoaded) {
+        getElementById("fun_percent")!.classList.add("op-hide");
+        getElementById("react_hyp_root")!.classList.remove("op-hide");
+    }
+}
 function onWorkerMessage(e: MessageEvent<WorkerResult>) {
     const msg = e.data;
     switch (msg.type) {
@@ -405,6 +412,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                     arr[i].hidden = true;
                 }
                 getElementById("loading-style")!.remove();
+                changeHypButtonIfNeeded();
                 clearResult();
                 focusExpression();
                 if (navigator.userAgent.indexOf("Firefox") >= 0) {
@@ -1394,8 +1402,8 @@ fetch("/calc_mui.js").then((result) => {
 
 addEventListener("message", (e) => {
     if (e.data === "hypRendered") {
-        getElementById("fun_percent")!.classList.add("op-hide");
-        getElementById("react_hyp_root")!.classList.remove("op-hide");
+        hypRendered = true;
+        changeHypButtonIfNeeded();
     } else if (e.data === "simplifyRendered") {
         simplifyRendered = true;
         changeResultUIVisibility();
