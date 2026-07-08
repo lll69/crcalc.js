@@ -34,18 +34,10 @@ const multiplyChar = "*";
 const divideChar = "/";
 
 const D = document;
-const M = Math;
 const getElementById: typeof D.getElementById = D.getElementById.bind(D);
 const createTextNode: typeof D.createTextNode = D.createTextNode.bind(D);
-const min = M.min;
-const max = M.max;
-const abs = M.abs;
-const floor = M.floor;
-const round = M.round;
-const iSetInterval = setInterval;
-const iClearInterval = clearInterval;
-const iSetTimeout = setTimeout;
-const iClearTimeout = clearTimeout;
+const { min, max, abs, floor, round } = Math;
+const { setInterval, clearInterval, setTimeout, clearTimeout } = window;
 const createObjectURL = URL.createObjectURL;
 // @ts-ignore
 const replaceStr: (s: string, a: string, b: string) => string = "".replaceAll ? (s, a, b) => s.replaceAll(a, b) : (s, a, b) => s.split(a).join(b);
@@ -436,7 +428,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 hasResult = false;
                 hasError = true;
                 workerBusy = false;
-                iClearTimeout(calcWaitTimeout);
+                clearTimeout(calcWaitTimeout);
                 buttonCalc.innerText = "=";
                 resultDiv.classList.remove("result-movable");
                 resultBoldTextNode.textContent = msg.error;
@@ -465,7 +457,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "toStringTruncated":
             if (msg.uid === lastCalculateUid) {
                 workerBusy = false;
-                iClearTimeout(calcWaitTimeout);
+                clearTimeout(calcWaitTimeout);
                 buttonCalc.innerText = "=";
                 if (msg.error) {
                     hasResult = false;
@@ -525,7 +517,7 @@ function showLoadAnimation() {
     resultBoldTextNode.textContent = "Loading..." + "/-\\|"[loadAnimationIndex];
 }
 function onLoadingError(e: string) {
-    iClearInterval(loadAnimationInterval);
+    clearInterval(loadAnimationInterval);
     loadingElement.innerText = e;
     exprInput.readOnly = true;
     exprInput.value = e;
@@ -559,12 +551,12 @@ function onExprChange() {
     }
     clearResult();
 }
-loadAnimationInterval = iSetInterval(showLoadAnimation, 100);
+loadAnimationInterval = setInterval(showLoadAnimation, 100);
 
 fetch("/calc_worker.js").then((result) => {
     if (result.ok) {
         result.text().then((workerJs) => {
-            iClearInterval(loadAnimationInterval);
+            clearInterval(loadAnimationInterval);
             initWorker(workerJs);
         }).catch((e) => {
             console.error(e);
@@ -632,7 +624,7 @@ function calculateResult() {
     if (workerBusy) {
         reInitWorker();
         buttonCalc.innerText = "=";
-        iClearTimeout(calcWaitTimeout);
+        clearTimeout(calcWaitTimeout);
         return;
     }
     clearResult();
@@ -651,8 +643,8 @@ function calculateResult() {
         degreeMode: degreeMode
     } as CreateURRequest);
     workerBusy = true;
-    iClearTimeout(calcWaitTimeout);
-    calcWaitTimeout = iSetTimeout(onCalcTimeout, 5000);
+    clearTimeout(calcWaitTimeout);
+    calcWaitTimeout = setTimeout(onCalcTimeout, 5000);
 }
 function focusExpression() {
     if (workerLoaded) {
@@ -1246,7 +1238,7 @@ function registerScroll() {
         if (absSpeed * 2 > chWidth && absSpeed !== Infinity) {
             lastSpeed *= 0.8333333333333334;
         } else {
-            iClearInterval(lastInterval);
+            clearInterval(lastInterval);
         }
         downX += lastSpeed;
         let offsetCh = round(downX / chWidth);
@@ -1266,7 +1258,7 @@ function registerScroll() {
                 resultDiv.setPointerCapture(e.pointerId);
             }
             downType = e.type;
-            iClearInterval(lastInterval);
+            clearInterval(lastInterval);
             lastDownX = downX;
             downScrollOffset = scrollOffset;
             lastTimestamp = e.timeStamp;
@@ -1317,7 +1309,7 @@ function registerScroll() {
             downX = 0;
             downScrollOffset = scrollOffset;
             if (abs(lastSpeed) > chWidth) {
-                lastInterval = iSetInterval(timedScroll, SCROLL_TICK);
+                lastInterval = setInterval(timedScroll, SCROLL_TICK);
             }
             resultDiv.classList.remove("result-movable-active");
         }
@@ -1332,7 +1324,7 @@ function registerScroll() {
     resultDiv.addEventListener("touchcancel", mouseUp, P);
     resultDiv.addEventListener("wheel", (e) => {
         if (workerLoaded && hasResult && resultScrollable) {
-            iClearInterval(lastInterval);
+            clearInterval(lastInterval);
             e.preventDefault();
             let delta = e.deltaX + e.deltaY;
             let offsetCh = round(delta / chWidth);
