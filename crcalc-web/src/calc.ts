@@ -15,8 +15,10 @@
  */
 
 import { CalcMuiPlugin, CalcMuiPluginHolder } from "./calc_mui_types";
+import Scroller from "./Scroller";
 import { CreateURRequest, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
 
+const INTEGER_MIN = -2147483648;
 const INTEGER_MAX = 2147483647;
 const INITIAL_PREC = 32;
 const PREC_INCREMENT = 128;
@@ -38,7 +40,7 @@ const D = document;
 const getElementById: typeof D.getElementById = D.getElementById.bind(D);
 const createTextNode: typeof D.createTextNode = D.createTextNode.bind(D);
 const { min, max, abs, floor, round } = Math;
-const { setInterval, clearInterval, setTimeout, clearTimeout } = window;
+const { setInterval, clearInterval, setTimeout, clearTimeout, requestAnimationFrame, cancelAnimationFrame } = window;
 const createObjectURL = URL.createObjectURL;
 // @ts-ignore
 const replaceStr: (s: string, a: string, b: string) => string = "".replaceAll ? (s, a, b) => s.replaceAll(a, b) : (s, a, b) => s.split(a).join(b);
@@ -107,6 +109,7 @@ const resultNormalTextNode = createTextNode("");
 resultBoldText.innerHTML = "";
 resultBoldText.appendChild(resultBoldTextNode);
 resultNormalText.appendChild(resultNormalTextNode);
+const scroller = Scroller();
 
 const crL10N = window["crL10N"] || {};
 const muiPlugin: CalcMuiPlugin = {};
@@ -1241,19 +1244,17 @@ function registerScroll() {
     let lastTimestamp = 0;
     let lastSpeed = 0;
     let lastInterval: any = -1;
+    let animationDx = 0;
     function timedScroll() {
-        let absSpeed = abs(lastSpeed);
-        if (absSpeed * 2 > chWidth && absSpeed !== Infinity) {
-            lastSpeed *= 0.8333333333333334;
-        } else {
-            clearInterval(lastInterval);
-        }
-        downX += lastSpeed;
-        let offsetCh = round(downX / chWidth);
-        let newScrollOffset = max(0, downScrollOffset - offsetCh);
-        if (newScrollOffset !== scrollOffset) {
-            scrollOffset = newScrollOffset;
-            showScrolledResult();
+        if (scroller.computeScrollOffset()) {
+            let newDx = animationDx + scroller.getCurrX();
+            let offsetCh = round(newDx / chWidth);
+            let newScrollOffset = max(0, downScrollOffset - offsetCh);
+            if (newScrollOffset !== scrollOffset) {
+                scrollOffset = newScrollOffset;
+                showScrolledResult();
+            }
+            lastInterval = requestAnimationFrame(timedScroll);
         }
     }
     function mouseDown(e) {
@@ -1266,7 +1267,7 @@ function registerScroll() {
                 resultDiv.setPointerCapture(e.pointerId);
             }
             downType = e.type;
-            clearInterval(lastInterval);
+            cancelAnimationFrame(lastInterval);
             lastDownX = downX;
             downScrollOffset = scrollOffset;
             lastTimestamp = e.timeStamp;
@@ -1295,7 +1296,7 @@ function registerScroll() {
             let offsetTime = e.timeStamp - lastTimestamp;
             if (offsetTime >= SCROLL_TICK) {
                 lastTimestamp = e.timeStamp;
-                lastSpeed = (moveX - lastDownX) * SCROLL_TICK / offsetTime;
+                lastSpeed = (moveX - lastDownX) * 1000 / offsetTime;
                 lastDownX = moveX;
             }
             let newScrollOffset = max(0, downScrollOffset - offsetCh);
@@ -1313,11 +1314,17 @@ function registerScroll() {
                 return;
             }
             e.preventDefault();
+            const offsetX = lastDownX - downX;
+            animationDx = offsetX - round(offsetX / chWidth) * chWidth;
             isDown = false;
             downX = 0;
             downScrollOffset = scrollOffset;
             if (abs(lastSpeed) > chWidth) {
-                lastInterval = setInterval(timedScroll, SCROLL_TICK);
+                scroller.abortAnimation();
+                scroller.fling(0, 0, lastSpeed, 0, INTEGER_MIN, INTEGER_MAX, 0, 0);
+                if (abs(scroller.getFinalX()) > chWidth) {
+                    lastInterval = requestAnimationFrame(timedScroll);
+                }
             }
             resultDiv.classList.remove("result-movable-active");
         }
@@ -1332,7 +1339,7 @@ function registerScroll() {
     resultDiv.addEventListener("touchcancel", mouseUp, P);
     resultDiv.addEventListener("wheel", (e) => {
         if (workerLoaded && hasResult && resultScrollable) {
-            clearInterval(lastInterval);
+            cancelAnimationFrame(lastInterval);
             e.preventDefault();
             let delta = e.deltaX + e.deltaY;
             let offsetCh = round(delta / chWidth);
