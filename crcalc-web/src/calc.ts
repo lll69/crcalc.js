@@ -137,11 +137,11 @@ let lastCalculateUid = 1;
 let loadAnimationIndex = 0;
 let loadAnimationInterval: any;
 let calcWaitTimeout: any;
-function showMessage(title: string, message: string, fallback: () => string) {
+function showMessage(title: string, message: string, fallback: () => string, showCopy?: boolean) {
     let shown = false;
     if (muiPlugin.showAlert) {
         try {
-            muiPlugin.showAlert(title, message);
+            muiPlugin.showAlert(title, message, showCopy);
             shown = true;
         } catch (e) {
             console.error(e);
@@ -152,13 +152,24 @@ function showMessage(title: string, message: string, fallback: () => string) {
     }
 }
 function copyText(str: string) {
-    let element = D.createElement("input");
-    element.style.opacity = "0";
-    element.value = str;
-    D.body.appendChild(element);
-    element.select();
-    D.execCommand("copy");
-    element.remove();
+    let copied = false;
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText as any) {
+        try {
+            navigator.clipboard.writeText(str);
+            copied = true;
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    if (!copied) {
+        const element = D.createElement("input");
+        element.style.opacity = "0";
+        element.value = str;
+        D.body.appendChild(element);
+        element.select();
+        D.execCommand("copy");
+        element.remove();
+    }
 }
 function changeResultUIVisibility() {
     copyButton.hidden = copyTruncatedButton.hidden = copyIntegerButton.hidden = !hasResult;
@@ -482,7 +493,9 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "toNiceString":
             if (msg.uid === lastCalculateUid) {
                 const text = msg.error || msg.result;
-                showMessage(crL10N["simplifiedResult"] || "Simplified Result", text!, () => (crL10N["simplifiedResult2"] || "Simplified Result: ") + text);
+                const title = (digitMax === 0) ? (crL10N["integerResult"] || "Integer Result") : crL10N["simplifiedResult"] || "Simplified Result";
+                const title2 = (digitMax === 0) ? (crL10N["integerResult2"] || "Integer Result: ") : (crL10N["simplifiedResult2"] || "Simplified Result: ");
+                showMessage(title, text!, () => title2 + text, true);
             }
             break;
     }
@@ -1144,16 +1157,11 @@ muiPlugin.onSaveClick = (option: string) => {
 };
 simplifyButton.addEventListener("click", () => {
     if (hasResult && isResultSimplifiable) {
-        if (digitMax === 0) {
-            const message = crL10N["simplifyInteger"] || "Integers cannot be simplified";
-            showMessage(crL10N["error"] || "Error", message, () => message);
-        } else {
-            worker!.postMessage({
-                type: "toNiceString",
-                id: lastCalculateId,
-                uid: ++lastCalculateUid,
-            } as ToNiceStringRequest);
-        }
+        worker!.postMessage({
+            type: "toNiceString",
+            id: lastCalculateId,
+            uid: ++lastCalculateUid,
+        } as ToNiceStringRequest);
     }
 });
 if (!ENABLE_VARIABLES) {

@@ -1,5 +1,5 @@
 export type CalcMuiPlugin = {
-    showAlert?: (title: string, text: string) => void;
+    showAlert?: (title: string, text: string, showCopy?: boolean) => void;
     showSaveOption?: (showExact: boolean) => void;
     onHypButtonClick?: (show: boolean) => void;
     onSinhButtonClick?: () => void;

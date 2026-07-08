@@ -20,14 +20,42 @@ const themeProps = {
     }
 };
 
-const hiddenStyle = {
-    display: "none !important"
+const buttonHiddenStyle = {
+    display: "none !important",
+    textTransform: "none",
 };
+
+const buttonStyle = {
+    textTransform: "none",
+};
+
+const copyString = (str: string) => {
+    let copied = false;
+    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText as any) {
+        try {
+            navigator.clipboard.writeText(str);
+            copied = true;
+        } catch (e) {
+            console.log(e);
+        }
+    }
+    if (!copied) {
+        const D = document;
+        const element = D.createElement("input");
+        element.style.opacity = "0";
+        element.value = str;
+        D.body.appendChild(element);
+        element.select();
+        D.execCommand("copy");
+        element.remove();
+    }
+}
 
 const AlertDialog = () => {
     const [openAlert, setOpenAlert] = React.useState(false);
     const [alertTitle, setAlertTitle] = React.useState("");
     const [alertText, setAlertText] = React.useState("");
+    const [showCopy, setShowCopy] = React.useState(false);
 
     const closeAlert = React.useCallback(() => {
         if (location.hash === "##mui-dialog") {
@@ -36,12 +64,17 @@ const AlertDialog = () => {
         setOpenAlert(false);
     }, []);
 
-    const showAlert = React.useCallback((title: string, text: string) => {
+    const showAlert = React.useCallback((title: string, text: string, showCopy?: boolean) => {
         history.pushState({}, "", "##mui-dialog");
         setAlertTitle(title);
         setAlertText(text);
+        setShowCopy(!!showCopy);
         setOpenAlert(true);
     }, []);
+
+    const copyText = React.useCallback(() => {
+        copyString(alertText);
+    }, [alertText]);
 
     React.useEffect(() => {
         (window as any as CalcMuiPluginHolder).calcMuiPlugin.showAlert = showAlert;
@@ -50,16 +83,13 @@ const AlertDialog = () => {
                 closeAlert();
             }
         }
-        if (location.hash === "##mui-dialog" && !openAlert) {
-            location.hash = "##";
-        }
         addEventListener("hashchange", hashChange);
 
         return () => {
             (window as any as CalcMuiPluginHolder).calcMuiPlugin.showAlert = undefined;
             removeEventListener("hashchange", hashChange);
         };
-    });
+    }, [openAlert]);
 
     return (
         <Dialog
@@ -76,6 +106,9 @@ const AlertDialog = () => {
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
+                {showCopy && <Button onClick={copyText}>
+                    {crL10N["copy"] || "Copy"}
+                </Button>}
                 <Button onClick={closeAlert} autoFocus>
                     {crL10N["ok"] || "OK"}
                 </Button>
@@ -108,19 +141,16 @@ const OptionDialog = () => {
                 closeAlert();
             }
         }
-        if (location.hash === "##mui-dialog-save" && !openAlert) {
-            location.hash = "##";
-        }
         addEventListener("hashchange", hashChange);
 
         return () => {
             (window as any as CalcMuiPluginHolder).calcMuiPlugin.showSaveOption = undefined;
             removeEventListener("hashchange", hashChange);
         };
-    });
+    }, [openAlert]);
 
-    const handleChange = React.useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
-        if (plugin.onSaveClick) plugin.onSaveClick(event.target.value);
+    const handleClick = React.useCallback((event: React.MouseEvent) => {
+        if (plugin.onSaveClick) plugin.onSaveClick((event.target as HTMLButtonElement).value);
         closeAlert();
     }, []);
 
@@ -134,14 +164,11 @@ const OptionDialog = () => {
                 {crL10N["saveResult"] || "Save Result"}
             </DialogTitle>
             <DialogContent>
-                <RadioGroup
-                    id="alert-dialog-description"
-                    value="choose"
-                    onChange={handleChange}>
-                    <FormControlLabel value="choose" control={<Radio />} label={crL10N["chooseOption"] || "Choose Option"} sx={hiddenStyle} />
-                    <FormControlLabel value="exact" control={<Radio />} label={crL10N["exactSave"] || "Save Exact Result"} sx={showExact ? undefined : hiddenStyle} />
-                    <FormControlLabel value="truncated" control={<Radio />} label={crL10N["truncatedSave"] || "Save Truncated Result"} />
-                    <FormControlLabel value="integer" control={<Radio />} label={crL10N["integerSave"] || "Save Integer Part"} />
+                <RadioGroup id="alert-dialog-description">
+                    <Button color="secondary" value="choose" sx={buttonHiddenStyle} onClick={handleClick}>{crL10N["chooseOption"] || "Choose Option"}</Button>
+                    <Button color="secondary" value="exact" sx={showExact ? buttonStyle : buttonHiddenStyle} onClick={handleClick}>{crL10N["exactSave"] || "Save Exact Result"}</Button>
+                    <Button color="secondary" value="truncated" sx={buttonStyle} onClick={handleClick}>{crL10N["truncatedSave"] || "Save Truncated Result"}</Button>
+                    <Button color="secondary" value="integer" sx={buttonStyle} onClick={handleClick}>{crL10N["integerSave"] || "Save Integer Part"}</Button>
                 </RadioGroup>
             </DialogContent>
             <DialogActions>
