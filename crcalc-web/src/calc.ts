@@ -585,10 +585,10 @@ fetch("/calc_worker.js").then((result) => {
 });
 function onCalcTimeout() {
     if (workerBusy) {
-        const title = "Calculation timed out";
-        const message = "The calculation took longer than expected.\n"
+        const title = crL10N["calcTimeOut"] || "Calculation timed out";
+        const message = crL10N["calcTimeOutDesc"] || ("The calculation took longer than expected.\n"
             + "Value may be infinite or undefined (such as tan(90°) or 1/0), or the number may have too many digits.\n"
-            + "You can stop the calculation or wait for it to complete. Waiting may result in prolonged high CPU usage.";
+            + "You can stop the calculation or wait for it to complete. Waiting may result in prolonged high CPU usage.");
         showMessage(title, message, () => message);
     }
 }
