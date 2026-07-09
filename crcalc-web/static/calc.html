@@ -232,8 +232,26 @@ limitations under the License.
             background-color: #B2EBF2;
         }
 
-        .button-link:active {
+        .button-link:active,
+        .button-link-select1 {
+            background-color: #80DEEA;
+        }
+
+        .button-link-select1:hover {
             background-color: #4DD0E1;
+        }
+
+        .button-link-select1:active,
+        .button-link-select2 {
+            background-color: #26C6DA;
+        }
+
+        .button-link-select2:hover {
+            background-color: #00bcd4;
+        }
+
+        .button-link-select2:active {
+            background-color: #00acc1;
         }
 
         section {
@@ -263,6 +281,7 @@ limitations under the License.
     <link rel="preload" as="image" href="copy_integer.svg">
     <link rel="preload" as="image" href="save.svg">
     <link rel="preload" as="image" href="simplify.svg">
+    <link rel="preload" as="image" href="accelerate.svg">
 </head>
 
 <body>
@@ -285,6 +304,7 @@ limitations under the License.
                 <a hidden id="copy_integer" href="javascript:;" class="button-link" title="Copy integer part" tabindex="5"><img alt="Copy integer part" src="copy_integer.svg"></a>
                 <a hidden id="save_result" href="javascript:;" class="button-link" title="Save displayed result to file" tabindex="6"><img alt="Save displayed result to file" src="save.svg"></a>
                 <a hidden id="show_simplify" href="javascript:;" class="button-link" title="Show simplified result" tabindex="7"><img alt="Show simplified result" src="simplify.svg"></a>
+                <a hidden id="speed_up_scroll" href="javascript:;" class="button-link" title="Speed up scrolling" tabindex="8"><img alt="Speed up scrolling" src="accelerate.svg"></a>
                 <div hidden id="react_simplify_root"></div>
             </div>
         </div>

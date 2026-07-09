@@ -39,7 +39,7 @@ const divideChar = "/";
 const D = document;
 const getElementById: typeof D.getElementById = D.getElementById.bind(D);
 const createTextNode: typeof D.createTextNode = D.createTextNode.bind(D);
-const { min, max, abs, floor, round } = Math;
+const { min, max, abs, floor, round, sqrt } = Math;
 const { setInterval, clearInterval, setTimeout, clearTimeout, requestAnimationFrame, cancelAnimationFrame } = window;
 const createObjectURL = URL.createObjectURL;
 // @ts-ignore
@@ -101,6 +101,7 @@ const copyIntegerButton = getElementById("copy_integer") as HTMLElement;
 const saveButton = getElementById("save_result") as HTMLElement;
 const simplifyButton = getElementById("show_simplify") as HTMLElement;
 const simplifyReact = getElementById("react_simplify_root") as HTMLElement;
+const speedUpButton = getElementById("speed_up_scroll") as HTMLElement;
 const gridOps = getElementById("grid_ops") as HTMLElement;
 const gridVar = getElementById("grid_var") as HTMLElement;
 const loadingElement = getElementById("loading") as HTMLElement;
@@ -121,6 +122,7 @@ let hasResult = false;
 let hasError = false;
 let isResultSimplifiable = false;
 let resultScrollable = false;
+let speedUpFactor = 1;
 let worker: Worker | null = null;
 let resultString = "";
 let digitMax = INTEGER_MAX;
@@ -169,7 +171,7 @@ function copyText(str: string) {
 }
 function changeResultUIVisibility() {
     copyButton.hidden = copyTruncatedButton.hidden = copyIntegerButton.hidden = !hasResult;
-    saveButton.hidden = !hasResult;
+    saveButton.hidden = speedUpButton.hidden = !hasResult;
     simplifyButton.hidden = !(!simplifyRendered && hasResult && isResultSimplifiable);
     simplifyReact.hidden = !(simplifyRendered && hasResult && isResultSimplifiable);
 }
@@ -344,7 +346,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
         if (scrollOffset > resultLength - displayWidth + newOffsetStrLength - INCREMENT_THRESHOLD) {
             let newResultLength = resultLength;
             precisionNeeded = precisionCurrent;
-            const precIncr = PREC_INCREMENT * min(1024, 1 + floor(scrollOffset / 1600));
+            const precIncr = PREC_INCREMENT * round(sqrt(speedUpFactor)) * min(1024, 1 + floor(scrollOffset / 1600));
             while (scrollOffset > newResultLength - displayWidth + newOffsetStrLength - INCREMENT_THRESHOLD) {
                 precisionNeeded += precIncr;
                 newResultLength += precIncr;
@@ -518,6 +520,7 @@ function reInitWorker() {
     workerBusy = false;
     hasResult = false;
     hasError = false;
+    changeResultUIVisibility();
 }
 function initWorker(workerJs: string) {
     workerContent = workerJs;
@@ -634,6 +637,7 @@ function calculateResult() {
     if (!workerLoaded) return;
     if (workerBusy) {
         reInitWorker();
+        clearResult();
         buttonCalc.innerText = "=";
         clearTimeout(calcWaitTimeout);
         return;
@@ -1167,6 +1171,23 @@ simplifyButton.addEventListener("click", () => {
         } as ToNiceStringRequest);
     }
 });
+speedUpButton.addEventListener("click", () => {
+    switch (speedUpFactor) {
+        case 1:
+            speedUpFactor = 4;
+            speedUpButton.classList.add("button-link-select1");
+            break;
+        case 4:
+            speedUpFactor = 16;
+            speedUpButton.classList.remove("button-link-select1");
+            speedUpButton.classList.add("button-link-select2");
+            break;
+        case 16:
+            speedUpFactor = 1;
+            speedUpButton.classList.remove("button-link-select2");
+            break;
+    }
+});
 if (!ENABLE_VARIABLES) {
     let varButton = getElementById("but_var") as HTMLButtonElement;
     varButton.disabled = true;
@@ -1246,6 +1267,7 @@ function registerScroll() {
     let lastInterval: any = -1;
     let animationDx = 0;
     function timedScroll() {
+        if (!hasResult) return;
         if (scroller.computeScrollOffset()) {
             let newDx = animationDx + scroller.getCurrX();
             let offsetCh = round(newDx / chWidth);
@@ -1292,7 +1314,7 @@ function registerScroll() {
                 return;
             }
             offsetX = moveX - downX;
-            let offsetCh = round(offsetX / chWidth);
+            let offsetCh = round(offsetX * speedUpFactor / chWidth);
             let offsetTime = e.timeStamp - lastTimestamp;
             if (offsetTime >= SCROLL_TICK) {
                 lastTimestamp = e.timeStamp;
@@ -1321,7 +1343,7 @@ function registerScroll() {
             downScrollOffset = scrollOffset;
             if (abs(lastSpeed) > chWidth) {
                 scroller.abortAnimation();
-                scroller.fling(0, 0, lastSpeed, 0, INTEGER_MIN, INTEGER_MAX, 0, 0);
+                scroller.fling(0, 0, lastSpeed * speedUpFactor, 0, INTEGER_MIN, INTEGER_MAX, 0, 0);
                 if (abs(scroller.getFinalX()) > chWidth) {
                     lastInterval = requestAnimationFrame(timedScroll);
                 }
@@ -1342,7 +1364,7 @@ function registerScroll() {
             cancelAnimationFrame(lastInterval);
             e.preventDefault();
             let delta = e.deltaX + e.deltaY;
-            let offsetCh = round(delta / chWidth);
+            let offsetCh = round(delta * speedUpFactor / chWidth);
             let newScrollOffset = max(0, scrollOffset + offsetCh);
             if (newScrollOffset !== scrollOffset) {
                 scrollOffset = newScrollOffset;
@@ -1356,7 +1378,7 @@ function registerScroll() {
             case "ArrowLeft":
             case "ArrowUp":
                 e.preventDefault();
-                newScrollOffset = max(0, scrollOffset - (e.ctrlKey ? 1 : 4));
+                newScrollOffset = max(0, scrollOffset - (e.ctrlKey ? 1 : 4) * speedUpFactor);
                 if (newScrollOffset !== scrollOffset) {
                     scrollOffset = newScrollOffset;
                     showScrolledResult();
@@ -1365,7 +1387,7 @@ function registerScroll() {
             case "ArrowRight":
             case "ArrowDown":
                 e.preventDefault();
-                newScrollOffset = max(0, scrollOffset + (e.ctrlKey ? 1 : 4));
+                newScrollOffset = max(0, scrollOffset + (e.ctrlKey ? 1 : 4) * speedUpFactor);
                 if (newScrollOffset !== scrollOffset) {
                     scrollOffset = newScrollOffset;
                     showScrolledResult();
@@ -1373,7 +1395,7 @@ function registerScroll() {
                 break;
             case "PageDown":
                 e.preventDefault();
-                newScrollOffset = max(0, scrollOffset + displayWidth);
+                newScrollOffset = max(0, scrollOffset + displayWidth * speedUpFactor);
                 if (newScrollOffset !== scrollOffset) {
                     scrollOffset = newScrollOffset;
                     showScrolledResult();
@@ -1381,7 +1403,7 @@ function registerScroll() {
                 break;
             case "PageUp":
                 e.preventDefault();
-                newScrollOffset = max(0, scrollOffset - displayWidth);
+                newScrollOffset = max(0, scrollOffset - displayWidth * speedUpFactor);
                 if (newScrollOffset !== scrollOffset) {
                     scrollOffset = newScrollOffset;
                     showScrolledResult();
