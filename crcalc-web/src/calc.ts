@@ -1178,11 +1178,11 @@ speedUpButton.addEventListener("click", () => {
             speedUpButton.classList.add("button-link-select1");
             break;
         case 4:
-            speedUpFactor = 16;
+            speedUpFactor = 9;
             speedUpButton.classList.remove("button-link-select1");
             speedUpButton.classList.add("button-link-select2");
             break;
-        case 16:
+        case 9:
             speedUpFactor = 1;
             speedUpButton.classList.remove("button-link-select2");
             break;
