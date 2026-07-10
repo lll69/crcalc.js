@@ -274,6 +274,22 @@ limitations under the License.
             height: 0;
             border: 0;
         }
+
+        a {
+            color: inherit;
+        }
+
+        section {
+            max-width: 1000px;
+        }
+
+        code {
+            background-color: rgba(27, 31, 35, .05);
+            border-radius: 3px;
+            font-size: 85%;
+            margin: 0;
+            padding: .2em .4em;
+        }
     </style>
     <link rel="stylesheet" href="roboto.css">
     <link rel="preload" as="image" href="copy.svg">
@@ -286,7 +302,7 @@ limitations under the License.
 
 <body>
     <div class="header header-fixed" id="header">
-        <h1><a href="/"><img src="favicon.ico" style="height:1em" alt="Home"></a>&nbsp;CRCalc.js Exact Calculator</h1>
+        <h1><a target="_blank" href="/"><img src="favicon.ico" style="height:1em" alt="Home"></a>&nbsp;CRCalc.js Exact Calculator</h1>
     </div>
     <div class="header"></div>
     <section>
@@ -394,7 +410,7 @@ limitations under the License.
             <li>Supports exponentiation and square root calculations</li>
             <li>Supports switching between radian and degree modes</li>
             <li>Supports copying results and saving results to a file</li>
-            <li><a style="color:inherit;" href="https://github.com/lll69/crcalc.js">Open source</a></li>
+            <li><a target="_blank" href="https://github.com/lll69/crcalc.js" data-goatcounter-click="https://github.com/lll69/crcalc.js">Open source</a></li>
         </ul>
     </section>
     <section>
@@ -405,11 +421,28 @@ limitations under the License.
         </ul>
     </section>
     <section>
-        <a style="color:inherit;" href="/aosp/licenses.html">Open Source Licenses</a>
+        <h2>Performance Tips</h2>
+        <ul>
+            <li>This calculator uses <a target="_blank" href="/aosp/arithmetic-overview.html" data-goatcounter-click="/aosp/arithmetic-overview.html"><strong>Constructive Real arithmetic</strong></a> for precise arbitrary-precision calculations.</li>
+            <li><strong>Cached Constants</strong> (fast): π uses the Gauss-Legendre algorithm for quadratic convergence, and intermediate square root results are cached between different precision requests.</li>
+            <li><strong>Uncached Functions / Constants</strong> (slower at extremely high precision): <code>^</code>, <code>e</code>, <code>exp</code>, <code>ln</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, and their hyperbolic counterparts are <strong>recomputed from scratch</strong> using Taylor series or Newton iteration for each higher precision request. Scrolling through these results (tens of thousands of digits) can trigger progressively slower recalculations.</li>
+        </ul>
+    </section>
+    <section>
+        <h2>Optimization Tips</h2>
+        <ul>
+            <li>π and square roots are highly optimized — you can scroll freely.</li>
+            <li><code>e</code>, trigonometric functions, and logarithms may slow down beyond 10,000 digits.</li>
+            <li><strong>For small integer powers, use multiplication instead of <code>^</code></strong>: <code>x*x</code> is much faster than <code>x^2</code>, and <code>x*x*x</code> is much faster than <code>x^3</code>. The power operator <code>^</code> even for simple cases falls back to log/exponent computation (<code>exp(y*ln(x))</code>), which involves uncached Taylor series evaluations.</li>
+            <li>Use the <strong>Simplify</strong> button whenever possible to get simplified expressions instead of raw numbers.</li>
+        </ul>
+    </section>
+    <section>
+        <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="/aosp/licenses.html">Open Source Licenses</a>
         |
-        <a style="color:inherit;" href="https://github.com/lll69/crcalc.js">Report bugs</a>
+        <a target="_blank" href="https://github.com/lll69/crcalc.js" data-goatcounter-click="https://github.com/lll69/crcalc.js">Report bugs</a>
         |
-        <a style="color:inherit;" href="/zh/calc.html">中文</a>
+        <a target="_blank" href="/zh/calc.html" data-goatcounter-click="/zh/calc.html">中文</a>
     </section>
     <div id="react-root" data-hyp="true" data-inv="true"></div>
     <script>window.onerror = function (e) { alert("Javascript Error: " + e); }</script>

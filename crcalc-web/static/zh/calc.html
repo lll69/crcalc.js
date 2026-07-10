@@ -274,6 +274,22 @@ limitations under the License.
             height: 0;
             border: 0;
         }
+
+        a {
+            color: inherit;
+        }
+
+        section {
+            max-width: 1000px;
+        }
+
+        code {
+            background-color: rgba(27, 31, 35, .05);
+            border-radius: 3px;
+            font-size: 85%;
+            margin: 0;
+            padding: .2em .4em;
+        }
     </style>
     <link rel="stylesheet" href="/roboto.css">
     <link rel="preload" as="image" href="/copy.svg">
@@ -286,7 +302,7 @@ limitations under the License.
 
 <body>
     <div class="header header-fixed" id="header">
-        <h1><a href="/"><img src="/favicon.ico" style="height:1em" alt="Home"></a>&nbsp;CRCalc.js 高精度计算器</h1>
+        <h1><a target="_blank" href="/"><img src="/favicon.ico" style="height:1em" alt="Home"></a>&nbsp;CRCalc.js 高精度计算器</h1>
     </div>
     <div class="header"></div>
     <section>
@@ -405,9 +421,26 @@ limitations under the License.
         </ul>
     </section>
     <section>
-        <a style="color:inherit;" href="/aosp/licenses.html">Open Source Licenses</a>
+        <h2>性能提示</h2>
+        <ul>
+            <li>这个计算器使用 <a target="_blank" href="/aosp/arithmetic-overview.html" data-goatcounter-click="/aosp/arithmetic-overview.html"><strong>构造实数（Constructive Real）算术</strong></a> 来进行精确的任意精度计算。</li>
+            <li><strong>缓存常数</strong>（快速）：π 使用 Gauss-Legendre 算法进行二次收敛，并在不同精度请求之间缓存中间平方根结果。</li>
+            <li><strong>未缓存函数/常数</strong>（在极高精度下较慢）：<code>^</code>、<code>e</code>、<code>exp</code>、<code>ln</code>、<code>sin</code>、<code>cos</code>、<code>tan</code>、<code>asin</code>、<code>acos</code>、<code>atan</code> 及其双曲函数，每次请求更高精度时都会 <strong>从零开始</strong> 通过泰勒级数或牛顿迭代计算。滚动查看这些结果（上万位数字）会触发逐渐变慢的重新计算。</li>
+        </ul>
+    </section>
+    <section>
+        <h2>优化提示</h2>
+        <ul>
+            <li>π 和平方根高度优化 —— 可以随意滚动。</li>
+            <li><code>e</code>、三角函数和对数值在超过 10,000 位时可能会变慢。</li>
+            <li><strong>对于小整数幂，使用乘法而不是 <code>^</code></strong>：<code>x*x</code> 比 <code>x^2</code> 快得多，<code>x*x*x</code> 比 <code>x^3</code> 快得多。幂运算符 <code>^</code> 即使在简单情况下也会退回到对数/指数计算（<code>exp(y*ln(x))</code>），这会涉及未缓存的泰勒级数求值。</li>
+            <li>当可用时，使用 <strong>化简</strong> 按钮以获得化简表达式，而不是原始数字。</li>
+        </ul>
+    </section>
+    <section>
+        <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="/aosp/licenses.html">Open Source Licenses</a>
         |
-        <a style="color:inherit;" href="/calc.html">English</a>
+        <a target="_blank" href="/calc.html" data-goatcounter-click="/calc.html">English</a>
     </section>
     <div id="react-root" data-hyp="true" data-inv="true"></div>
     <script>window.onerror = function (e) { alert("Javascript Error: " + e); }</script>
