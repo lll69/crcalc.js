@@ -47,6 +47,7 @@ module.exports = {
                 }
             }),
             new HtmlMinimizerPlugin({
+                exclude: /(arithmetic|implementation)-overview\.html/,
                 minimizerOptions: {
                     conservativeCollapse: false
                 }
