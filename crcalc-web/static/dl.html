@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Download CRCalc.js Exact Calculator</title>
+    <meta name="robots" content="noindex, nofollow">
+    <style>
+        body {
+            font-family: Roboto, sans-serif;
+        }
+
+        a {
+            color: inherit;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Download CRCalc.js Exact Calculator</h1>
+    <p class="noscript">Enable JavaScript To Continue</p>
+    <script>
+        (() => {
+            function formatSize(size) {
+                const K = 1024;
+                const M = K * K;
+                const G = M * K;
+                if (size >= G) {
+                    return (size / G).toFixed(3) + "G";
+                }
+                if (size >= M) {
+                    return (size / M).toFixed(3) + "M";
+                }
+                if (size >= K) {
+                    return (size / K).toFixed(3) + "K";
+                }
+                return size + "B";
+            }
+            document.querySelector(".noscript").remove();
+            if (new URLSearchParams(location.search).get("download") !== "on") {
+                location.href = "download.html";
+            } else {
+                const p = document.createElement("p");
+                p.id = "progress";
+                p.innerText = "Please Wait...";
+                document.body.appendChild(p);
+                let downloadState = 0;
+                let downloaded = 0;
+                const xhr = new XMLHttpRequest();
+                function callback(t, x, e) {
+                    if (downloadState !== 0) return;
+                    downloadState = t;
+                    downloaded = e.loaded;
+                    if (t === 0) {
+                        p.textContent = "Downloading data (" + formatSize(downloaded) + ")";
+                    } else if (t === 1) {
+                        window.downloaded = downloaded;
+                        Function(xhr.responseText)();
+                    } else if (t === 2) {
+                        p.textContent = "Error downloading data: /dl.js";
+                    }
+                }
+                xhr.onload = (e) => callback(xhr.status === 200 ? 1 : 2, xhr, e);
+                xhr.onerror = (e) => callback(2, xhr, e);
+                xhr.onprogress = (e) => callback(0, xhr, e);
+                xhr.open("GET", "/dl.js");
+                xhr.responseType = "text";
+                xhr.send();
+            }
+        })();
+    </script>
+</body>
+
+</html>

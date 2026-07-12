@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Download CRCalc.js Exact Calculator</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: Roboto, sans-serif;
+        }
+
+        .header {
+            height: 5em;
+            white-space: nowrap;
+            padding: 0 8px 0 8px;
+        }
+
+        .header-fixed {
+            background-color: #B2EBF266;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 10;
+            backdrop-filter: blur(4px);
+        }
+
+        section {
+            margin: 8px;
+            max-width: 1000px;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        code {
+            background-color: rgba(27, 31, 35, .05);
+            border-radius: 3px;
+            font-size: 85%;
+            margin: 0;
+            padding: .2em .4em;
+        }
+    </style>
+    <link rel="stylesheet" href="roboto.css">
+</head>
+
+<body>
+    <div class="header header-fixed" id="header">
+        <h1><a target="_blank" href="/"><img src="favicon.ico" style="height:1em" alt="Home"></a>&nbsp;Download CRCalc.js Exact Calculator</h1>
+    </div>
+    <div class="header"></div>
+    <section>
+        <p>Download the <a target="_blank" href="/calc.html" data-goatcounter-click="e/calc.html">CRCalc.js Exact Calculator</a> offline version, which runs completely offline and works in major browsers. Privacy-friendly and highly customizable.</p>
+    </section>
+    <form action="dl.html" method="GET">
+        <input type="hidden" name="download" value="on">
+        <section id="function-control">
+            <h2>1. Enable/Disable Functions</h2>
+            <ul>
+                <li>
+                    <button id="function-enable-all">Enable All</button>
+                    <button id="function-disable-all">Disable All</button>
+                </li>
+                <li>
+                    <h3>Operators</h3>
+                    <label><input name="power" type="checkbox" checked>Power (<code>^</code>)</label>
+                    <br>
+                    <label><input name="sqrt" type="checkbox" checked>Square Root (<code>√</code>)</label>
+                    <br>
+                    <label><input name="cbrt" type="checkbox" checked>Cube Root (<code>∛<i>x</i></code>, Enters <code>^(1/3)</code>, Controls Button Only)</label>
+                    <br>
+                    <label><input name="fact" type="checkbox" checked>Factorial (<code>!</code>)</label>
+                </li>
+                <li>
+                    <h3><label><input name="functionPanel" type="checkbox" checked>Function Panel</label></h2>
+                </li>
+                <li>
+                    <h3>Constants</h3>
+                    <label><input name="pi" type="checkbox" checked>Pi (<code>π</code>)</label>
+                    <br>
+                    <label><input name="e" type="checkbox" checked>Euler's number (<code>e</code>)</label>
+                </li>
+                <li>
+                    <h3>Functions</h3>
+                    <label><input name="ln" type="checkbox" checked>ln</label>
+                    <br>
+                    <label><input name="log" type="checkbox" checked>log10</label>
+                    <br>
+                    <label><input name="exp" type="checkbox" checked>exp (<code>eˣ</code>)</label>
+                    <br>
+                    <label><input name="pow10" type="checkbox" checked>10ˣ (Controls Button Only)</label>
+                    <br>
+                    <label><input name="trig" type="checkbox" checked>Trigonometric Functions (<code>sin</code>/<code>cos</code>/<code>tan</code>)</label>
+                    <br>
+                    <label><input name="trigInv" type="checkbox" checked>Inverse Trigonometric Functions (<code>sin⁻¹</code>/<code>cos⁻¹</code>/<code>tan⁻¹</code>)</label>
+                    <br>
+                    <label><input name="hyp" type="checkbox" checked>Hyperbolic Trigonometric Functions (<code>sinh</code>/<code>cosh</code>/<code>tanh</code>)</label>
+                    <br>
+                    <label><input name="hypInv" type="checkbox" checked>Inverse Hyperbolic Trigonometric Functions (<code>asinh</code>/<code>acosh</code>/<code>atanh</code>)</label>
+                    <br>
+                    <label><input name="brackets" type="checkbox" checked>Brackets (Controls Button Only)</label>
+                </li>
+                <li>
+                    <h3>Switches</h3>
+                    <label><input name="invSw" type="checkbox" checked>Inverse Functions Switch (<code>INV</code>)</label>
+                    <br>
+                    <label><input name="hypSw" type="checkbox" checked>Hyperbolic Trigonometric Functions Switch (<code>HYP</code>)</label>
+                </li>
+            </ul>
+            <script>
+                document.getElementById("function-enable-all").onclick = (e) => { e.preventDefault(); document.getElementById("function-control").querySelectorAll("input[type=checkbox]").forEach(x => x.checked = true) }
+                document.getElementById("function-disable-all").onclick = (e) => { e.preventDefault(); document.getElementById("function-control").querySelectorAll("input[type=checkbox]").forEach(x => x.checked = false) }
+            </script>
+        </section>
+        <section id="ui-control">
+            <h2>2. UI Control</h2>
+            <ul>
+                <li>
+                    <button id="ui-enable-all">Enable All</button>
+                    <button id="ui-disable-all">Disable All</button>
+                </li>
+                <li>
+                    <h3>Input/Output</h3>
+                    <label><input name="noKeyboard" type="checkbox" checked>Disable Soft Keyboard On Mobile Devices</label>
+                    <br>
+                    <label><input name="scrolling" type="checkbox" checked>Scrollable Output</label>
+                </li>
+                <li>
+                    <h3>Control Buttons</h3>
+                    <label><input name="copyResult" type="checkbox" checked>Copy Result</label>
+                    <br>
+                    <label><input name="copyTruncated" type="checkbox" checked>Copy Truncated Result</label>
+                    <br>
+                    <label><input name="copyInteger" type="checkbox" checked>Copy Integer Part</label>
+                    <br>
+                    <label><input name="saveResult" type="checkbox" checked>Save Result</label>
+                    <br>
+                    <label><input name="simplify" type="checkbox" checked>Show Simplified Result</label>
+                    <br>
+                    <label><input name="speedUpScroll" type="checkbox" checked>Speed Up Scrolling</label>
+                </li>
+            </ul>
+            <script>
+                document.getElementById("ui-enable-all").onclick = (e) => { e.preventDefault(); document.getElementById("ui-control").querySelectorAll("input[type=checkbox]").forEach(x => x.checked = true) }
+                document.getElementById("ui-disable-all").onclick = (e) => { e.preventDefault(); document.getElementById("ui-control").querySelectorAll("input[type=checkbox]").forEach(x => x.checked = false) }
+            </script>
+        </section>
+        <section>
+            <h2>3. Start Download</h2>
+            <input type="submit" value="Download CRCalc.js Exact Calculator">
+            <p>Calculator runs completely offline and works in major browsers.</p>
+        </section>
+    </form>
+    <script>
+        (function () {
+            let lastScrollTop = 0;
+            let headerY = 0;
+            let header = document.querySelector(".header-fixed");
+            document.addEventListener("scroll", function () {
+                let currentScrollTop = document.documentElement.scrollTop;
+                let scrollOffset = currentScrollTop - lastScrollTop;
+                lastScrollTop = currentScrollTop;
+                let headerHeight = header.offsetHeight;
+                let newHeaderY = headerY - scrollOffset;
+                if (newHeaderY > 0) {
+                    newHeaderY = 0;
+                } else if (newHeaderY < -headerHeight) {
+                    newHeaderY = -headerHeight;
+                }
+                headerY = newHeaderY;
+                header.style.top = headerY + "px";
+            });
+        })();
+    </script>
+    <script>
+        if (!location.toString().startsWith("file:")) {
+            fetch("/counter.js").then((result) => {
+                if (result.ok) {
+                    result.text().then((content) => {
+                        Function(content)();
+                    }).catch((e) => {
+                        console.error(e);
+                    })
+                } else {
+                    console.error("Error: counter.js status=" + result.status);
+                }
+            }).catch((e) => {
+                console.error(e);
+            });
+        }
+    </script>
+</body>
+
+</html>

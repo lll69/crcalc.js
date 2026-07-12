@@ -170,6 +170,10 @@ limitations under the License.
             cursor: pointer;
         }
 
+        .grid-fun-line>div>button:not(.MuiButton-root) {
+            font-family: Roboto, sans-serif;
+        }
+
         .grid-fun-line>button,
         .grid-num>button,
         .grid-ops>button,
@@ -423,7 +427,7 @@ limitations under the License.
     <section>
         <h2>性能提示</h2>
         <ul>
-            <li>这个计算器使用 <a target="_blank" href="/aosp/arithmetic-overview.html" data-goatcounter-click="/aosp/arithmetic-overview.html"><strong>构造实数（Constructive Real）算术</strong></a> 来进行精确的任意精度计算。</li>
+            <li>这个计算器使用 <a target="_blank" href="/aosp/arithmetic-overview.html" data-goatcounter-click="e/aosp/arithmetic-overview.html"><strong>构造实数（Constructive Real）算术</strong></a> 来进行精确的任意精度计算。</li>
             <li><strong>缓存常数</strong>（快速）：π 使用 Gauss-Legendre 算法进行二次收敛，并在不同精度请求之间缓存中间平方根结果。</li>
             <li><strong>未缓存函数/常数</strong>（在极高精度下较慢）：<code>^</code>、<code>e</code>、<code>exp</code>、<code>ln</code>、<code>sin</code>、<code>cos</code>、<code>tan</code>、<code>asin</code>、<code>acos</code>、<code>atan</code> 及其双曲函数，每次请求更高精度时都会 <strong>从零开始</strong> 通过泰勒级数或牛顿迭代计算。滚动查看这些结果（上万位数字）会触发逐渐变慢的重新计算。</li>
         </ul>
@@ -438,9 +442,9 @@ limitations under the License.
         </ul>
     </section>
     <section>
-        <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="/aosp/licenses.html">Open Source Licenses</a>
+        <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="e/aosp/licenses.html">Open Source Licenses</a>
         |
-        <a target="_blank" href="/calc.html" data-goatcounter-click="/calc.html">English</a>
+        <a target="_blank" href="/calc.html" data-goatcounter-click="e/calc.html">English</a>
     </section>
     <div id="react-root" data-hyp="true" data-inv="true"></div>
     <script>window.onerror = function (e) { alert("Javascript Error: " + e); }</script>

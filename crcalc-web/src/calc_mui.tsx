@@ -24,7 +24,44 @@ import DialogContent from '@mui/material/DialogContent';
 import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { CalcMuiPlugin, CalcMuiPluginHolder } from './calc_mui_types';
-import { FormControlLabel, Radio, RadioGroup } from '@mui/material';
+import { RadioGroup } from '@mui/material';
+
+/*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
+const CONFIG_IS_ONLINE = true;
+// Operators
+const CONFIG_POWER = true;
+const CONFIG_SQRT = true;
+const CONFIG_CBRT = true;
+const CONFIG_FACT = true;
+// Function Panel
+const CONFIG_FUNCTION_PANEL = true;
+// Constants
+const CONFIG_PI = true;
+const CONFIG_E = true;
+// Functions
+const CONFIG_LN = true;
+const CONFIG_LOG = true;
+const CONFIG_EXP = true;
+const CONFIG_POW10 = true;
+const CONFIG_TRIG = true;
+const CONFIG_TRIG_INV = true;
+const CONFIG_HYP = true;
+const CONFIG_HYP_INV = true;
+// Switches
+const CONFIG_SW_INV = true;
+const CONFIG_SW_HYP = true;
+const CONFIG_SW_BRACKETS = true;
+// Input/Output
+const CONFIG_UI_NO_KEYBOARD = true;
+const CONFIG_SCROLLING = true;
+// Control Buttons
+const CONFIG_UI_COPY_RESULT = true;
+const CONFIG_UI_COPY_TRUNC = true;
+const CONFIG_UI_COPY_INTEGER = true;
+const CONFIG_UI_SAVE_RESULT = true;
+const CONFIG_UI_SIMPLIFY = true;
+const CONFIG_UI_SPEED_SCROLL = true;
+/*HxDlWyZk CONFIGURATION END FOR DOWNLOAD pUrVkSlX**/
 
 const crL10N = window["crL10N"] || {};
 
@@ -150,20 +187,22 @@ const OptionDialog = () => {
         setOpenAlert(true);
     }, []);
 
-    React.useEffect(() => {
-        (window as any as CalcMuiPluginHolder).calcMuiPlugin.showSaveOption = showAlert;
-        const hashChange = () => {
-            if (location.hash !== "##mui-dialog-save" && openAlert) {
-                closeAlert();
+    if (CONFIG_UI_SAVE_RESULT) {
+        React.useEffect(() => {
+            (window as any as CalcMuiPluginHolder).calcMuiPlugin.showSaveOption = showAlert;
+            const hashChange = () => {
+                if (location.hash !== "##mui-dialog-save" && openAlert) {
+                    closeAlert();
+                }
             }
-        }
-        addEventListener("hashchange", hashChange);
+            addEventListener("hashchange", hashChange);
 
-        return () => {
-            (window as any as CalcMuiPluginHolder).calcMuiPlugin.showSaveOption = undefined;
-            removeEventListener("hashchange", hashChange);
-        };
-    }, [openAlert]);
+            return () => {
+                (window as any as CalcMuiPluginHolder).calcMuiPlugin.showSaveOption = undefined;
+                removeEventListener("hashchange", hashChange);
+            };
+        }, [openAlert]);
+    }
 
     const handleClick = React.useCallback((event: React.MouseEvent) => {
         if (plugin.onSaveClick) plugin.onSaveClick((event.target as HTMLButtonElement).value);
@@ -203,20 +242,20 @@ const DialogApp = () => {
             <StyledEngineProvider injectFirst>
                 <ThemeProvider theme={theme}>
                     <AlertDialog />
-                    <OptionDialog />
+                    {CONFIG_UI_SAVE_RESULT && <OptionDialog />}
                 </ThemeProvider>
             </StyledEngineProvider>
         </React.StrictMode>
     );
 };
 
-const ButtonApp = ({ text, click }: { text: string, click: () => void }) => {
+const ButtonApp = ({ text, click, disabled }: { text: string, click: () => void, disabled?: boolean }) => {
     const theme = React.useMemo(() => createTheme(themeProps), []);
     return (
         <React.StrictMode>
             <StyledEngineProvider injectFirst>
                 <ThemeProvider theme={theme}>
-                    <Button variant="outlined" disableElevation onClick={click} style={{ borderRadius: "0", padding: "0", width: "100%", height: "1.5em", fontSize: "1em", textTransform: "none" }}>{text}</Button>
+                    <Button variant="outlined" disabled={disabled} disableElevation onClick={click} style={{ borderRadius: "0", padding: "0", width: "100%", height: "1.5em", fontSize: "1em", textTransform: "none" }}>{text}</Button>
                 </ThemeProvider>
             </StyledEngineProvider>
         </React.StrictMode>
@@ -261,38 +300,38 @@ ReactDOM.createRoot(reactRoot).render(
     <DialogApp />
 );
 
-if (reactRoot.dataset.hyp === "true") {
+if (CONFIG_FUNCTION_PANEL && CONFIG_SW_HYP && reactRoot.dataset.hyp === "true") {
     ReactDOM.createRoot(getElementById("react_hyp_root")!).render(
         <HypButtonApp plugin={plugin} />
     );
     ReactDOM.createRoot(getElementById("react_sinh_root")!).render(
-        <ButtonApp text="sinh" click={() => { plugin.onSinhButtonClick && plugin.onSinhButtonClick() }} />
+        <ButtonApp disabled={!CONFIG_HYP} text={CONFIG_HYP ? "sinh" : ""} click={() => { plugin.onSinhButtonClick && plugin.onSinhButtonClick() }} />
     );
     ReactDOM.createRoot(getElementById("react_cosh_root")!).render(
-        <ButtonApp text="cosh" click={() => { plugin.onCoshButtonClick && plugin.onCoshButtonClick() }} />
+        <ButtonApp disabled={!CONFIG_HYP} text={CONFIG_HYP ? "cosh" : ""} click={() => { plugin.onCoshButtonClick && plugin.onCoshButtonClick() }} />
     );
     ReactDOM.createRoot(getElementById("react_tanh_root")!).render(
-        <ButtonApp text="tanh" click={() => { plugin.onTanhButtonClick && plugin.onTanhButtonClick() }} />
+        <ButtonApp disabled={!CONFIG_HYP} text={CONFIG_HYP ? "tanh" : ""} click={() => { plugin.onTanhButtonClick && plugin.onTanhButtonClick() }} />
     );
     ReactDOM.createRoot(getElementById("react_asinh_root")!).render(
-        <ButtonApp text="asinh" click={() => { plugin.onASinhButtonClick && plugin.onASinhButtonClick() }} />
+        <ButtonApp disabled={!CONFIG_HYP_INV} text={CONFIG_HYP_INV ? "asinh" : ""} click={() => { plugin.onASinhButtonClick && plugin.onASinhButtonClick() }} />
     );
     ReactDOM.createRoot(getElementById("react_acosh_root")!).render(
-        <ButtonApp text="acosh" click={() => { plugin.onACoshButtonClick && plugin.onACoshButtonClick() }} />
+        <ButtonApp disabled={!CONFIG_HYP_INV} text={CONFIG_HYP_INV ? "acosh" : ""} click={() => { plugin.onACoshButtonClick && plugin.onACoshButtonClick() }} />
     );
     ReactDOM.createRoot(getElementById("react_atanh_root")!).render(
-        <ButtonApp text="atanh" click={() => { plugin.onATanhButtonClick && plugin.onATanhButtonClick() }} />
+        <ButtonApp disabled={!CONFIG_HYP_INV} text={CONFIG_HYP_INV ? "atanh" : ""} click={() => { plugin.onATanhButtonClick && plugin.onATanhButtonClick() }} />
     );
     postMessage("hypRendered");
 }
-if (reactRoot.dataset.simp === "true") {
+if (CONFIG_UI_SIMPLIFY && reactRoot.dataset.simp === "true") {
     const link = getElementById("show_simplify")!;
     ReactDOM.createRoot(getElementById("react_simplify_root")!).render(
         <SimplifyButtonApp click={() => link.click()} />
     );
     postMessage("simplifyRendered");
 }
-if (reactRoot.dataset.inv === "true") {
+if (CONFIG_FUNCTION_PANEL && CONFIG_SW_INV && reactRoot.dataset.inv === "true") {
     ReactDOM.createRoot(getElementById("react_inv_root")!).render(
         <ButtonApp text="INV" click={() => { plugin.onInvButtonClick && plugin.onInvButtonClick() }} />
     );

@@ -170,6 +170,10 @@ limitations under the License.
             cursor: pointer;
         }
 
+        .grid-fun-line>div>button:not(.MuiButton-root) {
+            font-family: Roboto, sans-serif;
+        }
+
         .grid-fun-line>button,
         .grid-num>button,
         .grid-ops>button,
@@ -410,7 +414,7 @@ limitations under the License.
             <li>Supports exponentiation and square root calculations</li>
             <li>Supports switching between radian and degree modes</li>
             <li>Supports copying results and saving results to a file</li>
-            <li><a target="_blank" href="https://github.com/lll69/crcalc.js" data-goatcounter-click="https://github.com/lll69/crcalc.js">Open source</a></li>
+            <li><a target="_blank" href="https://github.com/lll69/crcalc.js" data-goatcounter-click="e/https://github.com/lll69/crcalc.js">Open source</a></li>
         </ul>
     </section>
     <section>
@@ -423,7 +427,7 @@ limitations under the License.
     <section>
         <h2>Performance Tips</h2>
         <ul>
-            <li>This calculator uses <a target="_blank" href="/aosp/arithmetic-overview.html" data-goatcounter-click="/aosp/arithmetic-overview.html"><strong>Constructive Real arithmetic</strong></a> for precise arbitrary-precision calculations.</li>
+            <li>This calculator uses <a target="_blank" href="/aosp/arithmetic-overview.html" data-goatcounter-click="e/aosp/arithmetic-overview.html"><strong>Constructive Real arithmetic</strong></a> for precise arbitrary-precision calculations.</li>
             <li><strong>Cached Constants</strong> (fast): π uses the Gauss-Legendre algorithm for quadratic convergence, and intermediate square root results are cached between different precision requests.</li>
             <li><strong>Uncached Functions / Constants</strong> (slower at extremely high precision): <code>^</code>, <code>e</code>, <code>exp</code>, <code>ln</code>, <code>sin</code>, <code>cos</code>, <code>tan</code>, <code>asin</code>, <code>acos</code>, <code>atan</code>, and their hyperbolic counterparts are <strong>recomputed from scratch</strong> using Taylor series or Newton iteration for each higher precision request. Scrolling through these results (tens of thousands of digits) can trigger progressively slower recalculations.</li>
         </ul>
@@ -438,11 +442,13 @@ limitations under the License.
         </ul>
     </section>
     <section>
-        <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="/aosp/licenses.html">Open Source Licenses</a>
+        <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="e/aosp/licenses.html">Open Source Licenses</a>
         |
-        <a target="_blank" href="https://github.com/lll69/crcalc.js" data-goatcounter-click="https://github.com/lll69/crcalc.js">Report bugs</a>
+        <a target="_blank" href="https://github.com/lll69/crcalc.js" data-goatcounter-click="e/https://github.com/lll69/crcalc.js">Report bugs</a>
         |
-        <a target="_blank" href="/zh/calc.html" data-goatcounter-click="/zh/calc.html">中文</a>
+        <a target="_blank" href="/zh/calc.html" data-goatcounter-click="e/zh/calc.html">中文</a>
+        |
+        <a target="_blank" href="/download.html" data-goatcounter-click="e/download.html">Download Offline Version</a>
     </section>
     <div id="react-root" data-hyp="true" data-inv="true"></div>
     <script>window.onerror = function (e) { alert("Javascript Error: " + e); }</script>

@@ -18,6 +18,45 @@ import { CalcMuiPlugin, CalcMuiPluginHolder } from "./calc_mui_types";
 import Scroller from "./Scroller";
 import { CreateURRequest, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
 
+/*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
+const CONFIG_IS_ONLINE = true;
+// Operators
+const CONFIG_POWER = true;
+const CONFIG_SQRT = true;
+const CONFIG_CBRT = true;
+const CONFIG_FACT = true;
+// Function Panel
+const CONFIG_FUNCTION_PANEL = true;
+// Constants
+const CONFIG_PI = true;
+const CONFIG_E = true;
+// Functions
+const CONFIG_LN = true;
+const CONFIG_LOG = true;
+const CONFIG_EXP = true;
+const CONFIG_POW10 = true;
+const CONFIG_TRIG = true;
+const CONFIG_TRIG_INV = true;
+const CONFIG_HYP = true;
+const CONFIG_HYP_INV = true;
+// Switches
+const CONFIG_SW_INV = true;
+const CONFIG_SW_HYP = true;
+const CONFIG_SW_BRACKETS = true;
+// Input/Output
+const CONFIG_UI_NO_KEYBOARD = true;
+const CONFIG_SCROLLING = true;
+// Control Buttons
+const CONFIG_UI_COPY_RESULT = true;
+const CONFIG_UI_COPY_TRUNC = true;
+const CONFIG_UI_COPY_INTEGER = true;
+const CONFIG_UI_SAVE_RESULT = true;
+const CONFIG_UI_SIMPLIFY = true;
+const CONFIG_UI_SPEED_SCROLL = true;
+// URLs
+const CONFIG_WORKER_JS_CONTENT = "";
+/*HxDlWyZk CONFIGURATION END FOR DOWNLOAD pUrVkSlX**/
+
 const INTEGER_MIN = -2147483648;
 const INTEGER_MAX = 2147483647;
 const INITIAL_PREC = 32;
@@ -114,7 +153,7 @@ const scroller = Scroller();
 
 const crL10N = window["crL10N"] || {};
 const muiPlugin: CalcMuiPlugin = {};
-let workerContent: string | null = null;
+let workerUrl: string | null = null;
 let workerLoaded = false;
 let workerBusy = false;
 let needEnterNewExpr = false;
@@ -170,10 +209,25 @@ function copyText(str: string) {
     }
 }
 function changeResultUIVisibility() {
-    copyButton.hidden = copyTruncatedButton.hidden = copyIntegerButton.hidden = !hasResult;
-    saveButton.hidden = speedUpButton.hidden = !hasResult;
-    simplifyButton.hidden = !(!simplifyRendered && hasResult && isResultSimplifiable);
-    simplifyReact.hidden = !(simplifyRendered && hasResult && isResultSimplifiable);
+    if (CONFIG_UI_COPY_RESULT) {
+        copyButton.hidden = !hasResult;
+    }
+    if (CONFIG_UI_COPY_TRUNC) {
+        copyTruncatedButton.hidden = !hasResult;
+    }
+    if (CONFIG_UI_COPY_INTEGER) {
+        copyIntegerButton.hidden = !hasResult;
+    }
+    if (CONFIG_UI_SAVE_RESULT) {
+        saveButton.hidden = !hasResult;
+    }
+    if (CONFIG_UI_SPEED_SCROLL) {
+        speedUpButton.hidden = !hasResult;
+    }
+    if (CONFIG_UI_SIMPLIFY) {
+        simplifyButton.hidden = !(!simplifyRendered && hasResult && isResultSimplifiable);
+        simplifyReact.hidden = !(simplifyRendered && hasResult && isResultSimplifiable);
+    }
 }
 function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) => void, truncate?: boolean) {
     if (!workerLoaded || !hasResult) return;
@@ -357,13 +411,15 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
     }
 }
 function saveText(content: string, name: string) {
-    let url = createObjectURL(new Blob([content], { type: "text/plain" }));
-    let element = D.createElement("a");
-    element.href = url;
-    element.download = name;
-    D.body.appendChild(element);
-    element.click();
-    element.remove();
+    if (CONFIG_UI_SAVE_RESULT) {
+        let url = createObjectURL(new Blob([content], { type: "text/plain" }));
+        let element = D.createElement("a");
+        element.href = url;
+        element.download = name;
+        D.body.appendChild(element);
+        element.click();
+        element.remove();
+    }
 }
 function copyResult(save: boolean, truncate: boolean) {
     const showAlert = (message: string) => {
@@ -392,7 +448,7 @@ function copyResult(save: boolean, truncate: boolean) {
         } else {
             showAlert((crL10N["truncatedCopied"] || "TRUNCATED result has been copied (length:") + (content.length) + ")");
         }
-    } else {
+    } else if (CONFIG_UI_SAVE_RESULT) {
         saveText(content, exact ? "output_exact.txt" : "output_truncated.txt");
     }
 }
@@ -402,7 +458,7 @@ function scrollToErrorIfNeeded(e: string, str: string) {
     }
 }
 function changeHypButtonIfNeeded() {
-    if (hypRendered && workerLoaded) {
+    if (CONFIG_SW_HYP && hypRendered && workerLoaded) {
         getElementById("fun_percent")!.classList.add("op-hide");
         getElementById("react_hyp_root")!.classList.remove("op-hide");
     }
@@ -496,7 +552,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
             }
             break;
         case "toNiceString":
-            if (msg.uid === lastCalculateUid) {
+            if (CONFIG_UI_SIMPLIFY && msg.uid === lastCalculateUid) {
                 const text = msg.error || msg.result;
                 const title = (digitMax === 0) ? (crL10N["integerResult"] || "Integer Result") : crL10N["simplifiedResult"] || "Simplified Result";
                 const title2 = (digitMax === 0) ? (crL10N["integerResult2"] || "Integer Result: ") : (crL10N["simplifiedResult2"] || "Simplified Result: ");
@@ -514,7 +570,7 @@ function reInitWorker() {
     if (worker) {
         worker.terminate();
     }
-    worker = new Worker(createObjectURL(new Blob([workerContent!], { type: "text/javascript" })));
+    worker = new Worker(workerUrl!);
     worker.onmessage = onWorkerMessage;
     worker.onerror = onWorkerError;
     workerBusy = false;
@@ -523,7 +579,7 @@ function reInitWorker() {
     changeResultUIVisibility();
 }
 function initWorker(workerJs: string) {
-    workerContent = workerJs;
+    workerUrl = createObjectURL(new Blob([workerJs], { type: "text/javascript" }));
     reInitWorker();
 }
 function showLoadAnimation() {
@@ -565,24 +621,28 @@ function onExprChange() {
     }
     clearResult();
 }
-loadAnimationInterval = setInterval(showLoadAnimation, 100);
 
-fetch("/calc_worker.js").then((result) => {
-    if (result.ok) {
-        result.text().then((workerJs) => {
-            clearInterval(loadAnimationInterval);
-            initWorker(workerJs);
-        }).catch((e) => {
-            console.error(e);
-            onLoadingError("Error: calc_worker.js " + e);
-        })
-    } else {
-        onLoadingError("Error: calc_worker.js status=" + result.status);
-    }
-}).catch((e) => {
-    console.error(e);
-    onLoadingError("Error: calc_worker.js " + e);
-});
+if (CONFIG_WORKER_JS_CONTENT === "") {
+    loadAnimationInterval = setInterval(showLoadAnimation, 100);
+    fetch("/calc_worker.js").then((result) => {
+        if (result.ok) {
+            result.text().then((workerJs) => {
+                clearInterval(loadAnimationInterval);
+                initWorker(workerJs);
+            }).catch((e) => {
+                console.error(e);
+                onLoadingError("Error: calc_worker.js " + e);
+            })
+        } else {
+            onLoadingError("Error: calc_worker.js status=" + result.status);
+        }
+    }).catch((e) => {
+        console.error(e);
+        onLoadingError("Error: calc_worker.js " + e);
+    });
+} else {
+    initWorker(CONFIG_WORKER_JS_CONTENT);
+}
 function onCalcTimeout() {
     if (workerBusy) {
         const title = crL10N["calcTimeOut"] || "Calculation timed out";
@@ -612,11 +672,11 @@ function preprocessExpr() {
         expr = replaceStr(expr, " ", "");
         modified = true;
     }
-    if (expr.indexOf("pi") >= 0) {
+    if (CONFIG_PI && expr.indexOf("pi") >= 0) {
         expr = replaceStr(expr, "pi", "\u03C0");
         modified = true;
     }
-    if (expr.indexOf("**") >= 0) {
+    if (CONFIG_POWER && expr.indexOf("**") >= 0) {
         expr = replaceStr(expr, "**", "^");
         modified = true;
     }
@@ -668,7 +728,7 @@ function focusExpression() {
 }
 function refreshInverseButton() {
     buttonInv.title = invReact.title = isInvert ? (crL10N["hideInv"] || "Hide inverse functions") : (crL10N["showInv"] || "Show inverse functions");
-    if (invRendered) {
+    if (CONFIG_SW_INV && invRendered) {
         if (isInvert) {
             buttonInv.classList.add("op-hide");
             invReact.classList.remove("op-hide");
@@ -723,11 +783,13 @@ function refreshInverse() {
     }
 }
 function inverseClick() {
-    if (!workerLoaded) return;
-    isInvert = !isInvert;
-    refreshInverse();
-    refreshInverseButton();
-    focusExpression();
+    if (CONFIG_SW_INV) {
+        if (!workerLoaded) return;
+        isInvert = !isInvert;
+        refreshInverse();
+        refreshInverseButton();
+        focusExpression();
+    }
 }
 function hypClick(show: boolean) {
     if (!workerLoaded) return;
@@ -737,8 +799,10 @@ function hypClick(show: boolean) {
     focusExpression();
 }
 function refreshModeButton() {
-    buttonMode.title = degreeMode ? (crL10N["currDeg"] || "Currently in degree mode") : (crL10N["currRad"] || "Currently in radian mode");
-    buttonMode.innerText = degreeMode ? "DEG" : "RAD";
+    if (CONFIG_TRIG || CONFIG_TRIG_INV) {
+        buttonMode.title = degreeMode ? (crL10N["currDeg"] || "Currently in degree mode") : (crL10N["currRad"] || "Currently in radian mode");
+        buttonMode.innerText = degreeMode ? "DEG" : "RAD";
+    }
 }
 function modeClick() {
     if (!workerLoaded) return;
@@ -890,7 +954,7 @@ function appendOperator(op: string, fromInput?: boolean) {
                 insertStr("(" + op);
                 return true;
             }
-        } else if (op === "*" && prevChar === '*') {
+        } else if (CONFIG_POWER && op === "*" && prevChar === '*') {
             exprInput.selectionStart = selectionStart - 1;
             insertStr("^");
             return true;
@@ -966,7 +1030,9 @@ function onClear() {
     clearResult();
 }
 refreshInverseButton();
-buttonInv.addEventListener("click", inverseClick);
+if (CONFIG_SW_INV) {
+    buttonInv.addEventListener("click", inverseClick);
+}
 refreshModeButton();
 buttonMode.addEventListener("click", modeClick);
 numButtons.forEach((button, idx) => {
@@ -995,55 +1061,86 @@ getElementById("op_div")!.addEventListener("click", () => {
     appendOperator(divideChar);
     focusExpression();
 });
-getElementById("op_pow")!.addEventListener("click", () => {
-    appendOperator("^");
-    focusExpression();
-});
-getElementById("op_fact")!.addEventListener("click", () => {
-    appendOperator("!");
-    focusExpression();
-});
-getElementById("const_pi")!.addEventListener("click", () => {
-    appendConst("\u03C0");
-    focusExpression();
-});
-getElementById("const_e")!.addEventListener("click", () => {
-    appendConst("e");
-    focusExpression();
-});
-getElementById("op_lparen")!.addEventListener("click", () => {
-    appendParen("(");
-    focusExpression();
-});
-getElementById("op_rparen")!.addEventListener("click", () => {
-    appendParen(")");
-    focusExpression();
-});
-getElementById("op_sqrt")!.addEventListener("click", () => {
-    appendFunction("sqrt");
-    focusExpression();
-});
-registerFunction("sin");
-registerFunction("cos");
-registerFunction("tan");
-registerFunction("asin");
-registerFunction("acos");
-registerFunction("atan");
-registerFunction("ln");
-registerFunction("log");
-registerFunction("exp");
-getElementById("fun_10pow")!.addEventListener("click", () => {
-    insertStr("10^");
-    focusExpression();
-});
-getElementById("fun_percent")!.addEventListener("click", () => {
-    insertStr("/100");
-    focusExpression();
-});
-getElementById("op_cbrt")!.addEventListener("click", () => {
-    insertStr("^(1/3)");
-    focusExpression();
-});
+if (CONFIG_POWER) {
+    getElementById("op_pow")!.addEventListener("click", () => {
+        appendOperator("^");
+        focusExpression();
+    });
+}
+if (CONFIG_FUNCTION_PANEL) {
+    if (CONFIG_FACT) {
+        getElementById("op_fact")!.addEventListener("click", () => {
+            appendOperator("!");
+            focusExpression();
+        });
+    }
+    if (CONFIG_PI) {
+        getElementById("const_pi")!.addEventListener("click", () => {
+            appendConst("\u03C0");
+            focusExpression();
+        });
+    }
+    if (CONFIG_E) {
+        getElementById("const_e")!.addEventListener("click", () => {
+            appendConst("e");
+            focusExpression();
+        });
+    }
+    if (CONFIG_SW_BRACKETS) {
+        getElementById("op_lparen")!.addEventListener("click", () => {
+            appendParen("(");
+            focusExpression();
+        });
+        getElementById("op_rparen")!.addEventListener("click", () => {
+            appendParen(")");
+            focusExpression();
+        });
+    }
+    if (CONFIG_SQRT) {
+        getElementById("op_sqrt")!.addEventListener("click", () => {
+            appendFunction("sqrt");
+            focusExpression();
+        });
+    }
+    if (CONFIG_TRIG) {
+        registerFunction("sin");
+        registerFunction("cos");
+        registerFunction("tan");
+    }
+    if (CONFIG_TRIG_INV) {
+        registerFunction("asin");
+        registerFunction("acos");
+        registerFunction("atan");
+    }
+    if (CONFIG_LN) {
+        registerFunction("ln");
+    }
+    if (CONFIG_LOG) {
+        registerFunction("log");
+    }
+    if (CONFIG_EXP) {
+        registerFunction("exp");
+    }
+    if (CONFIG_POW10) {
+        getElementById("fun_10pow")!.addEventListener("click", () => {
+            insertStr("10^");
+            focusExpression();
+        });
+    }
+    getElementById("fun_percent")!.addEventListener("click", () => {
+        insertStr("/100");
+        focusExpression();
+    });
+    if (CONFIG_CBRT) {
+        getElementById("op_cbrt")!.addEventListener("click", () => {
+            insertStr("^(1/3)");
+            focusExpression();
+        });
+    }
+} else {
+    const funPanel = document.querySelector(".grid-fun");
+    if (funPanel) funPanel.remove();
+}
 getElementById("but_del")!.addEventListener("click", () => {
     onDel();
     focusExpression();
@@ -1052,32 +1149,40 @@ getElementById("but_clr")!.addEventListener("click", () => {
     onClear();
     focusExpression();
 });
-muiPlugin.onSinhButtonClick = () => {
-    appendFunction("sinh");
-    focusExpression();
-};
-muiPlugin.onCoshButtonClick = () => {
-    appendFunction("cosh");
-    focusExpression();
-};
-muiPlugin.onTanhButtonClick = () => {
-    appendFunction("tanh");
-    focusExpression();
-};
-muiPlugin.onASinhButtonClick = () => {
-    appendFunction("asinh");
-    focusExpression();
-};
-muiPlugin.onACoshButtonClick = () => {
-    appendFunction("acosh");
-    focusExpression();
-};
-muiPlugin.onATanhButtonClick = () => {
-    appendFunction("atanh");
-    focusExpression();
-};
-muiPlugin.onHypButtonClick = hypClick;
-muiPlugin.onInvButtonClick = inverseClick;
+if (CONFIG_FUNCTION_PANEL && CONFIG_HYP) {
+    muiPlugin.onSinhButtonClick = () => {
+        appendFunction("sinh");
+        focusExpression();
+    };
+    muiPlugin.onCoshButtonClick = () => {
+        appendFunction("cosh");
+        focusExpression();
+    };
+    muiPlugin.onTanhButtonClick = () => {
+        appendFunction("tanh");
+        focusExpression();
+    };
+}
+if (CONFIG_FUNCTION_PANEL && CONFIG_HYP_INV) {
+    muiPlugin.onASinhButtonClick = () => {
+        appendFunction("asinh");
+        focusExpression();
+    };
+    muiPlugin.onACoshButtonClick = () => {
+        appendFunction("acosh");
+        focusExpression();
+    };
+    muiPlugin.onATanhButtonClick = () => {
+        appendFunction("atanh");
+        focusExpression();
+    };
+}
+if (CONFIG_FUNCTION_PANEL && CONFIG_SW_HYP) {
+    muiPlugin.onHypButtonClick = hypClick;
+}
+if (CONFIG_FUNCTION_PANEL && CONFIG_SW_INV) {
+    muiPlugin.onInvButtonClick = inverseClick;
+}
 buttonCalc.addEventListener("click", calculateResult);
 exprInput.addEventListener("input", onExprChange);
 exprInput.addEventListener("keydown", (e) => {
@@ -1097,7 +1202,7 @@ exprInput.addEventListener("keydown", (e) => {
             break;
         case "(":
         case ")":
-            if (appendParen(key, true)) e.preventDefault();
+            if (CONFIG_SW_BRACKETS && appendParen(key, true)) e.preventDefault();
             break;
         case ".":
             if (appendPoint(true)) e.preventDefault();
@@ -1126,13 +1231,19 @@ exprInput.addEventListener("keydown", (e) => {
             break;
     }
 });
-copyButton.addEventListener("click", () => copyResult(false, false));
-copyTruncatedButton.addEventListener("click", () => copyResult(false, true));
+if (CONFIG_UI_COPY_RESULT) {
+    copyButton.addEventListener("click", () => copyResult(false, false));
+}
+if (CONFIG_UI_COPY_TRUNC) {
+    copyTruncatedButton.addEventListener("click", () => copyResult(false, true));
+}
 function copyOrSaveInteger(save: boolean) {
     const content = resultString.substring(0, pointIndex);
     if (save) {
-        saveText(content, "output_integer.txt");
-    } else {
+        if (CONFIG_UI_SAVE_RESULT) {
+            saveText(content, "output_integer.txt");
+        }
+    } else if (CONFIG_UI_COPY_INTEGER) {
         const showAlert = (message: string) => {
             showMessage(crL10N["copied"] || "Copied", message, () => message);
         }
@@ -1140,54 +1251,62 @@ function copyOrSaveInteger(save: boolean) {
         showAlert((crL10N["integerCopied"] || "Integer part has been copied (length:") + (content.length) + ")");
     }
 }
-copyIntegerButton.addEventListener("click", () => copyOrSaveInteger(false));
-saveButton.addEventListener("click", () => {
-    if (muiPlugin.showSaveOption) {
-        const exact = (digitMax === 0 && precisionCurrent === 0) || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax);
-        muiPlugin.showSaveOption(exact);
-    } else {
-        copyResult(true, false);
-    }
-});
-muiPlugin.onSaveClick = (option: string) => {
-    switch (option) {
-        case "exact":
+if (CONFIG_UI_COPY_INTEGER) {
+    copyIntegerButton.addEventListener("click", () => copyOrSaveInteger(false));
+}
+if (CONFIG_UI_SAVE_RESULT) {
+    saveButton.addEventListener("click", () => {
+        if (muiPlugin.showSaveOption) {
+            const exact = (digitMax === 0 && precisionCurrent === 0) || (digitMax !== INTEGER_MAX && precisionCurrent >= digitMax);
+            muiPlugin.showSaveOption(exact);
+        } else {
             copyResult(true, false);
-            break;
-        case "truncated":
-            copyResult(true, true);
-            break;
-        case "integer":
-            copyOrSaveInteger(true);
-            break;
-    }
-};
-simplifyButton.addEventListener("click", () => {
-    if (hasResult && isResultSimplifiable) {
-        worker!.postMessage({
-            type: "toNiceString",
-            id: lastCalculateId,
-            uid: ++lastCalculateUid,
-        } as ToNiceStringRequest);
-    }
-});
-speedUpButton.addEventListener("click", () => {
-    switch (speedUpFactor) {
-        case 1:
-            speedUpFactor = 4;
-            speedUpButton.classList.add("button-link-select1");
-            break;
-        case 4:
-            speedUpFactor = 9;
-            speedUpButton.classList.remove("button-link-select1");
-            speedUpButton.classList.add("button-link-select2");
-            break;
-        case 9:
-            speedUpFactor = 1;
-            speedUpButton.classList.remove("button-link-select2");
-            break;
-    }
-});
+        }
+    });
+    muiPlugin.onSaveClick = (option: string) => {
+        switch (option) {
+            case "exact":
+                copyResult(true, false);
+                break;
+            case "truncated":
+                copyResult(true, true);
+                break;
+            case "integer":
+                copyOrSaveInteger(true);
+                break;
+        }
+    };
+}
+if (CONFIG_UI_SIMPLIFY) {
+    simplifyButton.addEventListener("click", () => {
+        if (hasResult && isResultSimplifiable) {
+            worker!.postMessage({
+                type: "toNiceString",
+                id: lastCalculateId,
+                uid: ++lastCalculateUid,
+            } as ToNiceStringRequest);
+        }
+    });
+}
+if (CONFIG_UI_SPEED_SCROLL) {
+    speedUpButton.addEventListener("click", () => {
+        switch (speedUpFactor) {
+            case 1:
+                speedUpFactor = 4;
+                speedUpButton.classList.add("button-link-select1");
+                break;
+            case 4:
+                speedUpFactor = 9;
+                speedUpButton.classList.remove("button-link-select1");
+                speedUpButton.classList.add("button-link-select2");
+                break;
+            case 9:
+                speedUpFactor = 1;
+                speedUpButton.classList.remove("button-link-select2");
+                break;
+        }
+    });
+}
 if (!ENABLE_VARIABLES) {
     let varButton = getElementById("but_var") as HTMLButtonElement;
     varButton.disabled = true;
@@ -1412,22 +1531,14 @@ function registerScroll() {
         }
     });
 }
-registerScroll();
+if (CONFIG_SCROLLING) {
+    registerScroll();
+}
+if (!CONFIG_UI_NO_KEYBOARD) {
+    exprInput.inputMode = "";
+}
 
 (window as any as CalcMuiPluginHolder).calcMuiPlugin = muiPlugin;
-fetch("/calc_mui.js").then((result) => {
-    if (result.ok) {
-        result.text().then((content) => {
-            Function(content)();
-        }).catch((e) => {
-            console.error(e);
-        })
-    } else {
-        console.error("Error: calc_mui.js status=" + result.status);
-    }
-}).catch((e) => {
-    console.error(e);
-});
 
 addEventListener("message", (e) => {
     if (e.data === "hypRendered") {
@@ -1442,8 +1553,26 @@ addEventListener("message", (e) => {
     }
 });
 
-if (!location.toString().startsWith("file:")) {
-    fetch("/counter.js").then((result) => {
+if (CONFIG_IS_ONLINE) {
+    if (!location.toString().startsWith("file:")) {
+        fetch("/counter.js").then((result) => {
+            if (result.ok) {
+                result.text().then((content) => {
+                    Function(content)();
+                }).catch((e) => {
+                    console.error(e);
+                })
+            } else {
+                console.error("Error: counter.js status=" + result.status);
+            }
+        }).catch((e) => {
+            console.error(e);
+        });
+    }
+}
+
+if (CONFIG_IS_ONLINE) {
+    fetch("/calc_mui.js").then((result) => {
         if (result.ok) {
             result.text().then((content) => {
                 Function(content)();
@@ -1451,7 +1580,7 @@ if (!location.toString().startsWith("file:")) {
                 console.error(e);
             })
         } else {
-            console.error("Error: counter.js status=" + result.status);
+            console.error("Error: calc_mui.js status=" + result.status);
         }
     }).catch((e) => {
         console.error(e);

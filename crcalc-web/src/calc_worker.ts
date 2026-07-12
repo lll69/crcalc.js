@@ -14,8 +14,45 @@
  * limitations under the License.
  */
 
-import { BoundedRational, UnifiedReal } from "crcalc-js";
+import { BoundedRational, UnifiedReal, ArithmeticException } from "crcalc-js";
 import { CreateURResult, InitResult, ToNiceStringResult, ToStringResult, WorkerRequest } from "./worker_types";
+
+/*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
+const CONFIG_IS_ONLINE = true;
+// Operators
+const CONFIG_POWER = true;
+const CONFIG_SQRT = true;
+const CONFIG_CBRT = true;
+const CONFIG_FACT = true;
+// Function Panel
+const CONFIG_FUNCTION_PANEL = true;
+// Constants
+const CONFIG_PI = true;
+const CONFIG_E = true;
+// Functions
+const CONFIG_LN = true;
+const CONFIG_LOG = true;
+const CONFIG_EXP = true;
+const CONFIG_POW10 = true;
+const CONFIG_TRIG = true;
+const CONFIG_TRIG_INV = true;
+const CONFIG_HYP = true;
+const CONFIG_HYP_INV = true;
+// Switches
+const CONFIG_SW_INV = true;
+const CONFIG_SW_HYP = true;
+const CONFIG_SW_BRACKETS = true;
+// Input/Output
+const CONFIG_UI_NO_KEYBOARD = true;
+const CONFIG_SCROLLING = true;
+// Control Buttons
+const CONFIG_UI_COPY_RESULT = true;
+const CONFIG_UI_COPY_TRUNC = true;
+const CONFIG_UI_COPY_INTEGER = true;
+const CONFIG_UI_SAVE_RESULT = true;
+const CONFIG_UI_SIMPLIFY = true;
+const CONFIG_UI_SPEED_SCROLL = true;
+/*HxDlWyZk CONFIGURATION END FOR DOWNLOAD pUrVkSlX**/
 
 const STRICT_EXPR = true;
 
@@ -656,6 +693,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         stack.push(getDivide(arg0, arg1));
                         break;
                     case "^": {
+                        if (!CONFIG_POWER) {
+                            throw new Error("Unsupported Operation: POWER");
+                        }
                         if (arg0.digitsRequired() === 0 && arg1.digitsRequired() === 0) {
                             const big0 = urToBigInt(arg0);
                             const big1 = urToBigInt(arg1);
@@ -689,6 +729,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         break;
                     }
                     case "!": {
+                        if (!CONFIG_FACT) {
+                            throw new Error("Unsupported Operation: FACT");
+                        }
                         stack.push(getFact(arg0));
                         break;
                     }
@@ -705,18 +748,33 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
             try {
                 switch (token) {
                     case "ln":
+                        if (!CONFIG_LN) {
+                            throw new Error("Unsupported Operation: ln");
+                        }
                         stack.push(getLn(arg0));
                         break;
                     case "log":
+                        if (!CONFIG_LOG) {
+                            throw new Error("Unsupported Operation: log");
+                        }
                         stack.push(getDivide(getLn(arg0), UR_LN10));
                         break;
                     case "exp":
+                        if (!CONFIG_EXP) {
+                            throw new Error("Unsupported Operation: exp");
+                        }
                         stack.push(getPowUR(UR_E, arg0));
                         break;
                     case "sqrt":
+                        if (!CONFIG_SQRT) {
+                            throw new Error("Unsupported Operation: sqrt");
+                        }
                         stack.push(getSqrt(arg0));
                         break;
                     case "sin":
+                        if (!CONFIG_TRIG) {
+                            throw new Error("Unsupported Operation: sin");
+                        }
                         if (degreeMode) {
                             stack.push(getSin(getMultiply(arg0, UR_RADIANS_PER_DEGREE)));
                         } else {
@@ -724,6 +782,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         }
                         break;
                     case "cos":
+                        if (!CONFIG_TRIG) {
+                            throw new Error("Unsupported Operation: cos");
+                        }
                         if (degreeMode) {
                             stack.push(getCos(getMultiply(arg0, UR_RADIANS_PER_DEGREE)));
                         } else {
@@ -731,6 +792,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         }
                         break;
                     case "tan":
+                        if (!CONFIG_TRIG) {
+                            throw new Error("Unsupported Operation: tan");
+                        }
                         if (degreeMode) {
                             stack.push(getTan(getMultiply(arg0, UR_RADIANS_PER_DEGREE)));
                         } else {
@@ -739,6 +803,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         break;
                     case "asin":
                     case "arcsin":
+                        if (!CONFIG_TRIG_INV) {
+                            throw new Error("Unsupported Operation: asin");
+                        }
                         if (degreeMode) {
                             stack.push(getDivide(getASin(arg0), UR_RADIANS_PER_DEGREE));
                         } else {
@@ -747,6 +814,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         break;
                     case "acos":
                     case "arccos":
+                        if (!CONFIG_TRIG_INV) {
+                            throw new Error("Unsupported Operation: acos");
+                        }
                         if (degreeMode) {
                             stack.push(getDivide(getACos(arg0), UR_RADIANS_PER_DEGREE));
                         } else {
@@ -755,6 +825,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         break;
                     case "atan":
                     case "arctan":
+                        if (!CONFIG_TRIG_INV) {
+                            throw new Error("Unsupported Operation: atan");
+                        }
                         if (degreeMode) {
                             stack.push(getDivide(getATan(arg0), UR_RADIANS_PER_DEGREE));
                         } else {
@@ -762,24 +835,42 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         }
                         break;
                     case "sinh":
+                        if (!CONFIG_HYP) {
+                            throw new Error("Unsupported Operation: sinh");
+                        }
                         stack.push(getDivide(getSub(getPowUR(UR_E, arg0), getPowUR(UR_E, getNegate(arg0))), UnifiedReal.TWO));
                         break;
                     case "cosh":
+                        if (!CONFIG_HYP) {
+                            throw new Error("Unsupported Operation: cosh");
+                        }
                         stack.push(getDivide(getAdd(getPowUR(UR_E, arg0), getPowUR(UR_E, getNegate(arg0))), UnifiedReal.TWO));
                         break;
                     case "tanh": {
+                        if (!CONFIG_HYP) {
+                            throw new Error("Unsupported Operation: tanh");
+                        }
                         const t1 = getPowUR(UR_E, arg0);
                         const t2 = getPowUR(UR_E, getNegate(arg0));
                         stack.push(getDivide(getSub(t1, t2), getAdd(t1, t2)));
                         break;
                     }
                     case "asinh":
+                        if (!CONFIG_HYP_INV) {
+                            throw new Error("Unsupported Operation: asinh");
+                        }
                         stack.push(getLn(getAdd(arg0, getSqrt(getAdd(getMultiply(arg0, arg0), UnifiedReal.ONE)))));
                         break;
                     case "acosh":
+                        if (!CONFIG_HYP_INV) {
+                            throw new Error("Unsupported Operation: acosh");
+                        }
                         stack.push(getLn(getAdd(arg0, getSqrt(getSub(getMultiply(arg0, arg0), UnifiedReal.ONE)))));
                         break;
                     case "atanh":
+                        if (!CONFIG_HYP_INV) {
+                            throw new Error("Unsupported Operation: atanh");
+                        }
                         stack.push(getDivide(getLn(getDivide(getAdd(UnifiedReal.ONE, arg0), getSub(UnifiedReal.ONE, arg0))), UnifiedReal.TWO));
                         break;
                 }
@@ -792,9 +883,9 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
             if (firstChar === "." || (firstChar >= "0" && firstChar <= "9")) {
                 // number
                 stack.push(getURFromStr(firstChar === "." ? ("0" + token) : token));
-            } else if (token === "e") {
+            } else if (CONFIG_E && token === "e") {
                 stack.push(UR_E);
-            } else if (token === "\u03C0") {
+            } else if (CONFIG_PI && token === "\u03C0") {
                 stack.push(UnifiedReal.PI);
             } else {
                 throw new Error("Unknown variable '" + token + "' at position [" + loc + "]")
@@ -866,6 +957,9 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
         }
         case "toNiceString": {
             try {
+                if (!CONFIG_UI_SIMPLIFY) {
+                    throw new Error("Unsupported Operation: SIMPLIFY");
+                }
                 let ur: UnifiedReal = urList[msg.id];
                 let result = ur.toNiceString();
                 postWorkerMessage({
