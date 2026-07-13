@@ -692,6 +692,10 @@ function calculateResult() {
     }
     clearResult();
     onCalculatorResize();
+    if (exprInput.value === "") {
+        focusExpression();
+        return;
+    }
     preprocessExpr();
     needEnterNewExpr = true;
     buttonCalc.innerText = "STOP";
