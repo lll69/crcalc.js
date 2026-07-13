@@ -18,6 +18,7 @@ import * as ClipboardJS from "clipboard";
 import { CalcMuiPlugin, CalcMuiPluginHolder } from "./calc_mui_types";
 import Scroller from "./Scroller";
 import { CreateURRequest, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
+import { decode } from "base85";
 
 /*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
 const CONFIG_IS_ONLINE = true;
@@ -54,8 +55,11 @@ const CONFIG_UI_COPY_INTEGER = true;
 const CONFIG_UI_SAVE_RESULT = true;
 const CONFIG_UI_SIMPLIFY = true;
 const CONFIG_UI_SPEED_SCROLL = true;
+const CONFIG_UI_BUNDLE_FONTS = false;
 // URLs
 const CONFIG_WORKER_JS_CONTENT = "";
+const CONFIG_FONT_CONTENTS: string[] = [];
+const CONFIG_FONT_SIZES: number[] = [];
 /*HxDlWyZk CONFIGURATION END FOR DOWNLOAD pUrVkSlX**/
 
 const INTEGER_MIN = -2147483648;
@@ -1569,4 +1573,25 @@ if (CONFIG_IS_ONLINE) {
     }).catch((e) => {
         console.error(e);
     });
+}
+
+if (CONFIG_UI_BUNDLE_FONTS) {
+    function decodeFont(file: number) {
+        return URL.createObjectURL(new Blob([new Uint8Array((decode(CONFIG_FONT_CONTENTS[file], "z85") as Uint8Array).buffer as ArrayBuffer, 0, CONFIG_FONT_SIZES[file])], { type: "font/woff2" }));
+    }
+    const cssContent =
+        `@font-face{font-display:swap;font-family:Roboto;font-style:italic;font-weight:400;src:url(${decodeFont(0)});unicode-range:u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd}` +
+        `@font-face{font-display:swap;font-family:Roboto;font-style:normal;font-weight:400;src:url(${decodeFont(1)});unicode-range:u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd}` +
+        `@font-face{font-display:swap;font-family:Roboto;font-style:normal;font-weight:500;src:url(${decodeFont(2)});unicode-range:u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd}` +
+        `@font-face{font-display:swap;font-family:Roboto;font-style:normal;font-weight:700;src:url(${decodeFont(3)});unicode-range:u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd}` +
+        `@font-face{font-display:swap;font-family:Roboto;font-style:normal;font-weight:400;src:url(${decodeFont(4)});unicode-range:u+0100-02ba,u+02bd-02c5,u+02c7-02cc,u+02ce-02d7,u+02dd-02ff,u+0304,u+0308,u+0329,u+1d00-1dbf,u+1e00-1e9f,u+1ef2-1eff,u+2020,u+20a0-20ab,u+20ad-20c0,u+2113,u+2c60-2c7f,u+a720-a7ff}` +
+        `@font-face{font-display:swap;font-family:Roboto;font-style:normal;font-weight:400;src:url(${decodeFont(5)});unicode-range:u+0302-0303,u+0305,u+0307-0308,u+0310,u+0312,u+0315,u+031a,u+0326-0327,u+032c,u+032f-0330,u+0332-0333,u+0338,u+033a,u+0346,u+034d,u+0391-03a1,u+03a3-03a9,u+03b1-03c9,u+03d1,u+03d5-03d6,u+03f0-03f1,u+03f4-03f5,u+2016-2017,u+2034-2038,u+203c,u+2040,u+2043,u+2047,u+2050,u+2057,u+205f,u+2070-2071,u+2074-208e,u+2090-209c,u+20d0-20dc,u+20e1,u+20e5-20ef,u+2100-2112,u+2114-2115,u+2117-2121,u+2123-214f,u+2190,u+2192,u+2194-21ae,u+21b0-21e5,u+21f1-21f2,u+21f4-2211,u+2213-2214,u+2216-22ff,u+2308-230b,u+2310,u+2319,u+231c-2321,u+2336-237a,u+237c,u+2395,u+239b-23b7,u+23d0,u+23dc-23e1,u+2474-2475,u+25af,u+25b3,u+25b7,u+25bd,u+25c1,u+25ca,u+25cc,u+25fb,u+266d-266f,u+27c0-27ff,u+2900-2aff,u+2b0e-2b11,u+2b30-2b4c,u+2bfe,u+3030,u+ff5b,u+ff5d,u+1d400-1d7ff,u+1ee??}` +
+        `@font-face{font-display:swap;font-family:Roboto Mono;font-style:normal;font-weight:400;src:url(${decodeFont(6)});unicode-range:u+0370-0377,u+037a-037f,u+0384-038a,u+038c,u+038e-03a1,u+03a3-03ff}` +
+        `@font-face{font-display:swap;font-family:Roboto Mono;font-style:normal;font-weight:700;src:url(${decodeFont(7)});unicode-range:u+0370-0377,u+037a-037f,u+0384-038a,u+038c,u+038e-03a1,u+03a3-03ff}` +
+        `@font-face{font-display:swap;font-family:Roboto Mono;font-style:normal;font-weight:400;src:url(${decodeFont(8)});unicode-range:u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd}` +
+        `@font-face{font-display:swap;font-family:Roboto Mono;font-style:normal;font-weight:700;src:url(${decodeFont(9)});unicode-range:u+00??,u+0131,u+0152-0153,u+02bb-02bc,u+02c6,u+02da,u+02dc,u+0304,u+0308,u+0329,u+2000-206f,u+20ac,u+2122,u+2191,u+2193,u+2212,u+2215,u+feff,u+fffd}`;
+    CONFIG_FONT_CONTENTS.length = 0;
+    const style = document.createElement("style");
+    style.textContent = cssContent;
+    document.head.appendChild(style);
 }

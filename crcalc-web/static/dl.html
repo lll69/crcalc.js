@@ -48,7 +48,7 @@
                 let downloadState = 0;
                 let downloaded = 0;
                 const xhr = new XMLHttpRequest();
-                function callback(t, x, e) {
+                function callback(t, e) {
                     if (downloadState !== 0) return;
                     downloadState = t;
                     downloaded = e.loaded;
@@ -61,9 +61,9 @@
                         p.textContent = "Error downloading data: /dl.js";
                     }
                 }
-                xhr.onload = (e) => callback(xhr.status === 200 ? 1 : 2, xhr, e);
-                xhr.onerror = (e) => callback(2, xhr, e);
-                xhr.onprogress = (e) => callback(0, xhr, e);
+                xhr.onload = (e) => callback(xhr.status === 200 ? 1 : 2, e);
+                xhr.onerror = (e) => callback(2, e);
+                xhr.onprogress = (e) => callback(0, e);
                 xhr.open("GET", "/dl.js");
                 xhr.responseType = "text";
                 xhr.send();

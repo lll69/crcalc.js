@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+import { encode } from "base85";
+import { Buffer } from "buffer";
 import { minify_sync } from "terser";
 
 const params = new URLSearchParams(location.search);
@@ -49,6 +51,7 @@ const CONFIG_UI_COPY_INTEGER = params.get("copyInteger") === "on";
 const CONFIG_UI_SAVE_RESULT = params.get("saveResult") === "on";
 const CONFIG_UI_SIMPLIFY = params.get("simplify") === "on";
 const CONFIG_UI_SPEED_SCROLL = params.get("speedUpScroll") === "on";
+const CONFIG_UI_BUNDLE_FONTS = params.get("bundleFonts") === "on";
 
 const SVG_RESOURCES = [
     "copy.svg",
@@ -57,7 +60,20 @@ const SVG_RESOURCES = [
     "save.svg",
     "simplify.svg",
     "accelerate.svg",
-]
+];
+
+const FONT_RESOURCES = [
+    "roboto-latin-400-italic.woff2",     // 0
+    "roboto-latin-400-normal.woff2",     // 1
+    "roboto-latin-500-normal.woff2",     // 2
+    "roboto-latin-700-normal.woff2",     // 3
+    "roboto-latin-ext-400-normal.woff2", // 4
+    "roboto-math-400-normal.woff2",      // 5
+    "roboto-mono-greek-400-normal.woff2",// 6
+    "roboto-mono-greek-700-normal.woff2",// 7
+    "roboto-mono-latin-400-normal.woff2",// 8
+    "roboto-mono-latin-700-normal.woff2",// 9
+];
 
 const enum State {
     DOWNLOADING = 0,
@@ -71,14 +87,18 @@ let calcHtmlDownloadState = State.DOWNLOADING;
 let calcJsDownloadState = State.DOWNLOADING;
 let calcWorkerDownloadState = State.DOWNLOADING;
 let calcSvgStates = Array<State>(SVG_RESOURCES.length).fill(State.DOWNLOADING);
+let calcFontStates = Array<State>(FONT_RESOURCES.length).fill(State.DOWNLOADING);
 let calcHtmlContent: Document | null = null;
 let calcJsContent = "";
 let calcWorkerContent = "";
 let calcSvgContents = Array<string>(SVG_RESOURCES.length).fill("");
+let calcFontContents = Array<string>(FONT_RESOURCES.length).fill("");
+let calcFontSizes = Array<number>(FONT_RESOURCES.length).fill(0);
 let calcHtmlDownloaded = 0;
 let calcJsDownloaded = 0;
 let calcWorkerDownloaded = 0;
 let calcSvgDownloaded = Array<number>(SVG_RESOURCES.length).fill(0);
+let calcFontDownloaded = Array<number>(FONT_RESOURCES.length).fill(0);
 let errorShown = false;
 let successShown = false;
 let htmlContent = "";
@@ -112,24 +132,30 @@ function formatSize(size: number) {
     return size + "B";
 }
 
-function getSvgStateBitOr() {
+function getArrayStateBitOr() {
     let result = 0;
     for (const state of calcSvgStates) {
+        result |= state;
+    }
+    for (const state of calcFontStates) {
         result |= state;
     }
     return result;
 }
 
-function getSvgStateBitAnd() {
+function getArrayStateBitAnd() {
     let result = 0xffffffff;
     for (const state of calcSvgStates) {
+        result &= state;
+    }
+    for (const state of calcFontStates) {
         result &= state;
     }
     return result;
 }
 
 function refreshState() {
-    if (0 !== (State.ERROR & (getSvgStateBitOr() | calcHtmlDownloadState | calcJsDownloadState | calcWorkerDownloadState))) {
+    if (0 !== (State.ERROR & (getArrayStateBitOr() | calcHtmlDownloadState | calcJsDownloadState | calcWorkerDownloadState))) {
         if (errorShown) return;
         errorShown = true;
         const errors: string[] = [];
@@ -147,19 +173,27 @@ function refreshState() {
                 errors.push(SVG_RESOURCES[i]);
             }
         }
+        for (let i = 0; i < FONT_RESOURCES.length; i++) {
+            if (calcFontStates[i] === State.ERROR) {
+                errors.push("/fonts/" + FONT_RESOURCES[i]);
+            }
+        }
         progressEl.textContent = "Error downloading data: " + errors.join(", ");
         xhrList.forEach(x => x.abort());
-    } else if (State.SUCCESS === (getSvgStateBitAnd() & calcHtmlDownloadState & calcJsDownloadState & calcWorkerDownloadState)) {
+    } else if (State.SUCCESS === (getArrayStateBitAnd() & calcHtmlDownloadState & calcJsDownloadState & calcWorkerDownloadState)) {
         if (successShown) return;
         successShown = true;
         progressEl.textContent = "Compressing, please wait...";
         setTimeout(generateHtmlAndDownload, 100);
     } else {
-        let svgSize = 0;
+        let arrayDownloadSize = 0;
         for (const size of calcSvgDownloaded) {
-            svgSize += size;
+            arrayDownloadSize += size;
         }
-        progressEl.textContent = "Downloading data (" + formatSize(svgSize + oldDownloaded + calcHtmlDownloaded + calcJsDownloaded + calcWorkerDownloaded) + ")";
+        for (const size of calcFontDownloaded) {
+            arrayDownloadSize += size;
+        }
+        progressEl.textContent = "Downloading data (" + formatSize(arrayDownloadSize + oldDownloaded + calcHtmlDownloaded + calcJsDownloaded + calcWorkerDownloaded) + ")";
     }
 }
 
@@ -207,9 +241,17 @@ const CONFIG_UI_COPY_INTEGER = ${CONFIG_UI_COPY_INTEGER};
 const CONFIG_UI_SAVE_RESULT = ${CONFIG_UI_SAVE_RESULT};
 const CONFIG_UI_SIMPLIFY = ${CONFIG_UI_SIMPLIFY};
 const CONFIG_UI_SPEED_SCROLL = ${CONFIG_UI_SPEED_SCROLL};
+const CONFIG_UI_BUNDLE_FONTS = ${CONFIG_UI_BUNDLE_FONTS};
 `;
     if (insertUrls) {
         configStr += "\nconst CONFIG_WORKER_JS_CONTENT = " + JSON.stringify(calcWorkerContent) + ";";
+        if (CONFIG_UI_BUNDLE_FONTS) {
+            configStr += "\nconst CONFIG_FONT_CONTENTS = " + JSON.stringify(calcFontContents) + ";";
+            configStr += "\nconst CONFIG_FONT_SIZES = " + JSON.stringify(calcFontSizes) + ";";
+        } else {
+            configStr += "\nconst CONFIG_FONT_CONTENTS = [];";
+            configStr += "\nconst CONFIG_FONT_SIZES = [];";
+        }
     }
     return jsContent.substring(0, startIdx) + configStr + jsContent.substring(endIdx);
 }
@@ -373,7 +415,7 @@ asyncFetch("/calc_worker_config.js", "text", (t, x, e) => {
 });
 
 SVG_RESOURCES.forEach((url, idx) => {
-    asyncFetch(url, "text", (t, x, e) => {
+    asyncFetch("/" + url, "text", (t, x, e) => {
         if (calcSvgStates[idx] !== State.DOWNLOADING) return;
         calcSvgStates[idx] = t;
         calcSvgDownloaded[idx] = e.loaded;
@@ -383,6 +425,32 @@ SVG_RESOURCES.forEach((url, idx) => {
         refreshState();
     });
 });
+
+if (CONFIG_UI_BUNDLE_FONTS) {
+    FONT_RESOURCES.forEach((url, idx) => {
+        asyncFetch("/fonts/" + url, "arraybuffer", (t, x, e) => {
+            if (calcFontStates[idx] !== State.DOWNLOADING) return;
+            calcFontStates[idx] = t;
+            calcFontDownloaded[idx] = e.loaded;
+            if (t === State.SUCCESS) {
+                const data = x.response as ArrayBuffer;
+                const dataSize = data.byteLength;
+                let encodeData: Buffer;
+                if (dataSize % 4 === 0) {
+                    encodeData = Buffer.from(data);
+                } else {
+                    encodeData = Buffer.alloc(((dataSize >> 2) << 2) + 4);
+                    encodeData.set(new Uint8Array(data));
+                }
+                calcFontContents[idx] = encode(encodeData, "z85");
+                calcFontSizes[idx] = dataSize;
+            }
+            refreshState();
+        });
+    });
+} else {
+    calcFontStates.fill(State.SUCCESS);
+}
 
 refreshState();
 

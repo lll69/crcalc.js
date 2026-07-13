@@ -62,6 +62,7 @@ const CONFIG_UI_COPY_INTEGER = true;
 const CONFIG_UI_SAVE_RESULT = true;
 const CONFIG_UI_SIMPLIFY = true;
 const CONFIG_UI_SPEED_SCROLL = true;
+const CONFIG_UI_BUNDLE_FONTS = false;
 /*HxDlWyZk CONFIGURATION END FOR DOWNLOAD pUrVkSlX**/
 
 const crL10N = window["crL10N"] || {};

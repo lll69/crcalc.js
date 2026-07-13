@@ -42,6 +42,12 @@
             margin: 0;
             padding: .2em .4em;
         }
+
+        label,
+        input[type=button],
+        input[type=submit] {
+            cursor: pointer;
+        }
     </style>
     <link rel="stylesheet" href="roboto.css">
 </head>
@@ -60,8 +66,8 @@
             <h2>1. Enable/Disable Functions</h2>
             <ul>
                 <li>
-                    <button id="function-enable-all">Enable All</button>
-                    <button id="function-disable-all">Disable All</button>
+                    <input id="function-enable-all" type="button" value="Enable All">
+                    <input id="function-disable-all" type="button" value="Disable All">
                 </li>
                 <li>
                     <h3>Operators</h3>
@@ -118,8 +124,8 @@
             <h2>2. UI Control</h2>
             <ul>
                 <li>
-                    <button id="ui-enable-all">Enable All</button>
-                    <button id="ui-disable-all">Disable All</button>
+                    <input id="ui-enable-all" type="button" value="Enable All">
+                    <input id="ui-disable-all" type="button" value="Disable All">
                 </li>
                 <li>
                     <h3>Input/Output</h3>
@@ -141,6 +147,10 @@
                     <br>
                     <label><input name="speedUpScroll" type="checkbox" checked>Speed Up Scrolling</label>
                 </li>
+                <li>
+                    <h3>Fonts</h3>
+                    <label><input name="bundleFonts" type="checkbox" checked>Bundle Roboto Fonts</label>
+                </li>
             </ul>
             <script>
                 document.getElementById("ui-enable-all").onclick = (e) => { e.preventDefault(); document.getElementById("ui-control").querySelectorAll("input[type=checkbox]").forEach(x => x.checked = true) }
@@ -153,6 +163,13 @@
             <p>Calculator runs completely offline and works in major browsers.</p>
         </section>
     </form>
+    <section>
+        <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="e/aosp/licenses.html">Open Source Licenses</a>
+        |
+        <a target="_blank" href="https://github.com/lll69/crcalc.js" data-goatcounter-click="e/https://github.com/lll69/crcalc.js">Report bugs</a>
+        |
+        <a target="_blank" href="/calc.html" data-goatcounter-click="e/calc.html">Online Version</a>
+    </section>
     <script>
         (function () {
             let lastScrollTop = 0;
