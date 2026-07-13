@@ -7,11 +7,10 @@ const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 module.exports = {
     entry: {
         calc: "./src/calc.ts",
-        calc_config: "./src/calc.ts",
         calc_worker: "./src/calc_worker.ts",
         calc_worker_config: "./src/calc_worker.ts",
         calc_mui: "./src/calc_mui.tsx",
-        calc_mui_config: "./src/calc_mui.tsx",
+        calc_with_mui_config: "./src/calc_with_mui_config.ts",
         fact: "./src/fact.ts",
         dl: "./src/dl.ts",
     },
@@ -44,7 +43,7 @@ module.exports = {
         minimize: true,
         minimizer: [
             new TerserPlugin({
-                exclude: /calc_(|worker_|mui_)config\.js/,
+                exclude: /calc_(worker|with_mui)_config\.js/,
                 terserOptions: {
                     compress: {
                         passes: 5

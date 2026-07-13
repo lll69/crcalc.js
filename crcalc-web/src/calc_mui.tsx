@@ -101,12 +101,12 @@ const AlertDialog = () => {
         history.pushState({}, "", "##mui-dialog");
         setAlertTitle(title);
         setAlertText(text);
-        setShowCopy(!!showCopy);
+        setShowCopy(CONFIG_UI_SIMPLIFY && !!showCopy);
         setOpenAlert(true);
     }, []);
 
     const copyText = React.useCallback(() => {
-        if (contentRef.current) {
+        if (CONFIG_UI_SIMPLIFY && contentRef.current) {
             ClipboardJS.copy(contentRef.current);
         }
     }, []);
@@ -141,7 +141,7 @@ const AlertDialog = () => {
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                {showCopy && <Button onClick={copyText}>
+                {CONFIG_UI_SIMPLIFY && showCopy && <Button onClick={copyText}>
                     {crL10N["copy"] || "Copy"}
                 </Button>}
                 <Button onClick={closeAlert} autoFocus>

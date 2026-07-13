@@ -69,17 +69,14 @@ const oldDownloaded = Number(window["downloaded"]);
 const xhrList = new Set<XMLHttpRequest>();
 let calcHtmlDownloadState = State.DOWNLOADING;
 let calcJsDownloadState = State.DOWNLOADING;
-let calcMuiDownloadState = State.DOWNLOADING;
 let calcWorkerDownloadState = State.DOWNLOADING;
 let calcSvgStates = Array<State>(SVG_RESOURCES.length).fill(State.DOWNLOADING);
 let calcHtmlContent: Document | null = null;
 let calcJsContent = "";
-let calcMuiContent = "";
 let calcWorkerContent = "";
 let calcSvgContents = Array<string>(SVG_RESOURCES.length).fill("");
 let calcHtmlDownloaded = 0;
 let calcJsDownloaded = 0;
-let calcMuiDownloaded = 0;
 let calcWorkerDownloaded = 0;
 let calcSvgDownloaded = Array<number>(SVG_RESOURCES.length).fill(0);
 let errorShown = false;
@@ -115,8 +112,24 @@ function formatSize(size: number) {
     return size + "B";
 }
 
+function getSvgStateBitOr() {
+    let result = 0;
+    for (const state of calcSvgStates) {
+        result |= state;
+    }
+    return result;
+}
+
+function getSvgStateBitAnd() {
+    let result = 0xffffffff;
+    for (const state of calcSvgStates) {
+        result &= state;
+    }
+    return result;
+}
+
 function refreshState() {
-    if (0 !== (State.ERROR & (calcHtmlDownloadState | calcJsDownloadState | calcMuiDownloadState | calcWorkerDownloadState))) {
+    if (0 !== (State.ERROR & (getSvgStateBitOr() | calcHtmlDownloadState | calcJsDownloadState | calcWorkerDownloadState))) {
         if (errorShown) return;
         errorShown = true;
         const errors: string[] = [];
@@ -124,17 +137,19 @@ function refreshState() {
             errors.push("/calc.html");
         }
         if (calcJsDownloadState === State.ERROR) {
-            errors.push("/calc_config.js");
-        }
-        if (calcMuiDownloadState === State.ERROR) {
-            errors.push("/calc_mui_config.js");
+            errors.push("/calc_with_mui_config.js");
         }
         if (calcWorkerDownloadState === State.ERROR) {
             errors.push("/calc_worker_config.js");
         }
+        for (let i = 0; i < SVG_RESOURCES.length; i++) {
+            if (calcSvgStates[i] === State.ERROR) {
+                errors.push(SVG_RESOURCES[i]);
+            }
+        }
         progressEl.textContent = "Error downloading data: " + errors.join(", ");
         xhrList.forEach(x => x.abort());
-    } else if (State.SUCCESS === (calcHtmlDownloadState & calcJsDownloadState & calcMuiDownloadState & calcWorkerDownloadState)) {
+    } else if (State.SUCCESS === (getSvgStateBitAnd() & calcHtmlDownloadState & calcJsDownloadState & calcWorkerDownloadState)) {
         if (successShown) return;
         successShown = true;
         progressEl.textContent = "Compressing, please wait...";
@@ -144,7 +159,7 @@ function refreshState() {
         for (const size of calcSvgDownloaded) {
             svgSize += size;
         }
-        progressEl.textContent = "Downloading data (" + formatSize(svgSize + oldDownloaded + calcHtmlDownloaded + calcJsDownloaded + calcMuiDownloaded + calcWorkerDownloaded) + ")";
+        progressEl.textContent = "Downloading data (" + formatSize(svgSize + oldDownloaded + calcHtmlDownloaded + calcJsDownloaded + calcWorkerDownloaded) + ")";
     }
 }
 
@@ -220,9 +235,7 @@ function disableButton(el: HTMLButtonElement | null) {
 
 function generateHtml() {
     calcWorkerContent = minifyJs(patchJs(calcWorkerContent, false));
-    calcJsContent = patchJs(calcJsContent, true);
-    calcMuiContent = patchJs(calcMuiContent, false);
-    const mainJsContent = minifyJs(calcJsContent + "\n" + calcMuiContent);
+    const mainJsContent = minifyJs(patchJs(patchJs(calcJsContent, true), true)); // patch twice
     const htmlEl = document.createElement("html");
     const headEl = document.createElement("head");
     htmlEl.appendChild(headEl);
@@ -339,22 +352,12 @@ asyncFetch("/calc.html", "document", (t, x, e) => {
     refreshState();
 });
 
-asyncFetch("/calc_config.js", "text", (t, x, e) => {
+asyncFetch("/calc_with_mui_config.js", "text", (t, x, e) => {
     if (calcJsDownloadState !== State.DOWNLOADING) return;
     calcJsDownloadState = t;
     calcJsDownloaded = e.loaded;
     if (t === State.SUCCESS) {
         calcJsContent = x.responseText;
-    }
-    refreshState();
-});
-
-asyncFetch("/calc_mui_config.js", "text", (t, x, e) => {
-    if (calcMuiDownloadState !== State.DOWNLOADING) return;
-    calcMuiDownloadState = t;
-    calcMuiDownloaded = e.loaded;
-    if (t === State.SUCCESS) {
-        calcMuiContent = x.responseText;
     }
     refreshState();
 });
