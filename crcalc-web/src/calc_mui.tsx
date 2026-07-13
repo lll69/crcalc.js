@@ -25,6 +25,7 @@ import DialogContentText from '@mui/material/DialogContentText';
 import DialogTitle from '@mui/material/DialogTitle';
 import { CalcMuiPlugin, CalcMuiPluginHolder } from './calc_mui_types';
 import { RadioGroup } from '@mui/material';
+import * as ClipboardJS from 'clipboard';
 
 /*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
 const CONFIG_IS_ONLINE = true;
@@ -82,33 +83,12 @@ const buttonStyle = {
     textTransform: "none",
 };
 
-const copyString = (str: string) => {
-    let copied = false;
-    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText as any) {
-        try {
-            navigator.clipboard.writeText(str);
-            copied = true;
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    if (!copied) {
-        const D = document;
-        const element = D.createElement("input");
-        element.style.opacity = "0";
-        element.value = str;
-        D.body.appendChild(element);
-        element.select();
-        D.execCommand("copy");
-        element.remove();
-    }
-}
-
 const AlertDialog = () => {
     const [openAlert, setOpenAlert] = React.useState(false);
     const [alertTitle, setAlertTitle] = React.useState("");
     const [alertText, setAlertText] = React.useState("");
     const [showCopy, setShowCopy] = React.useState(false);
+    const contentRef = React.useRef<HTMLElement | null>(null);
 
     const closeAlert = React.useCallback(() => {
         if (location.hash === "##mui-dialog") {
@@ -126,8 +106,10 @@ const AlertDialog = () => {
     }, []);
 
     const copyText = React.useCallback(() => {
-        copyString(alertText);
-    }, [alertText]);
+        if (contentRef.current) {
+            ClipboardJS.copy(contentRef.current);
+        }
+    }, []);
 
     React.useEffect(() => {
         (window as any as CalcMuiPluginHolder).calcMuiPlugin.showAlert = showAlert;
@@ -154,7 +136,7 @@ const AlertDialog = () => {
                 {alertTitle}
             </DialogTitle>
             <DialogContent>
-                <DialogContentText id="alert-dialog-description" style={{ wordBreak: "break-word", whiteSpace: "pre-line" }}>
+                <DialogContentText ref={contentRef} id="alert-dialog-description" style={{ wordBreak: "break-word", whiteSpace: "pre-line" }}>
                     {alertText}
                 </DialogContentText>
             </DialogContent>

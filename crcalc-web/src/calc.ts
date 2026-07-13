@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+import * as ClipboardJS from "clipboard";
 import { CalcMuiPlugin, CalcMuiPluginHolder } from "./calc_mui_types";
 import Scroller from "./Scroller";
 import { CreateURRequest, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
@@ -189,24 +190,7 @@ function showMessage(title: string, message: string, fallback: () => string, sho
     }
 }
 function copyText(str: string) {
-    let copied = false;
-    if (typeof navigator !== "undefined" && navigator.clipboard && navigator.clipboard.writeText as any) {
-        try {
-            navigator.clipboard.writeText(str);
-            copied = true;
-        } catch (e) {
-            console.log(e);
-        }
-    }
-    if (!copied) {
-        const element = D.createElement("input");
-        element.style.opacity = "0";
-        element.value = str;
-        D.body.appendChild(element);
-        element.select();
-        D.execCommand("copy");
-        element.remove();
-    }
+    ClipboardJS.copy(str);
 }
 function changeResultUIVisibility() {
     if (CONFIG_UI_COPY_RESULT) {

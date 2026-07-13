@@ -22,6 +22,7 @@
         "@fontsource/roboto": "^5.2.9",
         "@fontsource/roboto-mono": "^5.2.8",
         "@mui/material": "^5.18.0",
+        "clipboard": "^2.0.11",
         "crcalc-js": "^1.1.1",
         "react": "^19.2.0",
         "react-dom": "^19.2.0",
