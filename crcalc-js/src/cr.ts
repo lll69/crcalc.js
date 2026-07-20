@@ -2161,9 +2161,10 @@ class BoundedRational {
     }
 
     /**
+     * @deprecated We can't guarantee whether Integer.MAX_VALUE or 10000 will be returned when that's impossible. We don't change the existing implementation for compatibility reasons. Use the new function digitsRequiredByNumber() instead.
      * Return the number of decimal digits to the right of the decimal point required to represent
      * the argument exactly.
-     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
+     * Return Integer.MAX_VALUE or 10000 if that's not possible.  Never returns a value less than zero, even
      * if r is a power of ten.
      */
     public static digitsRequired(r: BoundedRational): number {
@@ -2196,6 +2197,46 @@ class BoundedRational {
         // powersOfTwo and powersOfFive.
         if (den !== 1n && den !== -1n) {
             return BoundedRationalConstants.MAX_SIZE;
+        }
+        return max(powersOfTwo, powersOfFive);
+    }
+
+    /**
+     * Return the number of decimal digits to the right of the decimal point required to represent
+     * the argument exactly.
+     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
+     * if r is a power of ten.
+     */
+    public static digitsRequiredByNumber(r: BoundedRational): number {
+        if (r === null) {
+            return CRConstants.INTEGER_MAX;
+        }
+        let powersOfTwo = 0;  // Max power of 2 that divides denominator
+        let powersOfFive = 0;  // Max power of 5 that divides denominator
+        // Try the easy case first to speed things up.
+        if (r.mDen === 1n) {
+            return 0;
+        }
+        r = r.reduce();
+        let den = r.mDen;
+        if (CR_bitLength_n(den) > BoundedRationalConstants.MAX_SIZE) {
+            return CRConstants.INTEGER_MAX;
+        }
+        while ((den & 1n) === 0n) {
+            ++powersOfTwo;
+            den = den >> 1n;
+        }
+        while ((den % 5n) === 0n) {
+            ++powersOfFive;
+            den /= 5n;
+        }
+        // If the denominator has a factor of other than 2 or 5 (the divisors of 10), the decimal
+        // expansion does not terminate.  Multiplying the fraction by any number of powers of 10
+        // will not cancel the demoniator.  (Recall the fraction was in lowest terms to start
+        // with.) Otherwise the powers of 10 we need to cancel the denominator is the larger of
+        // powersOfTwo and powersOfFive.
+        if (den !== 1n && den !== -1n) {
+            return CRConstants.INTEGER_MAX;
         }
         return max(powersOfTwo, powersOfFive);
     }
@@ -3350,14 +3391,29 @@ class UnifiedReal {
     }
 
     /**
+     * @deprecated We can't guarantee whether Integer.MAX_VALUE or 10000 will be returned when that's impossible. We don't change the existing implementation for compatibility reasons. Use the new function digitsRequiredByNumber() instead.
      * Return the number of decimal digits to the right of the decimal point required to represent
      * the argument exactly.
-     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
+     * Return Integer.MAX_VALUE or 10000 if that's not possible.  Never returns a value less than zero, even
      * if r is a power of ten.
      */
     public digitsRequired(): number {
         if (this.mCrFactor === UnifiedReal.CR_ONE || this.mRatFactor.signum() === 0) {
             return BoundedRational.digitsRequired(this.mRatFactor);
+        } else {
+            return CRConstants.INTEGER_MAX;
+        }
+    }
+
+    /**
+     * Return the number of decimal digits to the right of the decimal point required to represent
+     * the argument exactly.
+     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
+     * if r is a power of ten.
+     */
+    public digitsRequiredByNumber(): number {
+        if (this.mCrFactor === UnifiedReal.CR_ONE || this.mRatFactor.signum() === 0) {
+            return BoundedRational.digitsRequiredByNumber(this.mRatFactor);
         } else {
             return CRConstants.INTEGER_MAX;
         }

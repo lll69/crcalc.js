@@ -3,7 +3,8 @@
 Constructive Real Calculating library modified from AOSP
 
 [Open CRCalc.js Exact Calculator](https://crcalc.js.org/calc.html)  
-[Factorial Calculator](https://crcalc.js.org/fact.html)
+
+[Open Factorial Calculator](https://crcalc.js.org/fact.html)
 
 [Details of the AOSP](https://crcalc.js.org/aosp/)
 
@@ -59,9 +60,9 @@ const u_fact = u_c.fact();
 const u_pow = u_c.pow(u_a);
 
 // UnifiedReal methods
-console.log(u_add.digitsRequired()); // 4
-console.log(u_fact.digitsRequired()); // 0
-console.log(u_ln.digitsRequired()); // 2147483647
+console.log(u_add.digitsRequiredByNumber()); // 4
+console.log(u_fact.digitsRequiredByNumber()); // 0
+console.log(u_ln.digitsRequiredByNumber()); // 2147483647
 console.log(u_sqrt.exactlyDisplayable()); // true
 console.log(u_atan.exactlyDisplayable()); // false
 console.log(u_add.toNiceString()); // '211/16'
@@ -516,6 +517,16 @@ Return the reciprocal of r (or null if the argument was null).
 ### BoundedRational.digitsRequired(r)
 `static digitsRequired(r: BoundedRational): int`
 
+***@deprecated* We can't guarantee whether Integer.MAX_VALUE or 10000 will be returned when that's impossible. We don't change the existing implementation for compatibility reasons. Use the new function `digitsRequiredByNumber()` instead.**
+
+Return the number of decimal digits to the right of the decimal point required to represent
+the argument exactly.  
+Return `Integer.MAX_VALUE` or `10000` if that's not possible.  Never returns a value less than zero, even
+if r is a power of ten.
+
+### BoundedRational.digitsRequiredByNumber(r)
+`static digitsRequiredByNumber(r: BoundedRational): int`
+
 Return the number of decimal digits to the right of the decimal point required to represent
 the argument exactly.  
 Return `Integer.MAX_VALUE` if that's not possible.  Never returns a value less than zero, even
@@ -829,6 +840,16 @@ May round to nearest integer if value is close.
 
 ### digitsRequired()
 `digitsRequired(): int`
+
+***@deprecated* We can't guarantee whether Integer.MAX_VALUE or 10000 will be returned when that's impossible. We don't change the existing implementation for compatibility reasons. Use the new function `digitsRequiredByNumber()` instead.**
+
+Return the number of decimal digits to the right of the decimal point required to represent
+the argument exactly.  
+Return `Integer.MAX_VALUE` or `10000` if that's not possible.  Never returns a value less than zero, even
+if r is a power of ten.
+
+### digitsRequiredByNumber()
+`digitsRequiredByNumber(): int`
 
 Return the number of decimal digits to the right of the decimal point required to represent
 the argument exactly.  
