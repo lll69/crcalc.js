@@ -1736,13 +1736,16 @@ class acos_UnaryCRFunction extends UnaryCRFunction {
 // Since we know the tangent of the result, we can get its sine,
 // and then use the asin function.  Note that we don't always
 // want the positive square root when computing the sine.
+function atanCR(x: CR): CR {
+    let x2 = x.multiply(x);
+    let abs_sin_atan = x2.divide(this.one.add(x2)).sqrt();
+    let sin_atan = x.select(abs_sin_atan.negate(), abs_sin_atan);
+    return sin_atan.asin();
+}
 class atan_UnaryCRFunction extends UnaryCRFunction {
     one: CR = CR.ONE;
     public execute(x: CR): CR {
-        let x2 = x.multiply(x);
-        let abs_sin_atan = x2.divide(this.one.add(x2)).sqrt();
-        let sin_atan = x.select(abs_sin_atan.negate(), abs_sin_atan);
-        return sin_atan.asin();
+        return atanCR(x);
     }
 }
 
@@ -3080,7 +3083,7 @@ class UnifiedReal {
         if (this.definitelyEquals(UnifiedReal.SQRT3)) {
             return UnifiedReal.PI_OVER_3;
         }
-        return UnifiedReal.newCR(UnaryCRFunctions.atanFunction.execute(this.crValue()));
+        return UnifiedReal.newCR(atanCR(this.crValue()));
     }
 
     /**
