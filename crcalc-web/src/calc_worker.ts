@@ -638,7 +638,7 @@ function tokenToRpn(tokenizeResult: TokenizeResult) {
     return output;
 }
 function urToBigInt(ur: UnifiedReal) {
-    if (ur.digitsRequired() === 0) {
+    if (ur.digitsRequiredByNumber() === 0) {
         let asBI = ur.bigIntegerValue();
         if (asBI === null) {
             asBI = ur.crValue().get_appr(0);  // Correct if it was an integer.
@@ -697,7 +697,7 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                         if (!CONFIG_POWER) {
                             throw new Error("Unsupported Operation: POWER");
                         }
-                        if (arg0.digitsRequired() === 0 && arg1.digitsRequired() === 0) {
+                        if (arg0.digitsRequiredByNumber() === 0 && arg1.digitsRequiredByNumber() === 0) {
                             const big0 = urToBigInt(arg0);
                             const big1 = urToBigInt(arg1);
                             if (big0 && big1 && big1 >= 0) {
@@ -905,7 +905,7 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
             try {
                 let ur: UnifiedReal = createUR(msg.expr, msg.degreeMode);
                 urList[msg.id] = ur;
-                let digitsRequired = ur.digitsRequired();
+                let digitsRequired = ur.digitsRequiredByNumber();
                 let exactlyDisplayable = ur.exactlyDisplayable();
                 postWorkerMessage({
                     type: "createUR",
