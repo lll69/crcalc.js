@@ -1464,16 +1464,19 @@ class acos_UnaryCRFunction extends UnaryCRFunction {
 // Since we know the tangent of the result, we can get its sine,
 // and then use the asin function.  Note that we don't always
 // want the positive square root when computing the sine.
+function atanCR(x) {
+    let x2 = x.multiply(x);
+    let abs_sin_atan = x2.divide(this.one.add(x2)).sqrt();
+    let sin_atan = x.select(abs_sin_atan.negate(), abs_sin_atan);
+    return sin_atan.asin();
+}
 class atan_UnaryCRFunction extends UnaryCRFunction {
     constructor() {
         super(...arguments);
         this.one = CR.ONE;
     }
     execute(x) {
-        let x2 = x.multiply(x);
-        let abs_sin_atan = x2.divide(this.one.add(x2)).sqrt();
-        let sin_atan = x.select(abs_sin_atan.negate(), abs_sin_atan);
-        return sin_atan.asin();
+        return atanCR(x);
     }
 }
 const UnaryCRFunctions = Object.freeze({
@@ -1848,9 +1851,10 @@ class BoundedRational {
         return base.pow(exp.mNum);
     }
     /**
+     * @deprecated We can't guarantee whether Integer.MAX_VALUE or 10000 will be returned when that's impossible. We don't change the existing implementation for compatibility reasons. Use the new function digitsRequiredByNumber() instead.
      * Return the number of decimal digits to the right of the decimal point required to represent
      * the argument exactly.
-     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
+     * Return Integer.MAX_VALUE or 10000 if that's not possible.  Never returns a value less than zero, even
      * if r is a power of ten.
      */
     static digitsRequired(r) {
@@ -1883,6 +1887,45 @@ class BoundedRational {
         // powersOfTwo and powersOfFive.
         if (den !== 1n && den !== -1n) {
             return 10000 /* BoundedRationalConstants.MAX_SIZE */;
+        }
+        return max(powersOfTwo, powersOfFive);
+    }
+    /**
+     * Return the number of decimal digits to the right of the decimal point required to represent
+     * the argument exactly.
+     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
+     * if r is a power of ten.
+     */
+    static digitsRequiredByNumber(r) {
+        if (r === null) {
+            return 2147483647 /* CRConstants.INTEGER_MAX */;
+        }
+        let powersOfTwo = 0; // Max power of 2 that divides denominator
+        let powersOfFive = 0; // Max power of 5 that divides denominator
+        // Try the easy case first to speed things up.
+        if (r.mDen === 1n) {
+            return 0;
+        }
+        r = r.reduce();
+        let den = r.mDen;
+        if (CR_bitLength_n(den) > 10000 /* BoundedRationalConstants.MAX_SIZE */) {
+            return 2147483647 /* CRConstants.INTEGER_MAX */;
+        }
+        while ((den & 1n) === 0n) {
+            ++powersOfTwo;
+            den = den >> 1n;
+        }
+        while ((den % 5n) === 0n) {
+            ++powersOfFive;
+            den /= 5n;
+        }
+        // If the denominator has a factor of other than 2 or 5 (the divisors of 10), the decimal
+        // expansion does not terminate.  Multiplying the fraction by any number of powers of 10
+        // will not cancel the demoniator.  (Recall the fraction was in lowest terms to start
+        // with.) Otherwise the powers of 10 we need to cancel the denominator is the larger of
+        // powersOfTwo and powersOfFive.
+        if (den !== 1n && den !== -1n) {
+            return 2147483647 /* CRConstants.INTEGER_MAX */;
         }
         return max(powersOfTwo, powersOfFive);
     }
@@ -2595,7 +2638,7 @@ class UnifiedReal {
         if (this.definitelyEquals(UnifiedReal.SQRT3)) {
             return UnifiedReal.PI_OVER_3;
         }
-        return UnifiedReal.newCR(UnaryCRFunctions.atanFunction.execute(this.crValue()));
+        return UnifiedReal.newCR(atanCR(this.crValue()));
     }
     /**
      * Compute an integral power of a constructive real, using the standard recursive algorithm.
@@ -2899,14 +2942,29 @@ class UnifiedReal {
         return UnifiedReal.newBR(nRatFactor);
     }
     /**
+     * @deprecated We can't guarantee whether Integer.MAX_VALUE or 10000 will be returned when that's impossible. We don't change the existing implementation for compatibility reasons. Use the new function digitsRequiredByNumber() instead.
      * Return the number of decimal digits to the right of the decimal point required to represent
      * the argument exactly.
-     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
+     * Return Integer.MAX_VALUE or 10000 if that's not possible.  Never returns a value less than zero, even
      * if r is a power of ten.
      */
     digitsRequired() {
         if (this.mCrFactor === UnifiedReal.CR_ONE || this.mRatFactor.signum() === 0) {
             return BoundedRational.digitsRequired(this.mRatFactor);
+        }
+        else {
+            return 2147483647 /* CRConstants.INTEGER_MAX */;
+        }
+    }
+    /**
+     * Return the number of decimal digits to the right of the decimal point required to represent
+     * the argument exactly.
+     * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
+     * if r is a power of ten.
+     */
+    digitsRequiredByNumber() {
+        if (this.mCrFactor === UnifiedReal.CR_ONE || this.mRatFactor.signum() === 0) {
+            return BoundedRational.digitsRequiredByNumber(this.mRatFactor);
         }
         else {
             return 2147483647 /* CRConstants.INTEGER_MAX */;

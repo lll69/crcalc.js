@@ -529,12 +529,20 @@ declare class BoundedRational {
     pow(exp: bigint): BoundedRational | null;
     static pow(base: BoundedRational | null, exp: BoundedRational | null): BoundedRational | null;
     /**
+     * @deprecated We can't guarantee whether Integer.MAX_VALUE or 10000 will be returned when that's impossible. We don't change the existing implementation for compatibility reasons. Use the new function digitsRequiredByNumber() instead.
+     * Return the number of decimal digits to the right of the decimal point required to represent
+     * the argument exactly.
+     * Return Integer.MAX_VALUE or 10000 if that's not possible.  Never returns a value less than zero, even
+     * if r is a power of ten.
+     */
+    static digitsRequired(r: BoundedRational): number;
+    /**
      * Return the number of decimal digits to the right of the decimal point required to represent
      * the argument exactly.
      * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
      * if r is a power of ten.
      */
-    static digitsRequired(r: BoundedRational): number;
+    static digitsRequiredByNumber(r: BoundedRational): number;
 }
 /**
  * Computable real numbers, represented so that we can get exact decidable comparisons
@@ -822,12 +830,20 @@ declare class UnifiedReal {
      */
     fact(): UnifiedReal;
     /**
+     * @deprecated We can't guarantee whether Integer.MAX_VALUE or 10000 will be returned when that's impossible. We don't change the existing implementation for compatibility reasons. Use the new function digitsRequiredByNumber() instead.
+     * Return the number of decimal digits to the right of the decimal point required to represent
+     * the argument exactly.
+     * Return Integer.MAX_VALUE or 10000 if that's not possible.  Never returns a value less than zero, even
+     * if r is a power of ten.
+     */
+    digitsRequired(): number;
+    /**
      * Return the number of decimal digits to the right of the decimal point required to represent
      * the argument exactly.
      * Return Integer.MAX_VALUE if that's not possible.  Never returns a value less than zero, even
      * if r is a power of ten.
      */
-    digitsRequired(): number;
+    digitsRequiredByNumber(): number;
     /**
      * Return an upper bound on the number of leading zero bits.
      * These are the number of 0 bits
