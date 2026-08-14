@@ -409,7 +409,6 @@ declare class acos_UnaryCRFunction extends UnaryCRFunction {
     execute(x: CR): CR;
 }
 declare class atan_UnaryCRFunction extends UnaryCRFunction {
-    one: CR;
     execute(x: CR): CR;
 }
 declare const UnaryCRFunctions: Readonly<{
