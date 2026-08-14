@@ -1738,12 +1738,11 @@ class acos_UnaryCRFunction extends UnaryCRFunction {
 // want the positive square root when computing the sine.
 function atanCR(x: CR): CR {
     let x2 = x.multiply(x);
-    let abs_sin_atan = x2.divide(this.one.add(x2)).sqrt();
+    let abs_sin_atan = x2.divide(CR.ONE.add(x2)).sqrt();
     let sin_atan = x.select(abs_sin_atan.negate(), abs_sin_atan);
     return sin_atan.asin();
 }
 class atan_UnaryCRFunction extends UnaryCRFunction {
-    one: CR = CR.ONE;
     public execute(x: CR): CR {
         return atanCR(x);
     }
