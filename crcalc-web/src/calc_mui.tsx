@@ -316,7 +316,7 @@ if (CONFIG_UI_SIMPLIFY && reactRoot.dataset.simp === "true") {
 }
 if (CONFIG_FUNCTION_PANEL && CONFIG_SW_INV && reactRoot.dataset.inv === "true") {
     ReactDOM.createRoot(getElementById("react_inv_root")!).render(
-        <ButtonApp text="INV" click={() => { plugin.onInvButtonClick && plugin.onInvButtonClick() }} />
+        <ButtonApp text="2ndF" click={() => { plugin.onInvButtonClick && plugin.onInvButtonClick() }} />
     );
     postMessage("invRendered");
 }

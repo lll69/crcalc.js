@@ -728,7 +728,7 @@ function focusExpression() {
     }
 }
 function refreshInverseButton() {
-    buttonInv.title = invReact.title = isInvert ? (crL10N["hideInv"] || "Hide inverse functions") : (crL10N["showInv"] || "Show inverse functions");
+    buttonInv.title = invReact.title = isInvert ? (crL10N["hideInv"] || "Hide second functions") : (crL10N["showInv"] || "Show second functions");
     if (CONFIG_SW_INV && invRendered) {
         if (isInvert) {
             buttonInv.classList.add("op-hide");
