@@ -69,7 +69,6 @@ const INITIAL_PREC = 32;
 const PREC_INCREMENT = 128;
 const INCREMENT_THRESHOLD = 64;
 const MAX_INITIAL_PREC = INITIAL_PREC + PREC_INCREMENT;
-const ENABLE_VARIABLES = false;
 let displayWidth = 25;
 let chWidth = 0;
 let degreeMode = false;
@@ -1309,30 +1308,13 @@ if (CONFIG_UI_SPEED_SCROLL) {
         }
     });
 }
-if (!ENABLE_VARIABLES) {
-    let varButton = getElementById("but_var") as HTMLButtonElement;
-    varButton.disabled = true;
-    varButton.innerText = "";
-}
-getElementById("but_var")!.addEventListener("click", () => {
-    if (!ENABLE_VARIABLES || !workerLoaded) return;
-    gridOps.classList.add("grid-hide");
-    gridVar.classList.remove("grid-hide");
-    focusExpression();
-});
-getElementById("var_close")!.addEventListener("click", () => {
-    if (!workerLoaded) return;
-    gridOps.classList.remove("grid-hide");
-    gridVar.classList.add("grid-hide");
-    focusExpression();
-});
 function registerVariable(name: string) {
     getElementById("var_in_" + name)!.addEventListener("click", () => {
-        if (!ENABLE_VARIABLES || !workerLoaded) return;
+        if (!CONFIG_VARIABLES || !workerLoaded) return;
         throw new Error("Not yet implemented");
     });
     getElementById("var_out_" + name)!.addEventListener("click", () => {
-        if (!ENABLE_VARIABLES || !workerLoaded) return;
+        if (!CONFIG_VARIABLES || !workerLoaded) return;
         appendConst(name);
         focusExpression();
     });
