@@ -38,6 +38,7 @@ const CONFIG_TRIG = true;
 const CONFIG_TRIG_INV = true;
 const CONFIG_HYP = true;
 const CONFIG_HYP_INV = true;
+const CONFIG_VARIABLES = true;
 // Switches
 const CONFIG_SW_INV = true;
 const CONFIG_SW_HYP = true;
@@ -895,7 +896,7 @@ function createUR(expr: string | RpnResult, degreeMode: boolean, variables?: { [
                 stack.push(UnifiedReal.PI);
             } else {
                 let hasVariable = false;
-                if (variables) {
+                if (CONFIG_VARIABLES && variables) {
                     switch (token) {
                         case "a":
                         case "b":
