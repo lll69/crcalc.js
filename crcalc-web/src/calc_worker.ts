@@ -15,7 +15,7 @@
  */
 
 import { BoundedRational, UnifiedReal, ArithmeticException } from "crcalc-js";
-import { CreateURResult, InitResult, ToNiceStringResult, ToStringResult, WorkerRequest } from "./worker_types";
+import { CreateURResult, InitResult, RpnResult, ToNiceStringResult, ToStringResult, WorkerRequest } from "./worker_types";
 
 /*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
 const CONFIG_IS_ONLINE = true;
@@ -565,7 +565,7 @@ function tokenize(expr: string): TokenizeResult {
     }
     return { tokens: finalResult, locations: finalLocations };
 }
-function tokenToRpn(tokenizeResult: TokenizeResult) {
+function tokenToRpn(tokenizeResult: TokenizeResult): RpnResult {
     const tokens = tokenizeResult.tokens;
     const locations = tokenizeResult.locations;
     const len = tokens.length;
@@ -592,8 +592,8 @@ function tokenToRpn(tokenizeResult: TokenizeResult) {
     const rightAssocList = freezeObject(new Set([
         "unary+", "unary-", "unary+pow", "unary-pow", "^"
     ]));
-    const output: any[] = [];
-    const stack: any[] = [];
+    const output: (readonly [token: string, loc: number | readonly number[]])[] = [];
+    const stack: (readonly [token: string, loc: number | readonly number[]])[] = [];
     for (let i = 0; i < len; i++) {
         const token = tokens[i];
         const loc = locations[i];
@@ -601,14 +601,14 @@ function tokenToRpn(tokenizeResult: TokenizeResult) {
             stack.push(freezeObject([token, loc]));
         } else if (token === ")") {
             while (stack.length > 0 && stack[stack.length - 1][0] !== "(") {
-                output.push(stack.pop());
+                output.push(stack.pop()!);
             }
             if (stack.length === 0) {
                 throw new Error("Mismatched parentheses at position [" + loc + "]");
             }
             stack.pop();
             if (stack.length > 0 && functions.has(stack[stack.length - 1][0])) {
-                output.push(stack.pop());
+                output.push(stack.pop()!);
             }
         } else if (priority.hasOwnProperty(token)) {
             const currentPrio = priority[token];
@@ -618,7 +618,7 @@ function tokenToRpn(tokenizeResult: TokenizeResult) {
                 if (topToken === "(" || functions.has(topToken)) break;
                 const topPrio = priority[topToken] || 0;
                 if (currentAssoc ? (topPrio > currentPrio) : (topPrio >= currentPrio)) {
-                    output.push(stack.pop());
+                    output.push(stack.pop()!);
                 } else {
                     break;
                 }
@@ -629,7 +629,7 @@ function tokenToRpn(tokenizeResult: TokenizeResult) {
         }
     }
     while (stack.length > 0) {
-        const top = stack.pop();
+        const top = stack.pop()!;
         if (top[0] === "(") {
             throw new Error("Mismatched parentheses at position [" + top[1] + "]");
         }
@@ -650,7 +650,7 @@ function urToBigInt(ur: UnifiedReal) {
     }
     return null;
 }
-function createUR(expr: string, degreeMode: boolean): UnifiedReal {
+function createUR(expr: string | RpnResult, degreeMode: boolean, variables?: { [variable: string]: RpnResult }, noPosInError?: boolean): [UnifiedReal, RpnResult] {
     const unaryOps = freezeObject(new Set([
         "unary+", "unary-", "unary+pow", "unary-pow", "!"
     ]));
@@ -665,8 +665,13 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
         "sinh", "cosh", "tanh",
         "asinh", "acosh", "atanh",
     ]));
-    const tokenizeResult = tokenize(expr);
-    const rpnResult = tokenToRpn(tokenizeResult);
+    let rpnResult: RpnResult;
+    if (typeof expr == "string") {
+        const tokenizeResult = tokenize(expr);
+        rpnResult = tokenToRpn(tokenizeResult);
+    } else {
+        rpnResult = expr;
+    }
     const len = rpnResult.length;
     const stack: UnifiedReal[] = [];
     for (let i = 0; i < len; i++) {
@@ -675,7 +680,7 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
         const loc = rpnItem[1];
         if (binaryOps.has(token)) {
             if (stack.length < 2) {
-                throw new Error("Insufficient number of parameters for operator '" + token + "' at position [" + loc + "]")
+                throw new Error("Insufficient number of parameters for operator '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
             }
             const arg1 = stack.pop()!;
             const arg0 = stack.pop()!;
@@ -711,11 +716,11 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                 }
             } catch (e) {
                 console.error(e);
-                throw new Error(e.message + " at position [" + loc + "]")
+                throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
             }
         } else if (unaryOps.has(token)) {
             if (stack.length < 1) {
-                throw new Error("Insufficient number of parameters for operator '" + token + "' at position [" + loc + "]")
+                throw new Error("Insufficient number of parameters for operator '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
             }
             const arg0 = stack.pop()!;
             try {
@@ -739,11 +744,11 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                 }
             } catch (e) {
                 console.error(e);
-                throw new Error(e.message + " at position [" + loc + "]")
+                throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
             }
         } else if (functions.has(token)) {
             if (stack.length < 1) {
-                throw new Error("Insufficient number of parameters for function '" + token + "' at position [" + loc + "]")
+                throw new Error("Insufficient number of parameters for function '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
             }
             const arg0 = stack.pop()!;
             try {
@@ -877,7 +882,7 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
                 }
             } catch (e) {
                 console.error(e);
-                throw new Error(e.message + " at position [" + loc + "]")
+                throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
             }
         } else {
             const firstChar = token[0];
@@ -889,21 +894,47 @@ function createUR(expr: string, degreeMode: boolean): UnifiedReal {
             } else if (CONFIG_PI && token === "\u03C0") {
                 stack.push(UnifiedReal.PI);
             } else {
-                throw new Error("Unknown variable '" + token + "' at position [" + loc + "]")
+                let hasVariable = false;
+                if (variables) {
+                    switch (token) {
+                        case "a":
+                        case "b":
+                        case "c":
+                        case "i":
+                        case "j":
+                        case "k":
+                        case "m":
+                        case "n":
+                        case "x":
+                        case "y":
+                        case "z":
+                            let variableRpn = variables[token];
+                            if (variableRpn) {
+                                hasVariable = true;
+                                try {
+                                    stack.push(createUR(variableRpn, degreeMode, undefined, true)[0]);
+                                } catch (e) {
+                                    console.error(e);
+                                    throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
+                                }
+                            }
+                    }
+                }
+                if (!hasVariable) throw new Error("Unknown variable '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
             }
         }
     }
     if (stack.length != 1) {
         throw new Error("Invalid stack length: " + stack.length);
     }
-    return stack.pop()!;
+    return [stack.pop()!, rpnResult];
 }
 onmessage = function (e: MessageEvent<WorkerRequest>) {
     const msg = e.data;
     switch (msg.type) {
         case "createUR":
             try {
-                let ur: UnifiedReal = createUR(msg.expr, msg.degreeMode);
+                let [ur, rpnResult] = createUR(msg.expr, msg.degreeMode, msg.variables);
                 urList[msg.id] = ur;
                 let digitsRequired = ur.digitsRequiredByNumber();
                 let exactlyDisplayable = ur.exactlyDisplayable();
@@ -915,7 +946,8 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
                     degreeMode: msg.degreeMode,
                     digitsRequired: digitsRequired,
                     exactlyDisplayable: exactlyDisplayable,
-                    success: true
+                    success: true,
+                    rpnResult: rpnResult,
                 } as CreateURResult);
             } catch (e) {
                 postWorkerMessage({

@@ -7,7 +7,8 @@ export type CreateURRequest = {
     id: number,
     uid: number,
     expr: string,
-    degreeMode: boolean
+    degreeMode: boolean,
+    variables?: { [variable: string]: RpnResult },
 }
 
 export type CreateURResultSuccess = {
@@ -19,7 +20,8 @@ export type CreateURResultSuccess = {
     digitsRequired: number,
     exactlyDisplayable: boolean,
     success: true,
-    error: undefined
+    error: undefined,
+    rpnResult: RpnResult,
 }
 
 export type CreateURResultError = {
@@ -29,7 +31,8 @@ export type CreateURResultError = {
     expr: string,
     degreeMode: boolean,
     success: undefined,
-    error: string
+    error: string,
+    rpnResult: undefined,
 }
 
 export type CreateURResult = CreateURResultSuccess | CreateURResultError;
@@ -88,3 +91,5 @@ export type RemoveURRequest = {
 
 export type WorkerRequest = CreateURRequest | CopyURRequest | RemoveURRequest | ToStringRequest | ToNiceStringRequest;
 export type WorkerResult = InitResult | CreateURResult | ToStringResult | ToNiceStringResult;
+
+export type RpnResult = (readonly [token: string, loc: number | readonly number[]])[];

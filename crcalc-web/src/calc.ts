@@ -17,7 +17,7 @@
 import * as ClipboardJS from "clipboard";
 import { CalcMuiPlugin, CalcMuiPluginHolder } from "./calc_mui_types";
 import Scroller from "./Scroller";
-import { CreateURRequest, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
+import { CreateURRequest, RpnResult, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
 import { decode } from "base85";
 
 /*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
@@ -179,6 +179,14 @@ let lastCalculateUid = 1;
 let loadAnimationIndex = 0;
 let loadAnimationInterval: any;
 let calcWaitTimeout: any;
+
+const ZERO_RPN: RpnResult = [["0", [0, 1]]];
+let variables = {
+    x: [["x", [0, 1]]] as RpnResult,
+    y: [["y", [0, 1]]] as RpnResult,
+    z: [["z", [0, 1]]] as RpnResult,
+}
+
 function showMessage(title: string, message: string, fallback: () => string, showCopy?: boolean) {
     let shown = false;
     if (muiPlugin.showAlert) {
@@ -707,7 +715,8 @@ function calculateResult() {
         id: lastCalculateId,
         uid: lastCalculateId,
         expr: exprInput.value,
-        degreeMode: degreeMode
+        degreeMode: degreeMode,
+        variables: variables,
     } as CreateURRequest);
     workerBusy = true;
     clearTimeout(calcWaitTimeout);
