@@ -49,6 +49,7 @@ const CONFIG_TRIG_INV = true;
 const CONFIG_HYP = true;
 const CONFIG_HYP_INV = true;
 const CONFIG_VARIABLES = true;
+const CONFIG_CUSTOM_FUNCTIONS = false;
 // Switches
 const CONFIG_SW_INV = true;
 const CONFIG_SW_HYP = true;

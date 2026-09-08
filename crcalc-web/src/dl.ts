@@ -38,6 +38,7 @@ const CONFIG_TRIG_INV = params.get("trigInv") === "on";
 const CONFIG_HYP = params.get("hyp") === "on";
 const CONFIG_HYP_INV = params.get("hypInv") === "on";
 const CONFIG_VARIABLES = params.get("variables") === "on";
+const CONFIG_CUSTOM_FUNCTIONS = params.get("customFun") === "on";
 // Switches
 const CONFIG_SW_INV = params.get("invSw") === "on";
 const CONFIG_SW_HYP = params.get("hypSw") === "on";
@@ -229,6 +230,7 @@ const CONFIG_TRIG_INV = ${CONFIG_TRIG_INV};
 const CONFIG_HYP = ${CONFIG_HYP};
 const CONFIG_HYP_INV = ${CONFIG_HYP_INV};
 const CONFIG_VARIABLES = ${CONFIG_VARIABLES};
+const CONFIG_CUSTOM_FUNCTIONS = ${CONFIG_CUSTOM_FUNCTIONS};
 // Switches
 const CONFIG_SW_INV = ${CONFIG_SW_INV};
 const CONFIG_SW_HYP = ${CONFIG_SW_HYP};

@@ -42,6 +42,7 @@ const CONFIG_TRIG_INV = true;
 const CONFIG_HYP = true;
 const CONFIG_HYP_INV = true;
 const CONFIG_VARIABLES = true;
+const CONFIG_CUSTOM_FUNCTIONS = false;
 // Switches
 const CONFIG_SW_INV = true;
 const CONFIG_SW_HYP = true;
@@ -755,7 +756,7 @@ function calculateResult() {
         expr: exprInput.value,
         degreeMode: degreeMode,
         variables: CONFIG_VARIABLES ? variables : undefined,
-        functions: CONFIG_VARIABLES ? functions : undefined,
+        functions: CONFIG_CUSTOM_FUNCTIONS ? functions : undefined,
     } as CreateURRequest);
     workerBusy = true;
     clearTimeout(calcWaitTimeout);
@@ -772,13 +773,18 @@ function refreshFunVarButtons() {
             forEach.call("xyz", (ch: string, idx: number) => {
                 varButtons[idx].textContent = ch;
             });
-            forEach.call("fg", (ch: string, idx: number) => {
-                funButtons[idx].textContent = ch + "( )";
-            });
         } else { // write
             forEach.call("xyz", (ch: string, idx: number) => {
                 varButtons[idx].textContent = "→" + ch;
             });
+        }
+    }
+    if (CONFIG_CUSTOM_FUNCTIONS) {
+        if (!isInvert) { // read
+            forEach.call("fg", (ch: string, idx: number) => {
+                funButtons[idx].textContent = ch + "( )";
+            });
+        } else { // write
             forEach.call("fg", (ch: string, idx: number) => {
                 funButtons[idx].textContent = "→" + ch;
             });
@@ -1367,9 +1373,10 @@ if (CONFIG_UI_SPEED_SCROLL) {
         }
     });
 }
-if (!CONFIG_VARIABLES) {
+if (!CONFIG_VARIABLES && !CONFIG_CUSTOM_FUNCTIONS) {
     document.getElementById("fun_var_line")?.classList.add("grid-hide");
-} else {
+}
+if (CONFIG_CUSTOM_FUNCTIONS) {
     funButtons.forEach(button => {
         button.addEventListener("click", () => {
             if (!isInvert) {
@@ -1379,6 +1386,10 @@ if (!CONFIG_VARIABLES) {
             focusExpression();
         });
     });
+} else {
+    funButtons.forEach(button => (button as HTMLButtonElement).disabled = true);
+}
+if (CONFIG_VARIABLES) {
     varButtons.forEach(button => {
         button.addEventListener("click", () => {
             if (!isInvert) {
@@ -1390,7 +1401,10 @@ if (!CONFIG_VARIABLES) {
             }
         });
     });
+} else {
+    varButtons.forEach(button => (button as HTMLButtonElement).disabled = true);
 }
+
 function disallowScroll(element: HTMLElement) {
     let eLastScrollLeft = 0;
     let eHaveFocus = false;

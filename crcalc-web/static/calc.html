@@ -166,7 +166,7 @@ limitations under the License.
             overflow: hidden;
         }
 
-        .grid-fun-line>div>button {
+        .grid-fun-line>div>button:not([disabled]) {
             cursor: pointer;
         }
 
@@ -188,6 +188,12 @@ limitations under the License.
             -moz-user-select: none;
             -ms-user-select: none;
             transition: color 0.2s;
+        }
+
+        .grid-fun-line>button:not([disabled]),
+        .grid-num>button:not([disabled]),
+        .grid-ops>button:not([disabled]),
+        .grid-var>button:not([disabled]) {
             cursor: pointer;
         }
 
