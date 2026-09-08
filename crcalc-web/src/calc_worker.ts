@@ -88,6 +88,28 @@ type TokenizeResult = {
 const freezeObject = Object.freeze;
 const postWorkerMessage = postMessage;
 
+const functions = freezeObject(new Set([
+    "ln", "log", "exp", "sqrt",
+    "sin", "cos", "tan",
+    "asin", "acos", "atan",
+    "arcsin", "arccos", "arctan",
+    "sinh", "cosh", "tanh",
+    "asinh", "acosh", "atanh",
+    "F", "G", "H",
+    "f", "g", "h",
+]));
+const unaryOps = freezeObject(new Set([
+    "unary+", "unary-", "unary+pow", "unary-pow", "!"
+]));
+const binaryOps = freezeObject(new Set([
+    "+", "-", "*", "/", "^"
+]));
+
+const customFunctions = freezeObject(new Set([
+    "F", "G", "H",
+    "f", "g", "h",
+]));
+
 function getURFromStr(str: string): UnifiedReal {
     let cached = cachedURMap.get(str);
     if (cached === undefined) {
@@ -582,14 +604,6 @@ function tokenToRpn(tokenizeResult: TokenizeResult): RpnResult {
         "+": 1,
         "-": 1
     });
-    const functions = freezeObject(new Set([
-        "ln", "log", "exp", "sqrt",
-        "sin", "cos", "tan",
-        "asin", "acos", "atan",
-        "arcsin", "arccos", "arctan",
-        "sinh", "cosh", "tanh",
-        "asinh", "acosh", "atanh",
-    ]));
     const rightAssocList = freezeObject(new Set([
         "unary+", "unary-", "unary+pow", "unary-pow", "^"
     ]));
@@ -651,28 +665,74 @@ function urToBigInt(ur: UnifiedReal) {
     }
     return null;
 }
-function createUR(expr: string | RpnResult, degreeMode: boolean, variables?: { [variable: string]: RpnResult }, noPosInError?: boolean): [UnifiedReal, RpnResult] {
-    const unaryOps = freezeObject(new Set([
-        "unary+", "unary-", "unary+pow", "unary-pow", "!"
-    ]));
-    const binaryOps = freezeObject(new Set([
-        "+", "-", "*", "/", "^"
-    ]));
-    const functions = freezeObject(new Set([
-        "ln", "log", "exp", "sqrt",
-        "sin", "cos", "tan",
-        "asin", "acos", "atan",
-        "arcsin", "arccos", "arctan",
-        "sinh", "cosh", "tanh",
-        "asinh", "acosh", "atanh",
-    ]));
+function preprocessRpnResult(
+    rpnResult: RpnResult,
+    variables?: { [variable: string]: RpnResult | UnifiedReal | undefined },
+    definedFunctions?: { [fun: string]: RpnResult | undefined }
+): RpnResult {
+    for (let i = 0; i < rpnResult.length; i++) {
+        const rpnItem = rpnResult[i];
+        const token = rpnItem[0];
+        const loc = rpnItem[1];
+        if (!binaryOps.has(token) && !unaryOps.has(token)) {
+            if (functions.has(token)) {
+                // Functions cannot be preprocessed
+            } else {
+                const firstChar = token[0];
+                if (firstChar === "." || (firstChar >= "0" && firstChar <= "9")) {
+                    // number
+                } else if (CONFIG_E && token === "e") {
+                    // e
+                } else if (CONFIG_PI && token === "\u03C0") {
+                    // pi
+                } else {
+                    let hasVariable = false;
+                    if (CONFIG_VARIABLES && variables) {
+                        switch (token) {
+                            case "a":
+                            case "b":
+                            case "c":
+                            case "i":
+                            case "j":
+                            case "k":
+                            case "m":
+                            case "n":
+                            case "x":
+                            case "y":
+                            case "z":
+                                let variableRpn = variables[token];
+                                if (variableRpn) {
+                                    if (variableRpn instanceof UnifiedReal) {
+                                        throw new Error("Unsupported UnifiedReal variable");
+                                    } else {
+                                        hasVariable = true;
+                                        rpnResult.splice(i, 1, ...variableRpn);
+                                        i += variableRpn.length - 1;
+                                    }
+                                }
+                        }
+                    }
+                    if (!hasVariable) throw new Error("Unknown variable '" + token + "' at position [" + loc + "]");
+                }
+            }
+        }
+    }
+    return rpnResult;
+}
+function createUR(expr: string | RpnResult | UnifiedReal, degreeMode: boolean,
+    variables?: { [variable: string]: RpnResult | UnifiedReal | undefined },
+    definedFunctions?: { [fun: string]: RpnResult | undefined },
+    noPosInError?: boolean): [UnifiedReal, RpnResult] {
     let rpnResult: RpnResult;
     if (typeof expr == "string") {
         const tokenizeResult = tokenize(expr);
         rpnResult = tokenToRpn(tokenizeResult);
+    } else if (expr instanceof UnifiedReal) {
+        return [expr, []];
     } else {
         rpnResult = expr;
     }
+    rpnResult = preprocessRpnResult(rpnResult, variables);
     const len = rpnResult.length;
     const stack: UnifiedReal[] = [];
     for (let i = 0; i < len; i++) {
@@ -880,6 +940,23 @@ function createUR(expr: string | RpnResult, degreeMode: boolean, variables?: { [
                         }
                         stack.push(getDivide(getLn(getDivide(getAdd(UnifiedReal.ONE, arg0), getSub(UnifiedReal.ONE, arg0))), UnifiedReal.TWO));
                         break;
+                    default:
+                        let hasFunction = false;
+                        if (CONFIG_VARIABLES && definedFunctions) {
+                            let funRpn = definedFunctions[token];
+                            if (funRpn) {
+                                hasFunction = true;
+                                try {
+                                    stack.push(createUR(funRpn, degreeMode, { x: arg0 }, undefined, true)[0]);
+                                } catch (e) {
+                                    console.error(e);
+                                    throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
+                                }
+                            }
+                        }
+                        if (!hasFunction) {
+                            throw new Error("Undefined Function: " + token);
+                        }
                 }
             } catch (e) {
                 console.error(e);
@@ -913,7 +990,7 @@ function createUR(expr: string | RpnResult, degreeMode: boolean, variables?: { [
                             if (variableRpn) {
                                 hasVariable = true;
                                 try {
-                                    stack.push(createUR(variableRpn, degreeMode, undefined, true)[0]);
+                                    stack.push(createUR(variableRpn, degreeMode, undefined, undefined, true)[0]);
                                 } catch (e) {
                                     console.error(e);
                                     throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
@@ -935,7 +1012,7 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
     switch (msg.type) {
         case "createUR":
             try {
-                let [ur, rpnResult] = createUR(msg.expr, msg.degreeMode, msg.variables);
+                let [ur, rpnResult] = createUR(msg.expr, msg.degreeMode, msg.variables, msg.functions);
                 urList[msg.id] = ur;
                 let digitsRequired = ur.digitsRequiredByNumber();
                 let exactlyDisplayable = ur.exactlyDisplayable();

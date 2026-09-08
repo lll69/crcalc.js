@@ -74,6 +74,7 @@ let chWidth = 0;
 let degreeMode = false;
 let isInvert = false;
 let isShowHyp = false;
+let isShowFun1 = false;
 let simplifyRendered = false;
 let invRendered = false;
 let hypRendered = false;
@@ -139,6 +140,11 @@ const inverseHypElements = [
     getElementById("react_acosh_root") as HTMLElement,
     getElementById("react_atanh_root") as HTMLElement,
 ];
+const funVarButtons = [
+    getElementById("fun_var_0") as HTMLElement,
+    getElementById("fun_var_1") as HTMLElement,
+    getElementById("fun_var_2") as HTMLElement,
+];
 const copyButton = getElementById("copy_result") as HTMLElement;
 const copyTruncatedButton = getElementById("copy_truncated") as HTMLElement;
 const copyIntegerButton = getElementById("copy_integer") as HTMLElement;
@@ -146,8 +152,8 @@ const saveButton = getElementById("save_result") as HTMLElement;
 const simplifyButton = getElementById("show_simplify") as HTMLElement;
 const simplifyReact = getElementById("react_simplify_root") as HTMLElement;
 const speedUpButton = getElementById("speed_up_scroll") as HTMLElement;
-const gridOps = getElementById("grid_ops") as HTMLElement;
-const gridVar = getElementById("grid_var") as HTMLElement;
+const switchFunVarButton = getElementById("fun_var_switch") as HTMLElement;
+const writeFunVarButton = getElementById("fun_var_write") as HTMLElement;
 const loadingElement = getElementById("loading") as HTMLElement;
 const resultBoldTextNode = createTextNode("Loading...");
 const resultNormalTextNode = createTextNode("");
@@ -162,6 +168,7 @@ let workerUrl: string | null = null;
 let workerLoaded = false;
 let workerBusy = false;
 let needEnterNewExpr = false;
+let needEnterVariable: string | null = null;
 let hasResult = false;
 let hasError = false;
 let isResultSimplifiable = false;
@@ -180,12 +187,24 @@ let loadAnimationIndex = 0;
 let loadAnimationInterval: any;
 let calcWaitTimeout: any;
 
-const ZERO_RPN: RpnResult = [["0", [0, 1]]];
-let variables = {
-    x: [["x", [0, 1]]] as RpnResult,
-    y: [["y", [0, 1]]] as RpnResult,
-    z: [["z", [0, 1]]] as RpnResult,
-}
+const VARIABLE_AVAIL = ["a", "b", "c", "x", "y", "z"];
+const FUNCTION_AVAIL = ["F", "G", "H", "f", "g", "h"];
+const variables = {
+    a: undefined,
+    b: undefined,
+    c: undefined,
+    x: undefined,
+    y: undefined,
+    z: undefined,
+};
+const functions = {
+    F: undefined,
+    G: undefined,
+    H: undefined,
+    f: undefined,
+    g: undefined,
+    h: undefined,
+};
 
 function showMessage(title: string, message: string, fallback: () => string, showCopy?: boolean) {
     let shown = false;
@@ -488,6 +507,9 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 precisionCurrent = -1;
                 pointIndex = -1;
                 workerBusy = false;
+                if (needEnterVariable !== null) {
+                    variables[needEnterVariable] = msg.rpnResult;
+                }
                 calculateHigherPrecision();
             } else {
                 hasResult = false;
@@ -499,18 +521,19 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 resultBoldTextNode.textContent = msg.error;
                 resultNormalTextNode.textContent = "";
                 let errString = String(msg.error);
+                let matchOffset = needEnterVariable !== null ? 2 : 0;
                 let match = errString.match(/at position \[(\d+),(\d+)\]/);
                 if (match) {
                     focusExpression();
-                    let start = Number(match[1]);
+                    let start = Number(match[1]) + matchOffset;
                     exprInput.selectionStart = start;
-                    exprInput.selectionEnd = Number(match[2]);
+                    exprInput.selectionEnd = Number(match[2]) + matchOffset;
                     exprInput.scrollLeft = chWidth * (start > 0 ? start - 1 : start);
                 }
                 match = errString.match(/at position \((\d+)\)/);
                 if (match) {
                     focusExpression();
-                    let start = Number(match[1]);
+                    let start = Number(match[1]) + matchOffset;
                     exprInput.selectionStart = start;
                     exprInput.selectionEnd = start + 1;
                     exprInput.scrollLeft = chWidth * (start > 0 ? start - 1 : start);
@@ -689,6 +712,17 @@ function preprocessExpr() {
         exprInput.selectionStart = exprInput.selectionEnd = expr.length;
     }
 }
+function showError(errString: string) {
+    hasResult = false;
+    hasError = true;
+    workerBusy = false;
+    clearTimeout(calcWaitTimeout);
+    buttonCalc.innerText = "=";
+    resultDiv.classList.remove("result-movable");
+    resultBoldTextNode.textContent = errString;
+    resultNormalTextNode.textContent = "";
+    changeResultUIVisibility();
+}
 function calculateResult() {
     if (!workerLoaded) return;
     if (workerBusy) {
@@ -700,31 +734,77 @@ function calculateResult() {
     }
     clearResult();
     onCalculatorResize();
+    preprocessExpr();
     if (exprInput.value === "") {
         focusExpression();
         return;
     }
-    preprocessExpr();
     needEnterNewExpr = true;
-    buttonCalc.innerText = "STOP";
     worker!.postMessage({ type: "removeUR", id: lastCalculateId });
     lastCalculateId = (lastCalculateId + 1) | 0;
     changeResultUIVisibility();
-    worker!.postMessage({
-        type: "createUR",
-        id: lastCalculateId,
-        uid: lastCalculateId,
-        expr: exprInput.value,
-        degreeMode: degreeMode,
-        variables: variables,
-    } as CreateURRequest);
-    workerBusy = true;
-    clearTimeout(calcWaitTimeout);
-    calcWaitTimeout = setTimeout(onCalcTimeout, 5000);
+
+    const expr = exprInput.value;
+    const equalIdx = expr.indexOf("=");
+    if (equalIdx < 0) {
+        needEnterVariable = null;
+        buttonCalc.innerText = "STOP";
+        worker!.postMessage({
+            type: "createUR",
+            id: lastCalculateId,
+            uid: lastCalculateId,
+            expr: exprInput.value,
+            degreeMode: degreeMode,
+            variables: variables,
+            functions: functions,
+        } as CreateURRequest);
+        workerBusy = true;
+        clearTimeout(calcWaitTimeout);
+        calcWaitTimeout = setTimeout(onCalcTimeout, 5000);
+        return;
+    }
+    if (equalIdx == 1) {
+        const variable = expr[0];
+        if (variables.hasOwnProperty(variable) && expr.length >= 3) {
+            needEnterVariable = variable;
+            buttonCalc.innerText = "STOP";
+            worker!.postMessage({
+                type: "createUR",
+                id: lastCalculateId,
+                uid: lastCalculateId,
+                expr: expr.substring(2),
+                degreeMode: degreeMode,
+                variables: variables,
+                functions: functions,
+            } as CreateURRequest);
+            workerBusy = true;
+            clearTimeout(calcWaitTimeout);
+            calcWaitTimeout = setTimeout(onCalcTimeout, 5000);
+        } else {
+            showError("Invalid assignment");
+        }
+    }
 }
 function focusExpression() {
     if (workerLoaded) {
         exprInput.focus();
+    }
+}
+function refreshFunVarButtons() {
+    if (CONFIG_VARIABLES) {
+        if (!isInvert) { // variables
+            switchFunVarButton.textContent = isShowFun1 ? "xyz" : "abc";
+            writeFunVarButton.textContent = "x←";
+            Array.prototype.forEach.call(isShowFun1 ? "abc" : "xyz", (ch: string, idx: number) => {
+                funVarButtons[idx].textContent = ch;
+            });
+        } else { // functions
+            switchFunVarButton.textContent = isShowFun1 ? "fgh" : "FGH";
+            writeFunVarButton.textContent = "f←";
+            Array.prototype.forEach.call(isShowFun1 ? "FGH" : "fgh", (ch: string, idx: number) => {
+                funVarButtons[idx].textContent = ch + "( )";
+            });
+        }
     }
 }
 function refreshInverseButton() {
@@ -738,6 +818,7 @@ function refreshInverseButton() {
             invReact.classList.add("op-hide");
         }
     }
+    refreshFunVarButtons();
 }
 function refreshInverse() {
     for (const button of normalButtons) {
@@ -1306,6 +1387,39 @@ if (CONFIG_UI_SPEED_SCROLL) {
                 speedUpButton.classList.remove("button-link-select2");
                 break;
         }
+    });
+}
+if (!CONFIG_VARIABLES) {
+    document.getElementById("fun_var_line")?.classList.add("grid-hide");
+} else {
+    switchFunVarButton.addEventListener("click", () => {
+        isShowFun1 = !isShowFun1;
+        refreshFunVarButtons();
+        focusExpression();
+    });
+    writeFunVarButton.addEventListener("click", () => {
+        const targetPos = exprInput.value.length;
+        const currentExpr = exprInput.value.trimStart();
+        if (!isInvert) {
+            if (VARIABLE_AVAIL.indexOf(currentExpr) >= 0 && exprInput.selectionStart == targetPos && exprInput.selectionEnd == targetPos) {
+                insertStr("=");
+            }
+        } else {
+            if (FUNCTION_AVAIL.indexOf(currentExpr) >= 0 && exprInput.selectionStart == targetPos && exprInput.selectionEnd == targetPos) {
+                insertStr("(x)=");
+            }
+        }
+        focusExpression();
+    });
+    funVarButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            if (!isInvert) {
+                insertStr(button.textContent![0]);
+            } else {
+                insertStr(button.textContent![0] + "(");
+            }
+            focusExpression();
+        });
     });
 }
 function registerVariable(name: string) {

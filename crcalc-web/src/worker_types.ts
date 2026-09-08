@@ -8,7 +8,8 @@ export type CreateURRequest = {
     uid: number,
     expr: string,
     degreeMode: boolean,
-    variables?: { [variable: string]: RpnResult },
+    variables?: { [variable: string]: RpnResult | undefined },
+    functions?: { [fun: string]: RpnResult | undefined },
 }
 
 export type CreateURResultSuccess = {
