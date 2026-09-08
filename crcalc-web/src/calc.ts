@@ -510,7 +510,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 precisionCurrent = -1;
                 pointIndex = -1;
                 workerBusy = false;
-                if (needEnterVariable !== null) {
+                if (CONFIG_VARIABLES && needEnterVariable !== null) {
                     variables[needEnterVariable] = msg.rpnResult;
                 }
                 calculateHigherPrecision();
@@ -754,8 +754,8 @@ function calculateResult() {
         uid: lastCalculateId,
         expr: exprInput.value,
         degreeMode: degreeMode,
-        variables: variables,
-        functions: functions,
+        variables: CONFIG_VARIABLES ? variables : undefined,
+        functions: CONFIG_VARIABLES ? functions : undefined,
     } as CreateURRequest);
     workerBusy = true;
     clearTimeout(calcWaitTimeout);
