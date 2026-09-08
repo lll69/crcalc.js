@@ -89,6 +89,7 @@ const { setInterval, clearInterval, setTimeout, clearTimeout, requestAnimationFr
 const createObjectURL = URL.createObjectURL;
 // @ts-ignore
 const replaceStr: (s: string, a: string, b: string) => string = "".replaceAll ? (s, a, b) => s.replaceAll(a, b) : (s, a, b) => s.split(a).join(b);
+const forEach = Array.prototype.forEach;
 
 const calculatorDiv = getElementById("calculator") as HTMLElement;
 const exprInput = getElementById("expression") as HTMLInputElement;
@@ -140,10 +141,14 @@ const inverseHypElements = [
     getElementById("react_acosh_root") as HTMLElement,
     getElementById("react_atanh_root") as HTMLElement,
 ];
-const funVarButtons = [
-    getElementById("fun_var_0") as HTMLElement,
-    getElementById("fun_var_1") as HTMLElement,
-    getElementById("fun_var_2") as HTMLElement,
+const funButtons = [
+    getElementById("fun_f") as HTMLElement,
+    getElementById("fun_g") as HTMLElement,
+];
+const varButtons = [
+    getElementById("var_x") as HTMLElement,
+    getElementById("var_y") as HTMLElement,
+    getElementById("var_z") as HTMLElement,
 ];
 const copyButton = getElementById("copy_result") as HTMLElement;
 const copyTruncatedButton = getElementById("copy_truncated") as HTMLElement;
@@ -152,8 +157,6 @@ const saveButton = getElementById("save_result") as HTMLElement;
 const simplifyButton = getElementById("show_simplify") as HTMLElement;
 const simplifyReact = getElementById("react_simplify_root") as HTMLElement;
 const speedUpButton = getElementById("speed_up_scroll") as HTMLElement;
-const switchFunVarButton = getElementById("fun_var_switch") as HTMLElement;
-const writeFunVarButton = getElementById("fun_var_write") as HTMLElement;
 const loadingElement = getElementById("loading") as HTMLElement;
 const resultBoldTextNode = createTextNode("Loading...");
 const resultNormalTextNode = createTextNode("");
@@ -521,19 +524,18 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 resultBoldTextNode.textContent = msg.error;
                 resultNormalTextNode.textContent = "";
                 let errString = String(msg.error);
-                let matchOffset = needEnterVariable !== null ? 2 : 0;
                 let match = errString.match(/at position \[(\d+),(\d+)\]/);
                 if (match) {
                     focusExpression();
-                    let start = Number(match[1]) + matchOffset;
+                    let start = Number(match[1]);
                     exprInput.selectionStart = start;
-                    exprInput.selectionEnd = Number(match[2]) + matchOffset;
+                    exprInput.selectionEnd = Number(match[2]);
                     exprInput.scrollLeft = chWidth * (start > 0 ? start - 1 : start);
                 }
                 match = errString.match(/at position \((\d+)\)/);
                 if (match) {
                     focusExpression();
-                    let start = Number(match[1]) + matchOffset;
+                    let start = Number(match[1]);
                     exprInput.selectionStart = start;
                     exprInput.selectionEnd = start + 1;
                     exprInput.scrollLeft = chWidth * (start > 0 ? start - 1 : start);
@@ -613,7 +615,7 @@ function onLoadingError(e: string) {
     resultDiv.classList.remove("result-movable");
     resultBoldTextNode.textContent = crL10N["tryRefresh"] || "Try refreshing the page.";
     resultNormalTextNode.textContent = "";
-    Array.prototype.forEach.call(calculatorDiv.getElementsByTagName("button"), (e) => {
+    forEach.call(calculatorDiv.getElementsByTagName("button"), (e) => {
         e.disabled = true;
     });
 }
@@ -744,46 +746,20 @@ function calculateResult() {
     lastCalculateId = (lastCalculateId + 1) | 0;
     changeResultUIVisibility();
 
-    const expr = exprInput.value;
-    const equalIdx = expr.indexOf("=");
-    if (equalIdx < 0) {
-        needEnterVariable = null;
-        buttonCalc.innerText = "STOP";
-        worker!.postMessage({
-            type: "createUR",
-            id: lastCalculateId,
-            uid: lastCalculateId,
-            expr: exprInput.value,
-            degreeMode: degreeMode,
-            variables: variables,
-            functions: functions,
-        } as CreateURRequest);
-        workerBusy = true;
-        clearTimeout(calcWaitTimeout);
-        calcWaitTimeout = setTimeout(onCalcTimeout, 5000);
-        return;
-    }
-    if (equalIdx == 1) {
-        const variable = expr[0];
-        if (variables.hasOwnProperty(variable) && expr.length >= 3) {
-            needEnterVariable = variable;
-            buttonCalc.innerText = "STOP";
-            worker!.postMessage({
-                type: "createUR",
-                id: lastCalculateId,
-                uid: lastCalculateId,
-                expr: expr.substring(2),
-                degreeMode: degreeMode,
-                variables: variables,
-                functions: functions,
-            } as CreateURRequest);
-            workerBusy = true;
-            clearTimeout(calcWaitTimeout);
-            calcWaitTimeout = setTimeout(onCalcTimeout, 5000);
-        } else {
-            showError("Invalid assignment");
-        }
-    }
+    needEnterVariable = null;
+    buttonCalc.innerText = "STOP";
+    worker!.postMessage({
+        type: "createUR",
+        id: lastCalculateId,
+        uid: lastCalculateId,
+        expr: exprInput.value,
+        degreeMode: degreeMode,
+        variables: variables,
+        functions: functions,
+    } as CreateURRequest);
+    workerBusy = true;
+    clearTimeout(calcWaitTimeout);
+    calcWaitTimeout = setTimeout(onCalcTimeout, 5000);
 }
 function focusExpression() {
     if (workerLoaded) {
@@ -792,17 +768,19 @@ function focusExpression() {
 }
 function refreshFunVarButtons() {
     if (CONFIG_VARIABLES) {
-        if (!isInvert) { // variables
-            switchFunVarButton.textContent = isShowFun1 ? "xyz" : "abc";
-            writeFunVarButton.textContent = "x←";
-            Array.prototype.forEach.call(isShowFun1 ? "abc" : "xyz", (ch: string, idx: number) => {
-                funVarButtons[idx].textContent = ch;
+        if (!isInvert) { // read
+            forEach.call("xyz", (ch: string, idx: number) => {
+                varButtons[idx].textContent = ch;
             });
-        } else { // functions
-            switchFunVarButton.textContent = isShowFun1 ? "fgh" : "FGH";
-            writeFunVarButton.textContent = "f←";
-            Array.prototype.forEach.call(isShowFun1 ? "FGH" : "fgh", (ch: string, idx: number) => {
-                funVarButtons[idx].textContent = ch + "( )";
+            forEach.call("fg", (ch: string, idx: number) => {
+                funButtons[idx].textContent = ch + "( )";
+            });
+        } else { // write
+            forEach.call("xyz", (ch: string, idx: number) => {
+                varButtons[idx].textContent = "→" + ch;
+            });
+            forEach.call("fg", (ch: string, idx: number) => {
+                funButtons[idx].textContent = "→" + ch;
             });
         }
     }
@@ -1392,50 +1370,27 @@ if (CONFIG_UI_SPEED_SCROLL) {
 if (!CONFIG_VARIABLES) {
     document.getElementById("fun_var_line")?.classList.add("grid-hide");
 } else {
-    switchFunVarButton.addEventListener("click", () => {
-        isShowFun1 = !isShowFun1;
-        refreshFunVarButtons();
-        focusExpression();
-    });
-    writeFunVarButton.addEventListener("click", () => {
-        const targetPos = exprInput.value.length;
-        const currentExpr = exprInput.value.trimStart();
-        if (!isInvert) {
-            if (VARIABLE_AVAIL.indexOf(currentExpr) >= 0 && exprInput.selectionStart == targetPos && exprInput.selectionEnd == targetPos) {
-                insertStr("=");
-            }
-        } else {
-            if (FUNCTION_AVAIL.indexOf(currentExpr) >= 0 && exprInput.selectionStart == targetPos && exprInput.selectionEnd == targetPos) {
-                insertStr("(x)=");
-            }
-        }
-        focusExpression();
-    });
-    funVarButtons.forEach(button => {
+    funButtons.forEach(button => {
         button.addEventListener("click", () => {
             if (!isInvert) {
-                insertStr(button.textContent![0]);
+                appendFunction(button.dataset.fun!);
             } else {
-                insertStr(button.textContent![0] + "(");
             }
             focusExpression();
         });
     });
-}
-function registerVariable(name: string) {
-    getElementById("var_in_" + name)!.addEventListener("click", () => {
-        if (!CONFIG_VARIABLES || !workerLoaded) return;
-        throw new Error("Not yet implemented");
+    varButtons.forEach(button => {
+        button.addEventListener("click", () => {
+            if (!isInvert) {
+                appendConst(button.dataset.variable!);
+                focusExpression();
+            } else {
+                calculateResult();
+                needEnterVariable = button.dataset.variable!;
+            }
+        });
     });
-    getElementById("var_out_" + name)!.addEventListener("click", () => {
-        if (!CONFIG_VARIABLES || !workerLoaded) return;
-        appendConst(name);
-        focusExpression();
-    });
 }
-registerVariable("x");
-registerVariable("y");
-registerVariable("z");
 function disallowScroll(element: HTMLElement) {
     let eLastScrollLeft = 0;
     let eHaveFocus = false;
