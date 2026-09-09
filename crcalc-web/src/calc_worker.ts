@@ -973,33 +973,7 @@ function createUR(expr: string | RpnResult | UnifiedReal, degreeMode: boolean,
             } else if (CONFIG_PI && token === "\u03C0") {
                 stack.push(UnifiedReal.PI);
             } else {
-                let hasVariable = false;
-                if (CONFIG_VARIABLES && variables) {
-                    switch (token) {
-                        case "a":
-                        case "b":
-                        case "c":
-                        case "i":
-                        case "j":
-                        case "k":
-                        case "m":
-                        case "n":
-                        case "x":
-                        case "y":
-                        case "z":
-                            let variableRpn = variables[token];
-                            if (variableRpn) {
-                                hasVariable = true;
-                                try {
-                                    stack.push(createUR(variableRpn, degreeMode, undefined, undefined, true)[0]);
-                                } catch (e) {
-                                    console.error(e);
-                                    throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
-                                }
-                            }
-                    }
-                }
-                if (!hasVariable) throw new Error("Unknown variable '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
+                throw new Error("Unknown variable '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
             }
         }
     }
