@@ -668,16 +668,25 @@ function urToBigInt(ur: UnifiedReal) {
 }
 function preprocessRpnResult(
     rpnResult: RpnResult,
+    degreeMode: boolean,
     variables?: { [variable: string]: RpnResult | UnifiedReal | undefined },
-    definedFunctions?: { [fun: string]: RpnResult | undefined }
+    definedFunctions?: { [fun: string]: RpnResult | undefined },
+    noPosInError?: boolean
 ): RpnResult {
+    let hasFunctions = false;
     for (let i = 0; i < rpnResult.length; i++) {
         const rpnItem = rpnResult[i];
         const token = rpnItem[0];
         const loc = rpnItem[1];
         if (!binaryOps.has(token) && !unaryOps.has(token)) {
             if (functions.has(token)) {
-                // Functions cannot be preprocessed
+                // Functions cannot be preprocessed before variables
+                if (CONFIG_CUSTOM_FUNCTIONS && definedFunctions) {
+                    let funRpn = definedFunctions[token];
+                    if (funRpn) {
+                        hasFunctions = true;
+                    }
+                }
             } else {
                 const firstChar = token[0];
                 if (firstChar === "." || (firstChar >= "0" && firstChar <= "9")) {
@@ -718,6 +727,54 @@ function preprocessRpnResult(
             }
         }
     }
+    // process functions
+    if (hasFunctions) {
+        const stack: RpnResult[] = [];
+        for (let i = 0; i < rpnResult.length; i++) {
+            const rpnItem = rpnResult[i];
+            const token = rpnItem[0];
+            const loc = rpnItem[1];
+            if (binaryOps.has(token)) {
+                if (stack.length < 2) {
+                    throw new Error("Insufficient number of parameters for operator '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
+                }
+                const arg1 = stack.pop()!;
+                const arg0 = stack.pop()!;
+                stack.push([...arg0, ...arg1, rpnItem]);
+            } else if (unaryOps.has(token)) {
+                if (stack.length < 1) {
+                    throw new Error("Insufficient number of parameters for operator '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
+                }
+                const arg0 = stack.pop()!;
+                stack.push([...arg0, rpnItem]);
+            } else if (functions.has(token)) {
+                if (stack.length < 1) {
+                    throw new Error("Insufficient number of parameters for function '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
+                }
+                let hasFunction = false;
+                if (CONFIG_CUSTOM_FUNCTIONS && definedFunctions) {
+                    let funRpn = definedFunctions[token];
+                    if (funRpn) {
+                        try {
+                            const arg0 = stack.pop()!;
+                            stack.push(createUR(funRpn, degreeMode, { x: arg0 }, undefined, true)[1]);
+                            hasFunction = true;
+                        } catch (e) {
+                            console.error(e);
+                            throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
+                        }
+                    }
+                }
+                if (!hasFunction) {
+                    const arg0 = stack.pop()!;
+                    stack.push([...arg0, rpnItem]);
+                }
+            } else {
+                // number / constants
+                // stack.push(stack.pop()!);
+            }
+        }
+    }
     return rpnResult;
 }
 function createUR(expr: string | RpnResult | UnifiedReal, degreeMode: boolean,
@@ -733,7 +790,7 @@ function createUR(expr: string | RpnResult | UnifiedReal, degreeMode: boolean,
     } else {
         rpnResult = expr;
     }
-    rpnResult = preprocessRpnResult(rpnResult, variables);
+    rpnResult = preprocessRpnResult(rpnResult, degreeMode, variables, definedFunctions, noPosInError);
     const len = rpnResult.length;
     const stack: UnifiedReal[] = [];
     for (let i = 0; i < len; i++) {
@@ -942,22 +999,7 @@ function createUR(expr: string | RpnResult | UnifiedReal, degreeMode: boolean,
                         stack.push(getDivide(getLn(getDivide(getAdd(UnifiedReal.ONE, arg0), getSub(UnifiedReal.ONE, arg0))), UnifiedReal.TWO));
                         break;
                     default:
-                        let hasFunction = false;
-                        if (CONFIG_CUSTOM_FUNCTIONS && definedFunctions) {
-                            let funRpn = definedFunctions[token];
-                            if (funRpn) {
-                                hasFunction = true;
-                                try {
-                                    stack.push(createUR(funRpn, degreeMode, { x: arg0 }, undefined, true)[0]);
-                                } catch (e) {
-                                    console.error(e);
-                                    throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
-                                }
-                            }
-                        }
-                        if (!hasFunction) {
-                            throw new Error("Undefined Function: " + token);
-                        }
+                        throw new Error("Undefined Function: " + token);
                 }
             } catch (e) {
                 console.error(e);
