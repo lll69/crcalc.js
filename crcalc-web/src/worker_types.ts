@@ -12,6 +12,16 @@ export type CreateURRequest = {
     functions?: { [fun: string]: RpnResult | undefined },
 }
 
+export type CreateFunRpnRequest = {
+    type: "createFunRpn",
+    id: number,
+    uid: number,
+    expr: string,
+    degreeMode: boolean,
+    variables?: { [variable: string]: RpnResult | undefined },
+    functions?: { [fun: string]: RpnResult | undefined },
+}
+
 export type CreateURResultSuccess = {
     type: "createUR",
     id: number,
@@ -37,6 +47,30 @@ export type CreateURResultError = {
 }
 
 export type CreateURResult = CreateURResultSuccess | CreateURResultError;
+
+export type CreateFunRpnResultSuccess = {
+    type: "createFunRpn",
+    id: number,
+    uid: number,
+    expr: string,
+    degreeMode: boolean,
+    success: true,
+    error: undefined,
+    rpnResult: RpnResult,
+}
+
+export type CreateFunRpnResultError = {
+    type: "createFunRpn",
+    id: number,
+    uid: number,
+    expr: string,
+    degreeMode: boolean,
+    success: undefined,
+    error: string,
+    rpnResult: undefined,
+}
+
+export type CreateFunRpnResult = CreateFunRpnResultSuccess | CreateFunRpnResultError;
 
 export type ToStringRequest = {
     type: "toStringTruncated",
@@ -90,7 +124,7 @@ export type RemoveURRequest = {
     id: number
 }
 
-export type WorkerRequest = CreateURRequest | CopyURRequest | RemoveURRequest | ToStringRequest | ToNiceStringRequest;
-export type WorkerResult = InitResult | CreateURResult | ToStringResult | ToNiceStringResult;
+export type WorkerRequest = CreateURRequest | CopyURRequest | RemoveURRequest | ToStringRequest | ToNiceStringRequest | CreateFunRpnRequest;
+export type WorkerResult = InitResult | CreateURResult | ToStringResult | ToNiceStringResult | CreateFunRpnResult;
 
 export type RpnResult = (readonly [token: string, loc: number | readonly number[]])[];

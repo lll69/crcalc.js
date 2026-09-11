@@ -17,7 +17,7 @@
 import * as ClipboardJS from "clipboard";
 import { CalcMuiPlugin, CalcMuiPluginHolder } from "./calc_mui_types";
 import Scroller from "./Scroller";
-import { CreateURRequest, RpnResult, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
+import { CreateFunRpnRequest, CreateURRequest, ToNiceStringRequest, ToStringRequest, ToStringResultSuccess, WorkerResult } from "./worker_types";
 import { decode } from "base85";
 
 /*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
@@ -581,6 +581,50 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 showMessage(title, text!, () => title2 + text, true);
             }
             break;
+        case "createFunRpn":
+            if (msg.success) {
+                hasResult = false;
+                hasError = true;
+                workerBusy = false;
+                clearTimeout(calcWaitTimeout);
+                buttonCalc.innerText = "=";
+                resultDiv.classList.remove("result-movable");
+                resultBoldTextNode.textContent = "Success";
+                resultNormalTextNode.textContent = "";
+                if (CONFIG_CUSTOM_FUNCTIONS && needEnterVariable !== null) {
+                    functions[needEnterVariable] = msg.rpnResult;
+                }
+                changeResultUIVisibility();
+            } else {
+                hasResult = false;
+                hasError = true;
+                workerBusy = false;
+                clearTimeout(calcWaitTimeout);
+                buttonCalc.innerText = "=";
+                resultDiv.classList.remove("result-movable");
+                resultBoldTextNode.textContent = msg.error;
+                resultNormalTextNode.textContent = "";
+                let errString = String(msg.error);
+                let match = errString.match(/at position \[(\d+),(\d+)\]/);
+                if (match) {
+                    focusExpression();
+                    let start = Number(match[1]);
+                    exprInput.selectionStart = start;
+                    exprInput.selectionEnd = Number(match[2]);
+                    exprInput.scrollLeft = chWidth * (start > 0 ? start - 1 : start);
+                }
+                match = errString.match(/at position \((\d+)\)/);
+                if (match) {
+                    focusExpression();
+                    let start = Number(match[1]);
+                    exprInput.selectionStart = start;
+                    exprInput.selectionEnd = start + 1;
+                    exprInput.scrollLeft = chWidth * (start > 0 ? start - 1 : start);
+                }
+                scrollToErrorIfNeeded(errString, "Error: ArithmeticException: ");
+                changeResultUIVisibility();
+            }
+            break;
     }
 }
 function onWorkerError(e: ErrorEvent) {
@@ -726,7 +770,7 @@ function showError(errString: string) {
     resultNormalTextNode.textContent = "";
     changeResultUIVisibility();
 }
-function calculateResult() {
+function calculateResultWithFunction(isFun: boolean, funName?: string) {
     if (!workerLoaded) return;
     if (workerBusy) {
         reInitWorker();
@@ -747,20 +791,23 @@ function calculateResult() {
     lastCalculateId = (lastCalculateId + 1) | 0;
     changeResultUIVisibility();
 
-    needEnterVariable = null;
+    needEnterVariable = funName || null;
     buttonCalc.innerText = "STOP";
     worker!.postMessage({
-        type: "createUR",
+        type: isFun ? "createFunRpn" : "createUR",
         id: lastCalculateId,
         uid: lastCalculateId,
         expr: exprInput.value,
         degreeMode: degreeMode,
         variables: CONFIG_VARIABLES ? variables : undefined,
         functions: CONFIG_CUSTOM_FUNCTIONS ? functions : undefined,
-    } as CreateURRequest);
+    } as (CreateURRequest | CreateFunRpnRequest));
     workerBusy = true;
     clearTimeout(calcWaitTimeout);
     calcWaitTimeout = setTimeout(onCalcTimeout, 5000);
+}
+function calculateResult() {
+    calculateResultWithFunction(false);
 }
 function focusExpression() {
     if (workerLoaded) {
@@ -1382,6 +1429,7 @@ if (CONFIG_CUSTOM_FUNCTIONS) {
             if (!isInvert) {
                 appendFunction(button.dataset.fun!);
             } else {
+                calculateResultWithFunction(true, button.dataset.fun!);
             }
             focusExpression();
         });

@@ -15,7 +15,7 @@
  */
 
 import { BoundedRational, UnifiedReal, ArithmeticException } from "crcalc-js";
-import { CreateURResult, InitResult, RpnResult, ToNiceStringResult, ToStringResult, WorkerRequest } from "./worker_types";
+import { CreateFunRpnResult, CreateURResult, InitResult, RpnResult, ToNiceStringResult, ToStringResult, WorkerRequest } from "./worker_types";
 
 /*pUrVkSlX CONFIGURATION START FOR DOWNLOAD HxDlWyZk**/
 const CONFIG_IS_ONLINE = true;
@@ -671,8 +671,10 @@ function preprocessRpnResult(
     degreeMode: boolean,
     variables?: { [variable: string]: RpnResult | UnifiedReal | undefined },
     definedFunctions?: { [fun: string]: RpnResult | undefined },
-    noPosInError?: boolean
+    noPosInError?: boolean,
+    isFun?: boolean
 ): RpnResult {
+    rpnResult = [...rpnResult];
     let hasFunctions = false;
     for (let i = 0; i < rpnResult.length; i++) {
         const rpnItem = rpnResult[i];
@@ -697,7 +699,9 @@ function preprocessRpnResult(
                     // pi
                 } else {
                     let hasVariable = false;
-                    if (CONFIG_VARIABLES && variables) {
+                    if (CONFIG_CUSTOM_FUNCTIONS && isFun && token == "x") {
+                        hasVariable = true;
+                    } else if (CONFIG_VARIABLES && variables) {
                         switch (token) {
                             case "a":
                             case "b":
@@ -757,7 +761,7 @@ function preprocessRpnResult(
                     if (funRpn) {
                         try {
                             const arg0 = stack.pop()!;
-                            stack.push(createUR(funRpn, degreeMode, { x: arg0 }, undefined, true)[1]);
+                            stack.push(preprocessRpnResult(funRpn, degreeMode, { x: arg0 }, undefined, true, isFun));
                             hasFunction = true;
                         } catch (e) {
                             console.error(e);
@@ -771,16 +775,22 @@ function preprocessRpnResult(
                 }
             } else {
                 // number / constants
-                // stack.push(stack.pop()!);
+                stack.push([rpnItem]);
             }
         }
+        if (stack.length != 1) {
+            throw new Error("Invalid stack length: " + stack.length);
+        }
+        rpnResult = stack.pop()!;
     }
     return rpnResult;
 }
-function createUR(expr: string | RpnResult | UnifiedReal, degreeMode: boolean,
+function createUR(
+    expr: string | RpnResult | UnifiedReal, degreeMode: boolean,
     variables?: { [variable: string]: RpnResult | UnifiedReal | undefined },
     definedFunctions?: { [fun: string]: RpnResult | undefined },
-    noPosInError?: boolean): [UnifiedReal, RpnResult] {
+    noPosInError?: boolean
+): [UnifiedReal, RpnResult] {
     let rpnResult: RpnResult;
     if (typeof expr == "string") {
         const tokenizeResult = tokenize(expr);
@@ -1045,6 +1055,7 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
                     rpnResult: rpnResult,
                 } as CreateURResult);
             } catch (e) {
+                console.error(e);
                 postWorkerMessage({
                     type: "createUR",
                     id: msg.id,
@@ -1106,6 +1117,33 @@ onmessage = function (e: MessageEvent<WorkerRequest>) {
             }
             break;
         }
+        case "createFunRpn":
+            try {
+                if (!CONFIG_CUSTOM_FUNCTIONS) {
+                    throw new Error("Unsupported Operation");
+                }
+                let rpnResult = preprocessRpnResult(tokenToRpn(tokenize(msg.expr)), msg.degreeMode, msg.variables, msg.functions, false, true);
+                postWorkerMessage({
+                    type: "createFunRpn",
+                    id: msg.id,
+                    uid: msg.uid,
+                    expr: msg.expr,
+                    degreeMode: msg.degreeMode,
+                    success: true,
+                    rpnResult: rpnResult,
+                } as CreateFunRpnResult);
+            } catch (e) {
+                console.error(e);
+                postWorkerMessage({
+                    type: "createFunRpn",
+                    id: msg.id,
+                    uid: msg.uid,
+                    expr: msg.expr,
+                    degreeMode: msg.degreeMode,
+                    error: String(e)
+                } as CreateFunRpnResult);
+            }
+            break;
     }
 }
 postWorkerMessage({ type: "init" } as InitResult);
