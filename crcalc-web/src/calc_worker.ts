@@ -675,7 +675,6 @@ function preprocessRpnResult(
     isFun?: boolean
 ): RpnResult {
     rpnResult = [...rpnResult];
-    let hasFunctions = false;
     for (let i = 0; i < rpnResult.length; i++) {
         const rpnItem = rpnResult[i];
         const token = rpnItem[0];
@@ -683,12 +682,6 @@ function preprocessRpnResult(
         if (!binaryOps.has(token) && !unaryOps.has(token)) {
             if (functions.has(token)) {
                 // Functions cannot be preprocessed before variables
-                if (CONFIG_CUSTOM_FUNCTIONS && definedFunctions) {
-                    let funRpn = definedFunctions[token];
-                    if (funRpn) {
-                        hasFunctions = true;
-                    }
-                }
             } else {
                 const firstChar = token[0];
                 if (firstChar === "." || (firstChar >= "0" && firstChar <= "9")) {
@@ -731,59 +724,56 @@ function preprocessRpnResult(
             }
         }
     }
-    // process functions
-    if (hasFunctions) {
-        const stack: RpnResult[] = [];
-        for (let i = 0; i < rpnResult.length; i++) {
-            const rpnItem = rpnResult[i];
-            const token = rpnItem[0];
-            const loc = rpnItem[1];
-            if (binaryOps.has(token)) {
-                if (stack.length < 2) {
-                    throw new Error("Insufficient number of parameters for operator '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
-                }
-                const arg1 = stack.pop()!;
-                const arg0 = stack.pop()!;
-                stack.push([...arg0, ...arg1, rpnItem]);
-            } else if (unaryOps.has(token)) {
-                if (stack.length < 1) {
-                    throw new Error("Insufficient number of parameters for operator '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
-                }
-                const arg0 = stack.pop()!;
-                stack.push([...arg0, rpnItem]);
-            } else if (functions.has(token)) {
-                if (stack.length < 1) {
-                    throw new Error("Insufficient number of parameters for function '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
-                }
-                let hasFunction = false;
-                if (CONFIG_CUSTOM_FUNCTIONS && definedFunctions) {
-                    let funRpn = definedFunctions[token];
-                    if (funRpn) {
-                        try {
-                            const arg0 = stack.pop()!;
-                            stack.push(preprocessRpnResult(funRpn, degreeMode, { x: arg0 }, undefined, true, isFun));
-                            hasFunction = true;
-                        } catch (e) {
-                            console.error(e);
-                            throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
-                        }
+    // process functions && check expression
+    const stack: RpnResult[] = [];
+    for (let i = 0; i < rpnResult.length; i++) {
+        const rpnItem = rpnResult[i];
+        const token = rpnItem[0];
+        const loc = rpnItem[1];
+        if (binaryOps.has(token)) {
+            if (stack.length < 2) {
+                throw new Error("Insufficient number of parameters for operator '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
+            }
+            const arg1 = stack.pop()!;
+            const arg0 = stack.pop()!;
+            stack.push([...arg0, ...arg1, rpnItem]);
+        } else if (unaryOps.has(token)) {
+            if (stack.length < 1) {
+                throw new Error("Insufficient number of parameters for operator '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
+            }
+            const arg0 = stack.pop()!;
+            stack.push([...arg0, rpnItem]);
+        } else if (functions.has(token)) {
+            if (stack.length < 1) {
+                throw new Error("Insufficient number of parameters for function '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
+            }
+            let hasFunction = false;
+            if (CONFIG_CUSTOM_FUNCTIONS && definedFunctions) {
+                let funRpn = definedFunctions[token];
+                if (funRpn) {
+                    try {
+                        const arg0 = stack.pop()!;
+                        stack.push(preprocessRpnResult(funRpn, degreeMode, { x: arg0 }, undefined, true, isFun));
+                        hasFunction = true;
+                    } catch (e) {
+                        console.error(e);
+                        throw new Error(e.message + (!noPosInError ? " at position [" + loc + "]" : ""));
                     }
                 }
-                if (!hasFunction) {
-                    const arg0 = stack.pop()!;
-                    stack.push([...arg0, rpnItem]);
-                }
-            } else {
-                // number / constants
-                stack.push([rpnItem]);
             }
+            if (!hasFunction) {
+                const arg0 = stack.pop()!;
+                stack.push([...arg0, rpnItem]);
+            }
+        } else {
+            // number / constants
+            stack.push([rpnItem]);
         }
-        if (stack.length != 1) {
-            throw new Error("Invalid stack length: " + stack.length);
-        }
-        rpnResult = stack.pop()!;
     }
-    return rpnResult;
+    if (stack.length != 1) {
+        throw new Error("Invalid stack length: " + stack.length);
+    }
+    return stack.pop()!;
 }
 function createUR(
     expr: string | RpnResult | UnifiedReal, degreeMode: boolean,
