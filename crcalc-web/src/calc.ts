@@ -827,6 +827,7 @@ function focusExpression() {
                 }
             };
             document.addEventListener("scroll", scrollListener, true);
+            setTimeout(() => document.removeEventListener("scroll", scrollListener, true), 100);
         }
         exprInput.focus();
     }
