@@ -455,6 +455,105 @@ limitations under the License.
         </ul>
     </section>
     <section>
+        <h2>使用自定义变量和函数的说明</h2>
+        <p>CRCalc.js 计算器支持定义变量 <b>x、y、z</b> 以及自定义函数 <b>f、g</b>。</p>
+        <h3>1. 变量 x、y、z</h3>
+        <h4>1. 定义变量</h4>
+        <ol>
+            <li>输入想保存的表达式，例如：<code>3^6</code></li>
+            <li>点击 <code>2ndF</code> 进入第二功能模式。变量按钮会变成 <code>→x</code> / <code>→y</code> / <code>→z</code> 。</li>
+            <li>点击 <code>→x</code> / <code>→y</code> / <code>→z</code> 按钮。</li>
+            <li>成功定义后，该变量可以在后续表达式中使用。</li>
+            <li>再次点击 <code>2ndF</code> 退出第二功能模式。</li>
+        </ol>
+        <p>重新定义：重复上述步骤将覆盖旧定义。</p>
+        <h4>2. 使用变量</h4>
+        <ul>
+            <li>点击 <code>x</code> / <code>y</code> / <code>z</code> 按钮输入对应变量，或用键盘输入变量名称。</li>
+            <li>使用变量进行计算。例如：<code>x+1</code></li>
+            <li>按 <code>=</code> 或 <code>Enter</code> 键进行计算。</li>
+            <li>如果变量尚未定义，计算将出现错误。</li>
+        </ul>
+        <h3>2. 函数f、g</h3>
+        <h4>1. 定义函数</h4>
+        <ol>
+            <li>输入想保存的函数体，参数为 <code>x</code>。例如：<code>x^2+1</code></li>
+            <li>点击 <code>2ndF</code> 进入第二功能模式。函数按钮将变成 <code>→f(x)</code> / <code>→g(x)</code> 。</li>
+            <li>点击 <code>→f(x)</code> / <code>→g(x)</code> 按钮。</li>
+            <li>成功定义后，将可以调用函数，格式如 <code>f(2)</code>、<code>g(3)</code> 等。</li>
+            <li>再次点击 <code>2ndF</code> 退出第二功能模式。</li>
+        </ol>
+        <p>重新定义：重复上述步骤将覆盖旧定义。</p>
+        <h4>2. 使用函数</h4>
+        <ul>
+            <li>点击 <code>f</code> 或 <code>g</code> 按钮插入 <code>f(</code> 或 <code>g(</code>，或用键盘输入函数名。</li>
+            <li>输入参数并填写右括号。例如：<code>f(2)</code></li>
+            <li>按 <code>=</code> 或 <code>Enter</code> 键进行计算。</li>
+            <li>如果函数尚未定义，计算将出现错误。</li>
+        </ul>
+        <h3>3. 自定义变量和函数说明</h3>
+        <ol>
+            <li>
+                定义时，所有变量和函数都是内联的<br>
+                在定义变量/函数时，定义中出现的其他变量/函数将使用定义中的值/表达式<b>直接展开</b>。
+                之后，更改被引用的变量/函数<b>不会</b>影响已经定义的变量/函数。
+                <p>示例1：</p>
+                <ol>
+                    <li>
+                        定义 <code>x = 2</code>。
+                    </li>
+                    <li>
+                        定义 <code>y = x + 1</code>。<br>
+                        此时，<code>y</code> 被<b>内联化</b>为 <code>2 + 1</code>，即 <code>y = 3</code>。<br></li>
+                    <li>
+                        重新定义 <code>x = 10</code>。<br>
+                        <code>y</code> 仍然是<code>3</code>，<b>不会</b>变成<code>11</code>。
+                    </li>
+                </ol>
+                <p>示例2：</p>
+                <ol>
+                    <li>
+                        定义 <code>x = 3</code>。
+                    </li>
+                    <li>
+                        定义 <code>f(x) = x^2 + 1</code>。<br>
+                        这里，<code>x</code> 是函数参数，不会被内嵌为 3。<br>
+                    </li>
+                    <li>
+                        定义 <code>y = 5</code>。
+                    </li>
+                    <li>
+                        定义 <code>g(x) = f(x) + y</code>。<br>
+                        此时，<code>g</code> 将当前 <code>f</code> 和 <code>y</code> 的定义<b>嵌入</b>，得到 <code>g(x) = x^2 + 1 + 5</code>。<br>
+                    </li>
+                    <li>
+                        修改 <code>f</code> 或 <code>y</code> 后，<code>g</code> <b>不会</b>相应变化。
+                    </li>
+                </ol>
+            </li>
+            <li>
+                在函数定义中，<code>x</code> 是参数
+                <ul>
+                    <li>在定义函数时，函数体中的 <code>x</code> 被视为参数的占位符，而<b>不是</b>作为变量 <code>x</code> 内嵌。</li>
+                    <li>调用函数时，参数替换该 <code>x</code>。</li>
+                    <li>如果要在函数体中使用变量，请使用 <code>y</code> 或 <code>z</code>，而不是 <code>x</code>，否则它会被当作参数处理。</li>
+                </ul>
+            </li>
+            <li>
+                定义的顺序很重要
+                <ul>
+                    <li>先定义引用的变量/函数，然后再定义新的变量/函数。</li>
+                    <li>如果定义中引用了尚未定义的变量/函数，则会引发错误。</li>
+                    <li>由于定义是内联的，后续对基础变量/函数的更改<b>不会自动</b>更新已定义的上层变量/函数。</li>
+                </ul>
+            </li>
+            <li>
+                不支持递归<br>
+                在函数定义中引用自身<b>不会</b>按预期工作。
+            </li>
+        </ol>
+    </section>
+    <section>
         <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="e/aosp/licenses.html">Open Source Licenses</a>
         |
         <a target="_blank" href="/calc.html" data-goatcounter-click="e/calc.html">English</a>

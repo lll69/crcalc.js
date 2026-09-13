@@ -455,6 +455,105 @@ limitations under the License.
         </ul>
     </section>
     <section>
+        <h2>Instructions for using Custom Variables and Functions</h2>
+        <p>CRCalc.js calculator supports defining variables <b>x, y, z</b>, and custom functions <b>f, g</b>.</p>
+        <h3>1. Variables x, y, z</h3>
+        <h4>1. Define variables</h4>
+        <ol>
+            <li>Enter the expression you want to save in the input box, for example: <code>3^6</code></li>
+            <li>Click <code>2ndF</code> to enter the second function mode. The variable button will become <code>→x</code> / <code>→y</code> / <code>→z</code>.</li>
+            <li>Click the <code>→x</code> / <code>→y</code> / <code>→z</code> button.</li>
+            <li>Once defined successfully, the variable can be used in subsequent expressions.</li>
+            <li>Click <code>2ndF</code> again to exit the second function mode.</li>
+        </ol>
+        <p>Redefining: Repeating the above steps will override the old definition.</p>
+        <h4>2. Use variables</h4>
+        <ul>
+            <li>Click the <code>x</code> / <code>y</code> / <code>z</code> button to insert the corresponding variable, or use the keyboard to enter the variable name.</li>
+            <li>Using variables for calculation. For example: <code>x+1</code></li>
+            <li>Press <code>=</code> or <code>Enter</code> to calculate.</li>
+            <li>If the variable is not yet defined, an error will be raised during calculation.</li>
+        </ul>
+        <h3>2. Functions f, g</h3>
+        <h4>1. Define functions</h4>
+        <ol>
+            <li>Enter the function body in the input box, using <code>x</code> as the parameter. For example: <code>x^2+1</code></li>
+            <li>Click <code>2ndF</code> to enter the second function mode. The function button will become <code>→f(x)</code> / <code>→g(x)</code>.</li>
+            <li>Click the <code>→f(x)</code> / <code>→g(x)</code> button.</li>
+            <li>Once defined successfully, you can call the function in formats such as <code>f(2)</code>, <code>g(3)</code>, etc.</li>
+            <li>Click <code>2ndF</code> again to exit the second function mode.</li>
+        </ol>
+        <p>Redefinition: Repeating the above steps will override the old definition.</p>
+        <h4>2. Use functions</h4>
+        <ul>
+            <li>Click the <code>f</code> or <code>g</code> button to insert <code>f(</code> or <code>g(</code>, or enter the function name using the keyboard.</li>
+            <li>Enter the parameters and complete the right parentheses. For example: <code>f(2)</code></li>
+            <li>Press <code>=</code> or <code>Enter</code> to calculate.</li>
+            <li>If the function is not yet defined, an error will be raised during calculation.</li>
+        </ul>
+        <h3>3. Notes on Custom Variables and Functions</h3>
+        <ol>
+            <li>
+                When defining, all variables and functions used are inlined<br>
+                When defining a variable/function, other variables/functions appearing in the definition <b>WILL BE DIRECTLY EXPANDED</b> using the value/expression from the definition.
+                After that, changing a referenced variable/function <b>WILL NOT</b> affect variables/functions that have already been defined.
+                <p>Example 1:</p>
+                <ol>
+                    <li>
+                        Define <code>x = 2</code>.
+                    </li>
+                    <li>
+                        Define <code>y = x + 1</code>.<br>
+                        At this point, <code>y</code> is <b>INLINED</b> as <code>2 + 1</code>, i.e., <code>y = 3</code>.<br></li>
+                    <li>
+                        Redefine <code>x = 10</code>.<br>
+                        <code>y</code> is still <code>3</code>, it <b>WILL NOT</b> become <code>11</code>.
+                    </li>
+                </ol>
+                <p>Example 2:</p>
+                <ol>
+                    <li>
+                        Define <code>x = 3</code>.
+                    </li>
+                    <li>
+                        Define <code>f(x) = x^2 + 1</code>.<br>
+                        Here, <code>x</code> is the function parameter and will not be inlined as 3.<br>
+                    </li>
+                    <li>
+                        Define <code>y = 5</code>.
+                    </li>
+                    <li>
+                        Define <code>g(x) = f(x) + y</code>.<br>
+                        At this point, <code>g</code> <b>INLINES</b> the current definitions of <code>f</code> and <code>y</code>, resulting in <code>g(x) = x^2 + 1 + 5</code>.<br>
+                    </li>
+                    <li>
+                        After modifying <code>f</code> or <code>y</code>, <code>g</code> <b>WILL NOT</b> change accordingly.
+                    </li>
+                </ol>
+            </li>
+            <li>
+                In the function definition, <code>x</code> is the parameter
+                <ul>
+                    <li>When defining a function, <code>x</code> in the function body is treated as a placeholder for parameters, and is <b>NOT</b> inlined as the variable <code>x</code>.</li>
+                    <li>When calling a function, the argument replaces this <code>x</code>.</li>
+                    <li>If you want to use variables in a function body, use <code>y</code> or <code>z</code>, not <code>x</code>, or it will be treated as parameter.</li>
+                </ul>
+            </li>
+            <li>
+                The order of definitions is important
+                <ul>
+                    <li>First define the referenced variables/functions, then define new variables/functions.</li>
+                    <li>If a variable/function that has not yet been defined is referenced in the definition, an error will be raised.</li>
+                    <li>Since definitions are inlined, subsequent changes to base variables/functions <b>WILL NOT</b> automatically update already defined upper-level variables/functions.</li>
+                </ul>
+            </li>
+            <li>
+                Recursion is not supported<br>
+                References in function definitions <b>WILL NOT</b> work as expected.
+            </li>
+        </ol>
+    </section>
+    <section>
         <a target="_blank" href="/aosp/licenses.html" data-goatcounter-click="e/aosp/licenses.html">Open Source Licenses</a>
         |
         <a target="_blank" href="https://github.com/lll69/crcalc.js" data-goatcounter-click="e/https://github.com/lll69/crcalc.js">Report bugs</a>
