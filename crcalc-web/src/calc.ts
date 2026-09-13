@@ -670,7 +670,6 @@ function clearResult() {
     resultDiv.classList.remove("result-movable");
     resultBoldTextNode.textContent = "";
     resultNormalTextNode.textContent = "";
-    loadingElement.hidden = true;
     needEnterNewExpr = false;
     hasResult = false;
     hasError = false;
