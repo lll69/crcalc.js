@@ -666,14 +666,6 @@ function urToBigInt(ur: UnifiedReal) {
     }
     return null;
 }
-function overrideRpnLoc(rpnResult: RpnResult, loc: number | readonly number[]) {
-    rpnResult = [...rpnResult];
-    const len = rpnResult.length;
-    for (let i = 0; i < len; i++) {
-        rpnResult[i] = freezeObject([rpnResult[i][0], loc]);
-    }
-    return rpnResult;
-}
 function preprocessRpnResult(
     rpnResult: RpnResult,
     degreeMode: boolean,
@@ -725,7 +717,6 @@ function preprocessRpnResult(
                                     if (variableRpn instanceof UnifiedReal) {
                                         throw new Error("Unsupported UnifiedReal variable");
                                     } else {
-                                        variableRpn = overrideRpnLoc(variableRpn, loc);
                                         hasVariable = true;
                                         rpnResult.splice(i, 1, ...variableRpn);
                                         i += variableRpn.length - 1;
