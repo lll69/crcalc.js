@@ -753,7 +753,7 @@ function preprocessRpnResult(
                 if (funRpn) {
                     try {
                         const arg0 = stack.pop()!;
-                        stack.push(preprocessRpnResult(funRpn, degreeMode, { x: arg0 }, undefined, true, isFun));
+                        stack.push(preprocessRpnResult(funRpn, degreeMode, { x: arg0 }, undefined, true, false));
                         hasFunction = true;
                     } catch (e) {
                         console.error(e);
