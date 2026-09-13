@@ -190,6 +190,8 @@ let lastCalculateUid = 1;
 let loadAnimationIndex = 0;
 let loadAnimationInterval: any;
 let calcWaitTimeout: any;
+let eLastScrollLeft = 0;
+let eHaveFocus = false;
 
 const VARIABLE_AVAIL = ["a", "b", "c", "x", "y", "z"];
 const FUNCTION_AVAIL = ["F", "G", "H", "f", "g", "h"];
@@ -811,6 +813,21 @@ function calculateResult() {
 }
 function focusExpression() {
     if (workerLoaded) {
+        const html = document.documentElement;
+        const lastScrollTop = html.scrollTop;
+        const lastScrollLeft = html.scrollLeft;
+        if (!eHaveFocus) {
+            const focusTime = Date.now();
+            const scrollListener = (e: Event) => {
+                document.removeEventListener("scroll", scrollListener, true);
+                if (Date.now() - focusTime < 100) {
+                    e.stopImmediatePropagation();
+                    html.scrollTop = lastScrollTop;
+                    html.scrollLeft = lastScrollLeft;
+                }
+            };
+            document.addEventListener("scroll", scrollListener, true);
+        }
         exprInput.focus();
     }
 }
@@ -1453,27 +1470,20 @@ if (CONFIG_VARIABLES) {
     varButtons.forEach(button => (button as HTMLButtonElement).disabled = true);
 }
 
-function disallowScroll(element: HTMLElement) {
-    let eLastScrollLeft = 0;
-    let eHaveFocus = false;
-    element.addEventListener("scroll", () => {
-        let lastScrollLeft = eLastScrollLeft;
-        eLastScrollLeft = element.scrollLeft;
-        if (element.scrollLeft === 0 && !eHaveFocus && lastScrollLeft !== 0) {
-            element.scrollLeft = lastScrollLeft;
-        }
-    })
-    element.addEventListener("focus", () => {
-        eHaveFocus = true;
-        if (element === exprInput) {
-            needEnterNewExpr = false;
-        }
-    });
-    element.addEventListener("blur", () => {
-        eHaveFocus = false;
-    });
-}
-disallowScroll(exprInput);
+exprInput.addEventListener("scroll", () => {
+    let lastScrollLeft = eLastScrollLeft;
+    eLastScrollLeft = exprInput.scrollLeft;
+    if (exprInput.scrollLeft === 0 && !eHaveFocus && lastScrollLeft !== 0) {
+        exprInput.scrollLeft = lastScrollLeft;
+    }
+})
+exprInput.addEventListener("focus", () => {
+    eHaveFocus = true;
+    needEnterNewExpr = false;
+});
+exprInput.addEventListener("blur", () => {
+    eHaveFocus = false;
+});
 exprInput.addEventListener("pointerdown", () => {
     needEnterNewExpr = false;
 });
