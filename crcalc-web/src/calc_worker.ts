@@ -694,7 +694,7 @@ function preprocessRpnResult(
                     let hasVariable = false;
                     if (CONFIG_CUSTOM_FUNCTIONS && isFun && token == "x") {
                         hasVariable = true;
-                    } else if (CONFIG_VARIABLES && variables) {
+                    } else if ((CONFIG_VARIABLES || (CONFIG_CUSTOM_FUNCTIONS && token == "x")) && variables) {
                         switch (token) {
                             case "a":
                             case "b":
@@ -719,7 +719,7 @@ function preprocessRpnResult(
                                 }
                         }
                     }
-                    if (!hasVariable) throw new Error("Unknown variable '" + token + "' at position [" + loc + "]");
+                    if (!hasVariable) throw new Error("Unknown variable '" + token + "'" + (!noPosInError ? " at position [" + loc + "]" : ""));
                 }
             }
         }

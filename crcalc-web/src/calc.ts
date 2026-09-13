@@ -143,13 +143,14 @@ const inverseHypElements = [
     getElementById("react_atanh_root") as HTMLElement,
 ];
 const funButtons = [
-    getElementById("fun_f") as HTMLElement,
-    getElementById("fun_g") as HTMLElement,
+    getElementById("fun_f") as HTMLButtonElement,
+    getElementById("fun_g") as HTMLButtonElement,
 ];
+const varXButton = getElementById("var_x") as HTMLButtonElement;
 const varButtons = [
-    getElementById("var_x") as HTMLElement,
-    getElementById("var_y") as HTMLElement,
-    getElementById("var_z") as HTMLElement,
+    varXButton,
+    getElementById("var_y") as HTMLButtonElement,
+    getElementById("var_z") as HTMLButtonElement,
 ];
 const copyButton = getElementById("copy_result") as HTMLElement;
 const copyTruncatedButton = getElementById("copy_truncated") as HTMLElement;
@@ -841,6 +842,8 @@ function refreshFunVarButtons() {
                 varButtons[idx].textContent = "→" + ch;
             });
         }
+    } else if (CONFIG_CUSTOM_FUNCTIONS) {
+        varXButton.textContent = "x";
     }
     if (CONFIG_CUSTOM_FUNCTIONS) {
         if (!isInvert) { // read
@@ -1466,7 +1469,14 @@ if (CONFIG_VARIABLES) {
         });
     });
 } else {
-    varButtons.forEach(button => (button as HTMLButtonElement).disabled = true);
+    varButtons.forEach(button => button.disabled = true);
+    if (CONFIG_CUSTOM_FUNCTIONS) {
+        varXButton.disabled = false;
+        varXButton.addEventListener("click", () => {
+            appendConst("x");
+            focusExpression();
+        });
+    }
 }
 
 exprInput.addEventListener("scroll", () => {
