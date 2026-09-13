@@ -850,7 +850,7 @@ function refreshFunVarButtons() {
             });
         } else { // write
             forEach.call("fg", (ch: string, idx: number) => {
-                funButtons[idx].textContent = "→" + ch;
+                funButtons[idx].textContent = "→" + ch + "(x)";
             });
         }
     }
