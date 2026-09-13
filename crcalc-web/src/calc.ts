@@ -586,7 +586,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
         case "createFunRpn":
             if (msg.success) {
                 hasResult = false;
-                hasError = true;
+                hasError = false;
                 workerBusy = false;
                 clearTimeout(calcWaitTimeout);
                 buttonCalc.innerText = "=";
