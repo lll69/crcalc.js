@@ -499,7 +499,7 @@ function onWorkerMessage(e: MessageEvent<WorkerResult>) {
                 clearResult();
                 focusExpression();
                 if (navigator.userAgent.indexOf("Firefox") >= 0) {
-                    loadingElement.innerText = crL10N["firefoxNotice"] || "When performing exponentiation and factorial calculations, Chrome/Edge may be faster than Firefox and can compute more digits.";
+                    loadingElement.innerText = crL10N["firefoxNotice"] || "When performing calculations, Chrome/Edge may be faster than Firefox and can compute more digits.";
                     loadingElement.hidden = false;
                 }
             }
