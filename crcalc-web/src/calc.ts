@@ -322,7 +322,7 @@ function showScrolledResult(copyCallback?: (mightExact: boolean, str: string) =>
         }
         if (scrollOffset === 0) {
             let usedScientific = false;
-            if (newOffsetStrLength > 0 && pointIndex > displayWidth) {
+            if (newOffsetStrLength > 0 && pointIndex >= displayWidth) {
                 // Try to use scientific notation
                 let powerOfTen = resultString[0] === "-" ? (pointIndex - 2) : (pointIndex - 1);
                 let powerOfTenLength = String(powerOfTen).length + 1;
