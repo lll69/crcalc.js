@@ -8,5 +8,5 @@
     }
   ],
   "display": "standalone",
-  "start_url": "/calc.html#pwa=1"
+  "start_url": "/calc.html?pwa=1"
 }

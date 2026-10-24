@@ -1,7 +1,7 @@
 const CACHE_NAME = "crcalc-cache-v1-2026-10-23T21:58:27";
 const urlsToCache = [
     "accelerate.svg",
-    "calc.html",
+    "calc.html?pwa=1",
     "calc.js",
     "calc_mui.js",
     "calc_worker.js",

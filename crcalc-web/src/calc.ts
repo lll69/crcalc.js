@@ -212,7 +212,7 @@ const functions = {
     g: undefined,
     h: undefined,
 };
-const isPwa = new URLSearchParams(String(location.hash).substring(1)).get("pwa") === "1";
+const isPwa = new URLSearchParams(String(location.search)).get("pwa") === "1";
 
 function showMessage(title: string, message: string, fallback: () => string, showCopy?: boolean) {
     let shown = false;
