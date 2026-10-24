@@ -1742,3 +1742,13 @@ if (CONFIG_UI_BUNDLE_FONTS) {
     style.textContent = cssContent;
     document.head.appendChild(style);
 }
+
+if(location.search == "?pwa" && 'serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('serviceworker.js').then((reg) => {
+            navigator.storage.persist();
+            (document.querySelector("link[rel='manifest']") as HTMLLinkElement).href="manifest.webmanifest";
+            (document.getElementById("bottom-links") as HTMLElement).style.display = 'none';
+        });
+    });
+}

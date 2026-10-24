@@ -1,0 +1,10 @@
+{
+  "lang": "en",
+  "name": "CRCalc.js Exact Calculator",
+  "short_name": "CRCalc.js",
+  "icons": [{
+    "src": "favicon.ico",
+    "sizes": "192x192"
+  }],
+  "display": "standalone"
+}
