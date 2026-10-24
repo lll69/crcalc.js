@@ -1,0 +1,12 @@
+{
+  "lang": "zh-CN",
+  "name": "CRCalc.js 高精度计算器",
+  "short_name": "CRCalc.js",
+  "icons": [
+    {
+      "src": "/favicon.ico"
+    }
+  ],
+  "display": "standalone",
+  "start_url": "/zh/calc.html#pwa=1"
+}
