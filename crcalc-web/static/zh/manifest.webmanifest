@@ -4,7 +4,12 @@
   "short_name": "CRCalc.js",
   "icons": [
     {
-      "src": "/favicon.ico"
+      "src": "/favicon.ico",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/favicon.ico",
+      "sizes": "512x512"
     }
   ],
   "display": "standalone",
