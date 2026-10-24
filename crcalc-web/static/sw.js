@@ -22,7 +22,8 @@ const urlsToCache = [
     "manifest.webmanifest",
     "roboto.css",
     "save.svg",
-    "simplify.svg"
+    "simplify.svg",
+    "zh/calc.html",
 ];
 
 self.addEventListener("install", (event) => {
