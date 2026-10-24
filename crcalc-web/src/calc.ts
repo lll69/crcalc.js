@@ -1745,7 +1745,12 @@ if (CONFIG_UI_BUNDLE_FONTS) {
 }
 
 if (isPwa && "serviceWorker" in navigator) {
-    (document.getElementById("bottom-links") as HTMLElement).style.display = "none";
+    forEach.call(document.querySelectorAll(".pwa-hide"), (element: HTMLElement) => {
+        element.hidden = true;
+    });
+    forEach.call(document.querySelectorAll(".no-pwa-link"), (element: HTMLElement) => {
+        element.removeAttribute("href");
+    });
     window.addEventListener("load", () => {
         navigator.serviceWorker.register("sw.js").then((reg) => {
             navigator.storage.persist();
