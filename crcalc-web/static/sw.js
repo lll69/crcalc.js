@@ -23,7 +23,7 @@ const urlsToCache = [
     "roboto.css",
     "save.svg",
     "simplify.svg",
-    "zh/calc.html",
+    "zh/calc.html?pwa=1",
 ];
 
 self.addEventListener("install", (event) => {
