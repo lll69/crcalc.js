@@ -1,6 +1,11 @@
-const CACHE_NAME = "crcalc-cache-v1-2026-10-23T21:58:27";
+const CACHE_NAME = "crcalc-cache-v1-2026-10-25T07:49:46";
 const urlsToCache = [
     "accelerate.svg",
+    "aosp/icon_144.png",
+    "aosp/icon_192.png",
+    "aosp/icon_48.png",
+    "aosp/icon_72.png",
+    "aosp/icon_96.png",
     "calc.html",
     "calc.html?pwa=1",
     "calc.js",

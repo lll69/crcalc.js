@@ -4,12 +4,24 @@
   "short_name": "CRCalc.js",
   "icons": [
     {
-      "src": "/favicon.ico",
+      "src": "/aosp/icon_192.png",
       "sizes": "192x192"
     },
     {
-      "src": "/favicon.ico",
-      "sizes": "512x512"
+      "src": "/aosp/icon_144.png",
+      "sizes": "144x144"
+    },
+    {
+      "src": "/aosp/icon_96.png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "/aosp/icon_72.png",
+      "sizes": "72x72"
+    },
+    {
+      "src": "/aosp/icon_48.png",
+      "sizes": "48x48"
     }
   ],
   "display": "standalone",
