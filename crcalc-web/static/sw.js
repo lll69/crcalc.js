@@ -24,6 +24,7 @@ const urlsToCache = [
     "save.svg",
     "simplify.svg",
     "zh/calc.html?pwa=1",
+    "zh/manifest.webmanifest",
 ];
 
 self.addEventListener("install", (event) => {

@@ -1754,7 +1754,6 @@ if (isPwa && "serviceWorker" in navigator) {
     window.addEventListener("load", () => {
         navigator.serviceWorker.register("/sw.js").then((reg) => {
             navigator.storage.persist();
-            (document.querySelector("link[rel='manifest']") as HTMLLinkElement).href = "manifest.webmanifest";
         });
     });
 }
