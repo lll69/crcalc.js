@@ -1691,11 +1691,16 @@ addEventListener("message", (e) => {
 
 let sw: ServiceWorkerRegistration | null = null;
 
+function addManifest() {
+    (document.querySelector("link[rel='manifest']") as HTMLLinkElement).href = "manifest.webmanifest";
+}
+
 function registerSw(isUser: boolean) {
     if ("serviceWorker" in navigator && sw == null) {
         navigator.serviceWorker.register("/sw.js").then((reg) => {
             sw = reg;
             getElementById("update-sw-container")!.hidden = false;
+            addManifest();
             if (isUser) navigator.storage.persist();
         });
     }
@@ -1706,6 +1711,7 @@ function updateSw() {
 }
 
 function onPwaLinkClick() {
+    addManifest();
     registerSw(true);
     const installDesc = (navigator.userAgent.indexOf("Firefox") >= 0 ? (crL10N["installPwaDescFirefox"] || "Firefox might not support this feature.\n") : "") +
         (crL10N["installPwaDesc"] || (
