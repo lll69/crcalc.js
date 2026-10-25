@@ -1701,7 +1701,10 @@ function registerSw(isUser: boolean) {
             sw = reg;
             getElementById("update-sw-container")!.hidden = false;
             addManifest();
-            if (isUser) navigator.storage.persist();
+            if (isUser) {
+                showPwaMessage();
+                navigator.storage.persist();
+            }
         });
     }
 }
@@ -1712,7 +1715,17 @@ function updateSw() {
 
 function onPwaLinkClick() {
     addManifest();
-    registerSw(true);
+    if (sw == null) {
+        if (muiPlugin.showAlert) {
+            showMessage(crL10N["installPwaTitle"] || "Install as Offline App", crL10N["installPwaLoading"] || "Loading...");
+        }
+        registerSw(true);
+    } else {
+        showPwaMessage();
+    }
+}
+
+function showPwaMessage() {
     const installDesc = (navigator.userAgent.indexOf("Firefox") >= 0 ? (crL10N["installPwaDescFirefox"] || "Firefox might not support this feature.\n") : "") +
         (crL10N["installPwaDesc"] || (
             "Follow the instructions below to install CRCalc.js as offline app. \n" +
