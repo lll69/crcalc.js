@@ -1,0 +1,29 @@
+{
+  "name": "CRCalc.js 高精度计算器",
+  "description": "计算数学表达式，支持高达1,000,000位的高精度。通过拖动、使用鼠标滚轮和方向键来滚动查看结果。",
+  "short_name": "CRCalc.js",
+  "icons": [
+    {
+      "src": "/aosp/icon_192.png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/aosp/icon_144.png",
+      "sizes": "144x144"
+    },
+    {
+      "src": "/aosp/icon_96.png",
+      "sizes": "96x96"
+    },
+    {
+      "src": "/aosp/icon_72.png",
+      "sizes": "72x72"
+    },
+    {
+      "src": "/aosp/icon_48.png",
+      "sizes": "48x48"
+    }
+  ],
+  "display": "standalone",
+  "start_url": "/zh/calc.html?pwa=1"
+}
