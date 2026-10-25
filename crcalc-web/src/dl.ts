@@ -358,7 +358,10 @@ function generateHtml() {
     reactRoot.dataset.hyp = String(CONFIG_SW_HYP);
     reactRoot.dataset.inv = String(CONFIG_SW_INV);
     bodyEl.appendChild(reactRoot);
-    const scriptEl = document.createElement("script");
+    let scriptEl = document.createElement("script");
+    scriptEl.textContent = "window.onerror=function(e){alert(\"Javascript Error: \"+e);}";
+    bodyEl.appendChild(scriptEl);
+    scriptEl = document.createElement("script");
     scriptEl.textContent = mainJsContent;
     bodyEl.appendChild(scriptEl);
     return "<!DOCTYPE html>" + htmlEl.outerHTML;
