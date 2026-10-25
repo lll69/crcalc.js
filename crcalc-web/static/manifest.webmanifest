@@ -1,6 +1,6 @@
 {
-  "lang": "en",
   "name": "CRCalc.js Exact Calculator",
+  "description": "Calculate mathematical expressions with scrollable high accuracy up to 1,000,000 digits. Scroll through the result by dragging, using the mouse wheel, and arrow keys.",
   "short_name": "CRCalc.js",
   "icons": [
     {

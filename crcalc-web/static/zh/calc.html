@@ -577,13 +577,23 @@ limitations under the License.
             <a class="no-pwa-link" target="_blank" href="/calc.html" data-goatcounter-click="e/calc.html">English</a>
             |
         </span>
-        <a href="?pwa=1">在浏览器安装离线 App</a>
+        <a id="install-pwa" href="javascript:;">安装为离线 App</a>
+        <span id="update-sw-container" hidden>
+            |
+            <a id="update-sw" href="javascript:;">更新离线 App 数据</a>
+        </span>
     </section>
     <div id="react-root" data-hyp="true" data-inv="true"></div>
     <script>window.onerror = function (e) { alert("Javascript Error: " + e); }</script>
     <script>
         window["crL10N"] = {
-            "updatePwa": "在浏览器更新离线 App",
+            "updatePwaTip": "这将更新离线 App 数据并刷新页面。\n是否继续？",
+            "installPwaTitle": "安装为离线 App",
+            "installPwaDescFirefox": "Firefox 可能不支持此功能。\n",
+            "installPwaDesc": "按照以下指引，将 CRCalc.js 安装为离线 App。\n" +
+                "桌面端：点击地址栏右侧「安装」按钮，或点击浏览器菜单 → 「投放、保存和分享」 → 「安装」或类似入口。\n" +
+                "移动端：点击底部「安装」按钮，或点击浏览器菜单 → 「添加到主屏幕」或类似入口。\n" +
+                "不同浏览器的实际操作可能不同，请以实际界面为准。",
             "tryRefresh": "尝试刷新页面。",
             "firefoxNotice": "在进行计算时，Chrome/Edge 可能比 Firefox 更快，并且可以计算更多的位数。",
             "hideInv": "隐藏第二功能",

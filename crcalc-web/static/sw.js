@@ -1,6 +1,7 @@
 const CACHE_NAME = "crcalc-cache-v1-2026-10-23T21:58:27";
 const urlsToCache = [
     "accelerate.svg",
+    "calc.html",
     "calc.html?pwa=1",
     "calc.js",
     "calc_mui.js",
@@ -23,6 +24,7 @@ const urlsToCache = [
     "roboto.css",
     "save.svg",
     "simplify.svg",
+    "zh/calc.html",
     "zh/calc.html?pwa=1",
     "zh/manifest.webmanifest",
 ];
@@ -34,7 +36,18 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("fetch", (event) => {
+    if (event.request && event.request.url) {
+        try {
+            const pathname = new URL(event.request.url).pathname;
+            if (pathname === "/is_sw.txt") {
+                event.respondWith(new Response(new Blob(["1"], { type: "text/plain" })));
+                return;
+            }
+        } catch (e) {
+            console.warn(e);
+        }
+    }
     event.respondWith(caches.match(event.request).then((response) => {
-        return response || fetch(event.request, {redirect: "follow"});
+        return response || fetch(event.request, { redirect: "follow" });
     }));
 });

@@ -214,7 +214,7 @@ const functions = {
 };
 const isPwa = new URLSearchParams(String(location.search)).get("pwa") === "1";
 
-function showMessage(title: string, message: string, fallback: () => string, showCopy?: boolean) {
+function showMessage(title: string, message: string, fallback?: () => string, showCopy?: boolean) {
     let shown = false;
     if (muiPlugin.showAlert) {
         try {
@@ -225,7 +225,7 @@ function showMessage(title: string, message: string, fallback: () => string, sho
         }
     }
     if (!shown) {
-        alert(fallback());
+        alert(fallback != undefined ? fallback() : (title + "\n" + message));
     }
 }
 function copyText(str: string) {
@@ -1442,7 +1442,7 @@ if (CONFIG_UI_SPEED_SCROLL) {
     });
 }
 if (!CONFIG_VARIABLES && !CONFIG_CUSTOM_FUNCTIONS) {
-    document.getElementById("fun_var_line")?.classList.add("grid-hide");
+    getElementById("fun_var_line")?.classList.add("grid-hide");
 }
 if (CONFIG_CUSTOM_FUNCTIONS) {
     funButtons.forEach(button => {
@@ -1689,6 +1689,40 @@ addEventListener("message", (e) => {
     }
 });
 
+let sw: ServiceWorkerRegistration | null = null;
+
+function registerSw(isUser: boolean) {
+    if ("serviceWorker" in navigator && sw == null) {
+        navigator.serviceWorker.register("/sw.js").then((reg) => {
+            sw = reg;
+            getElementById("update-sw-container")!.hidden = false;
+            if (isUser) navigator.storage.persist();
+        });
+    }
+}
+
+function updateSw() {
+    if (sw != null) sw.update().then(() => location.reload());
+}
+
+function onPwaLinkClick() {
+    registerSw(true);
+    const installDesc = (navigator.userAgent.indexOf("Firefox") >= 0 ? (crL10N["installPwaDescFirefox"] || "Firefox might not support this feature.\n") : "") +
+        (crL10N["installPwaDesc"] || (
+            "Follow the instructions below to install CRCalc.js as offline app. \n" +
+            "On desktop: click the 'Install' button on the right side of the address bar, or go to your browser menu → 'Cast, save & share' → 'Install' or a similar option.\n" +
+            "On mobile: tap the 'Install' button at the bottom, or go to your browser menu → 'Add to Home Screen' or a similar option.\n" +
+            "The exact steps may vary depending on your browser."
+        ));
+    showMessage(crL10N["installPwaTitle"] || "Install as Offline App", installDesc);
+}
+
+function onUpdatePwaClick() {
+    if (sw != null && confirm(crL10N["updatePwaTip"] || "This will update the offline app data and refresh the page.\nContinue?")) {
+        updateSw();
+    }
+}
+
 if (CONFIG_IS_ONLINE) {
     if (!location.toString().startsWith("file:") && !isPwa) {
         fetch("/counter.js").then((result) => {
@@ -1721,6 +1755,28 @@ if (CONFIG_IS_ONLINE) {
     }).catch((e) => {
         console.error(e);
     });
+    getElementById("install-pwa")!.addEventListener("click", onPwaLinkClick);
+    getElementById("update-sw")!.addEventListener("click", onUpdatePwaClick);
+    if (isPwa && "serviceWorker" in navigator) {
+        forEach.call(document.querySelectorAll(".pwa-hide"), (element: HTMLElement) => {
+            element.hidden = true;
+        });
+        forEach.call(document.querySelectorAll(".no-pwa-link"), (element: HTMLElement) => {
+            element.removeAttribute("href");
+        });
+        window.addEventListener("load", () => registerSw(false));
+    }
+    fetch("/is_sw.txt").then(result => {
+        if (result.ok) {
+            result.text().then(content => {
+                if (content.trim() === "1") {
+                    console.log("SW detected");
+                    registerSw(false);
+                    getElementById("update-sw-container")!.hidden = false;
+                }
+            }).catch(e => console.error(e))
+        } else console.error("Error: is_sw.txt status=" + result.status);
+    }).catch(e => console.error(e));
 }
 
 if (CONFIG_UI_BUNDLE_FONTS) {
@@ -1742,18 +1798,4 @@ if (CONFIG_UI_BUNDLE_FONTS) {
     const style = document.createElement("style");
     style.textContent = cssContent;
     document.head.appendChild(style);
-}
-
-if (isPwa && "serviceWorker" in navigator) {
-    forEach.call(document.querySelectorAll(".pwa-hide"), (element: HTMLElement) => {
-        element.hidden = true;
-    });
-    forEach.call(document.querySelectorAll(".no-pwa-link"), (element: HTMLElement) => {
-        element.removeAttribute("href");
-    });
-    window.addEventListener("load", () => {
-        navigator.serviceWorker.register("/sw.js").then((reg) => {
-            navigator.storage.persist();
-        });
-    });
 }
