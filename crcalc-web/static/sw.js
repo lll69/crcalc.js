@@ -34,10 +34,28 @@ const urlsToCache = [
     "zh/manifest.webmanifest",
 ];
 
+let cached = false;
+
+async function notifyClients(msg) {
+    const clients = await self.clients.matchAll({
+        includeUncontrolled: true,
+        type: "window",
+    });
+    for (const c of clients) c.postMessage(msg);
+}
+
 self.addEventListener("install", (event) => {
-    event.waitUntil(caches.open(CACHE_NAME).then((cache) => {
-        return cache.addAll(urlsToCache);
-    }));
+    event.waitUntil(async () => {
+        try {
+            const cache = caches.open(CACHE_NAME);
+            await cache.addAll(urlsToCache);
+            cached = true;
+            await notifyClients("swInstallSuccess");
+        } catch (e) {
+            await notifyClients({ type: "swInstallError", error: e });
+            throw e;
+        }
+    });
 });
 
 self.addEventListener("fetch", (event) => {
@@ -45,7 +63,7 @@ self.addEventListener("fetch", (event) => {
         try {
             const pathname = new URL(event.request.url).pathname;
             if (pathname === "/is_sw.txt") {
-                event.respondWith(new Response(new Blob(["1"], { type: "text/plain" })));
+                event.respondWith(new Response(new Blob([cached ? "2" : "1"], { type: "text/plain" })));
                 return;
             }
         } catch (e) {

@@ -1676,8 +1676,30 @@ if (!CONFIG_UI_NO_KEYBOARD) {
 
 (window as any as CalcMuiPluginHolder).calcMuiPlugin = muiPlugin;
 
+let sw: ServiceWorkerRegistration | null = null;
+let swInstalled = false;
+let pendingShowPwaMessage = false;
+let fetchCheckSwChecking = false;
+let fetchCheckSwInterval: any | undefined;
+
+function setSwInstalled() {
+    if (!swInstalled) {
+        swInstalled = true;
+        if (fetchCheckSwInterval != undefined) {
+            clearInterval(fetchCheckSwInterval);
+            fetchCheckSwInterval = undefined;
+        }
+        if (pendingShowPwaMessage) {
+            pendingShowPwaMessage = false;
+            showPwaMessage();
+        }
+    }
+}
+
 addEventListener("message", (e) => {
-    if (e.data === "hypRendered") {
+    if (e.data == null) {
+        return;
+    } else if (e.data === "hypRendered") {
         hypRendered = true;
         changeHypButtonIfNeeded();
     } else if (e.data === "simplifyRendered") {
@@ -1686,10 +1708,10 @@ addEventListener("message", (e) => {
     } else if (e.data === "invRendered") {
         invRendered = true;
         refreshInverseButton();
+    } else if (e.data === "swInstallSuccess" || e.data.type === "swInstallError") {
+        setSwInstalled();
     }
 });
-
-let sw: ServiceWorkerRegistration | null = null;
 
 function addManifest() {
     (document.querySelector("link[rel='manifest']") as HTMLLinkElement).href = "manifest.webmanifest";
@@ -1702,7 +1724,6 @@ function registerSw(isUser: boolean) {
             getElementById("update-sw-container")!.hidden = false;
             addManifest();
             if (isUser) {
-                showPwaMessage();
                 navigator.storage.persist();
             }
         });
@@ -1713,15 +1734,50 @@ function updateSw() {
     if (sw != null) sw.update().then(() => location.reload());
 }
 
+async function fetchCheckSwInstalled() {
+    if (swInstalled || fetchCheckSwChecking) return;
+    fetchCheckSwChecking = true;
+    try {
+        const result = await fetch("/is_sw.txt");
+        if (result.ok) {
+            const content = (await result.text()).trim();
+            if (content !== "0") {
+                console.log("SW detected");
+                registerSw(false);
+                setSwInstalled();
+                getElementById("update-sw-container")!.hidden = false;
+            }
+            fetchCheckSwChecking = false;
+        } else {
+            throw ("Error: is_sw.txt status=" + result.status);
+        }
+    } catch (e) {
+        console.error(e);
+        fetchCheckSwChecking = false;
+    };
+}
+
 function onPwaLinkClick() {
     addManifest();
-    if (sw == null) {
-        if (muiPlugin.showAlert) {
-            showMessage(crL10N["installPwaTitle"] || "Install as Offline App", crL10N["installPwaLoading"] || "Loading...");
-        }
-        registerSw(true);
-    } else {
+    if (swInstalled && sw != null) {
         showPwaMessage();
+        return;
+    } else if (sw == null) {
+        registerSw(true);
+    }
+    if (muiPlugin.showAlert) {
+        showMessage(crL10N["installPwaTitle"] || "Install as Offline App", crL10N["installPwaLoading"] || "Loading...");
+    }
+    pendingShowPwaMessage = true;
+    if (fetchCheckSwInterval == undefined) {
+        fetchCheckSwInterval = setInterval(fetchCheckSwInstalled, 1000);
+        setTimeout(() => {
+            if (fetchCheckSwInterval != undefined) {
+                clearInterval(fetchCheckSwInterval);
+                fetchCheckSwInterval = undefined;
+                if (!swInstalled) showPwaMessage();
+            }
+        }, 10000);
     }
 }
 
@@ -1785,17 +1841,7 @@ if (CONFIG_IS_ONLINE) {
         });
         window.addEventListener("load", () => registerSw(false));
     }
-    fetch("/is_sw.txt").then(result => {
-        if (result.ok) {
-            result.text().then(content => {
-                if (content.trim() === "1") {
-                    console.log("SW detected");
-                    registerSw(false);
-                    getElementById("update-sw-container")!.hidden = false;
-                }
-            }).catch(e => console.error(e))
-        } else console.error("Error: is_sw.txt status=" + result.status);
-    }).catch(e => console.error(e));
+    fetchCheckSwInstalled();
 }
 
 if (CONFIG_UI_BUNDLE_FONTS) {
