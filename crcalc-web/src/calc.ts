@@ -1722,7 +1722,6 @@ function registerSw(isUser: boolean) {
         navigator.serviceWorker.register("/sw.js").then((reg) => {
             sw = reg;
             getElementById("update-sw-container")!.hidden = false;
-            addManifest();
             if (isUser) {
                 navigator.storage.persist();
             }
@@ -1833,6 +1832,7 @@ if (CONFIG_IS_ONLINE) {
     getElementById("install-pwa")!.addEventListener("click", onPwaLinkClick);
     getElementById("update-sw")!.addEventListener("click", onUpdatePwaClick);
     if (isPwa && "serviceWorker" in navigator) {
+        addManifest();
         forEach.call(document.querySelectorAll(".pwa-hide"), (element: HTMLElement) => {
             element.hidden = true;
         });
