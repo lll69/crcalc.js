@@ -1,4 +1,5 @@
-const CACHE_NAME = "crcalc-cache-v1-2026-10-25T07:49:46";
+const CACHE_PREFIX = "crcalc-cache-";
+const CACHE_NAME = CACHE_PREFIX + "v1-2026-11-04T07:49:46";
 const urlsToCache = [
     "accelerate.svg",
     "aosp/icon_144.png",
@@ -45,25 +46,26 @@ async function notifyClients(msg) {
 }
 
 self.addEventListener("install", (event) => {
-    event.waitUntil(async () => {
+    event.waitUntil((async () => {
         try {
-            const cache = caches.open(CACHE_NAME);
+            const cache = await caches.open(CACHE_NAME);
             await cache.addAll(urlsToCache);
             cached = true;
-            await notifyClients("swInstallSuccess");
+            notifyClients("swInstallSuccess");
         } catch (e) {
-            await notifyClients({ type: "swInstallError", error: e });
+            notifyClients({ type: "swInstallError", error: e });
             throw e;
         }
-    });
+    })());
 });
 
 self.addEventListener("fetch", (event) => {
     if (event.request && event.request.url) {
         try {
-            const pathname = new URL(event.request.url).pathname;
-            if (pathname === "/is_sw.txt") {
-                event.respondWith(new Response(new Blob([cached ? "2" : "1"], { type: "text/plain" })));
+            const url = new URL(event.request.url);
+            const pathname = url.pathname;
+            if (pathname === "/is_sw.txt" && url.origin === self.location.origin) {
+                event.respondWith((async () => { return new Response(new Blob([(cached || await caches.has(CACHE_NAME)) ? "2" : "1"], { type: "text/plain" })) })());
                 return;
             }
         } catch (e) {
@@ -71,7 +73,7 @@ self.addEventListener("fetch", (event) => {
         }
     }
     event.respondWith(caches.match(event.request).then((response) => {
-        return response || fetch(event.request, { redirect: "follow" });
+        return response || fetch(event.request);
     }));
 });
 
